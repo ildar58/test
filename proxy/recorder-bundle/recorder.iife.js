@@ -13412,12 +13412,29 @@ var PamRecorder = (() => {
 
   // src/index.ts
   var instance = null;
+  var SESSION_STORAGE_KEY = "_pam_sid";
+  function resolveSessionId(provided) {
+    if (provided)
+      return provided;
+    try {
+      const existing = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      if (existing)
+        return existing;
+      const fresh = crypto.randomUUID();
+      sessionStorage.setItem(SESSION_STORAGE_KEY, fresh);
+      return fresh;
+    } catch {
+      return crypto.randomUUID();
+    }
+  }
   function init(options) {
     if (instance)
       return;
     const { sessionId, distinctId, ...overrides } = options;
     const config = { ...DEFAULT_CONFIG, ...overrides };
-    instance = new Recorder(config, sessionId, distinctId);
+    const resolvedSessionId = resolveSessionId(sessionId);
+    const resolvedDistinctId = distinctId ?? "anonymous";
+    instance = new Recorder(config, resolvedSessionId, resolvedDistinctId);
     instance.start();
   }
   function stop() {

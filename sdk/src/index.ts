@@ -15,13 +15,29 @@ import { Recorder } from './recorder';
 export type { RecorderConfig };
 
 export interface InitOptions extends Partial<RecorderConfig> {
-  /** Required: unique session ID (generate with crypto.randomUUID()) */
-  sessionId: string;
-  /** Required: user identifier for your system */
-  distinctId: string;
+  /** Optional: unique session ID. If omitted, a UUID is generated and persisted in sessionStorage. */
+  sessionId?: string;
+  /** Optional: user identifier. Defaults to 'anonymous'. Can be updated later via identify(). */
+  distinctId?: string;
 }
 
 let instance: Recorder | null = null;
+
+const SESSION_STORAGE_KEY = '_pam_sid';
+
+function resolveSessionId(provided?: string): string {
+  if (provided) return provided;
+  try {
+    const existing = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (existing) return existing;
+    const fresh = crypto.randomUUID();
+    sessionStorage.setItem(SESSION_STORAGE_KEY, fresh);
+    return fresh;
+  } catch {
+    // sessionStorage unavailable (privacy mode, SSR) — fall back to per-pageload UUID
+    return crypto.randomUUID();
+  }
+}
 
 /**
  * Initialize and start recording.
@@ -32,8 +48,10 @@ export function init(options: InitOptions): void {
 
   const { sessionId, distinctId, ...overrides } = options;
   const config: RecorderConfig = { ...DEFAULT_CONFIG, ...overrides };
+  const resolvedSessionId = resolveSessionId(sessionId);
+  const resolvedDistinctId = distinctId ?? 'anonymous';
 
-  instance = new Recorder(config, sessionId, distinctId);
+  instance = new Recorder(config, resolvedSessionId, resolvedDistinctId);
   instance.start();
 }
 

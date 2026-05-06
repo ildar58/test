@@ -85,25 +85,23 @@ cat > src/app/app.component.html << 'APP_HTML'
 <router-outlet />
 APP_HTML
 
-# ── Add RouterModule imports to AppComponent ──────────────────────────────────
-echo "[pam-e2e] patching app.component.ts imports..."
-# Replace imports array to include RouterOutlet and RouterLink
-sed -i '' \
-  's/imports: \[/imports: [RouterOutlet, RouterLink, RouterLinkActive, /' \
-  src/app/app.component.ts 2>/dev/null || \
-sed -i \
-  's/imports: \[/imports: [RouterOutlet, RouterLink, RouterLinkActive, /' \
-  src/app/app.component.ts
+# ── Rewrite app.component.ts to ensure RouterOutlet+Link+Active are imported ──
+echo "[pam-e2e] rewriting app.component.ts..."
+cat > src/app/app.component.ts << 'APP_TS'
+import { Component } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 
-# Add import statements if not present
-if ! grep -q "RouterOutlet" src/app/app.component.ts; then
-  sed -i '' \
-    "1s/^/import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular\/router';\n/" \
-    src/app/app.component.ts 2>/dev/null || \
-  sed -i \
-    "1s/^/import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular\/router';\n/" \
-    src/app/app.component.ts
-fi
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss'
+})
+export class AppComponent {
+  title = 'ng-app';
+}
+APP_TS
 
 # ── Add a simple form input to FormComponent ─────────────────────────────────
 cat > src/app/pages/form/form.component.html << 'FORM_HTML'

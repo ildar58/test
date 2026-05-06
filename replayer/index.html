@@ -34,8 +34,9 @@
     <div id="rrweb-player"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/rrweb-player@latest/dist/index.js"></script>
-  <script>
+  <script type="module">
+    import rrwebPlayer from 'https://cdn.jsdelivr.net/npm/rrweb-player@latest/dist/index.mjs';
+
     const API_BASE = window.location.origin;
     let currentPlayer = null;
 
@@ -105,7 +106,21 @@
       });
     }
 
-    loadSessions();
+    async function init() {
+      await loadSessions();
+      const params = new URLSearchParams(window.location.search);
+      const deepLinkId = params.get('id');
+      if (deepLinkId) {
+        const item = document.querySelector(`.session-item[data-id="${deepLinkId}"]`);
+        if (item) item.classList.add('active');
+        await playSession(deepLinkId);
+      }
+    }
+
+    init().catch(err => {
+      document.getElementById('placeholder').textContent = 'Init error: ' + err.message;
+      console.error(err);
+    });
   </script>
 </body>
 </html>
