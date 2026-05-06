@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Ingestion runtime data
+ingestion/data/
+data/
+
+# E2E fixtures (regenerated via setup-fixture.sh)
+e2e/fixtures/ng-app/
+e2e/test-results/
+e2e/playwright-report/
+e2e/playwright/.cache/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env
+.env
+.env.local
+.env.*.local

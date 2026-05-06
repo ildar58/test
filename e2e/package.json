@@ -1,0 +1,21 @@
+{
+  "name": "@pam/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "E2E tests for @pam/web-session-recorder",
+  "scripts": {
+    "setup": "bash fixtures/setup-fixture.sh",
+    "test": "playwright test",
+    "test:b": "playwright test --grep variant-b",
+    "test:a": "playwright test --grep variant-a",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0",
+    "@types/node": "^20.0.0",
+    "execa": "^9.0.0",
+    "get-port": "^7.1.0",
+    "typescript": "^5.4.0"
+  }
+}

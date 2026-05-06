@@ -1,0 +1,36 @@
+{
+  "name": "@pam/web-session-recorder",
+  "version": "0.1.0",
+  "description": "rrweb-based session recorder SDK with batched gzip transport (Variant B — npm import)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ildar58/test",
+    "directory": "sdk"
+  },
+  "license": "MIT",
+  "author": "Ildar Dautov",
+  "keywords": ["rrweb", "session-replay", "session-recording", "monitoring"],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.esm.js",
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc && esbuild src/index.ts --bundle --format=esm --outfile=dist/index.esm.js --external:rrweb",
+    "build:iife": "esbuild src/index.ts --bundle --format=iife --global-name=PamRecorder --outfile=dist/recorder.iife.js",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@rrweb/types": "^2.0.0-alpha.13",
+    "fflate": "^0.8.2",
+    "rrweb": "^2.0.0-alpha.13"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.20.0",
+    "jsdom": "^24.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

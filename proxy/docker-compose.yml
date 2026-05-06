@@ -1,0 +1,42 @@
+services:
+  # ---------------------------------------------------------------------------
+  # Demo upstream app (simple static SPA)
+  # ---------------------------------------------------------------------------
+  demo-app:
+    image: nginx:alpine
+    volumes:
+      - ../demo-app:/usr/share/nginx/html:ro
+    expose:
+      - "80"
+
+  # ---------------------------------------------------------------------------
+  # Session ingestion + replayer backend (Node/Express)
+  # ---------------------------------------------------------------------------
+  ingestion:
+    build:
+      context: ../ingestion
+      dockerfile: Dockerfile
+    volumes:
+      - ingestion-data:/app/data
+    expose:
+      - "3001"
+    environment:
+      PORT: "3001"
+
+  # ---------------------------------------------------------------------------
+  # nginx proxy: injects recorder into every HTML response from demo-app
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "8080:80"    # corp app (with recorder injected)
+      - "8081:8080"  # replayer admin UI
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./recorder-bundle:/srv/recorder-bundle:ro
+    depends_on:
+      - demo-app
+      - ingestion
+
+volumes:
+  ingestion-data:

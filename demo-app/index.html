@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Corp Demo App</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #1a1a2e; }
+    .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    input, select { width: 100%; padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    input[type=password] { /* masked by recorder: maskAllInputs=true */ }
+    button { background: #1a1a2e; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #2d2d5e; }
+    .rec-no-capture { background: #fff3cd; padding: 8px; border-radius: 4px; font-size: 12px; }
+    .rec-mask { color: #000; }
+    #log { background: #f5f5f5; padding: 12px; border-radius: 4px; font-size: 12px; font-family: monospace; height: 120px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h1>Corp Demo Application</h1>
+  <p>This page is recorded by rrweb (injected by nginx proxy — Variant A).<br/>
+     Or by the SDK directly if you include <code>@pam/web-session-recorder</code> — Variant B.</p>
+
+  <div class="card">
+    <h2>Login Form (masked by recorder)</h2>
+    <input type="text" placeholder="Username" value="" />
+    <!-- Password masked because maskAllInputs=true -->
+    <input type="password" placeholder="Password" />
+    <button onclick="logAction('login_click')">Sign In</button>
+  </div>
+
+  <div class="card">
+    <h2>Data Entry</h2>
+    <input type="text" placeholder="Search query..." oninput="logAction('search: ' + this.value)" />
+    <select onchange="logAction('filter: ' + this.value)">
+      <option>All departments</option>
+      <option>Engineering</option>
+      <option>Finance</option>
+      <option>HR</option>
+    </select>
+  </div>
+
+  <div class="card rec-no-capture">
+    <strong>rec-no-capture zone</strong> — this block is hidden from recorder (blockClass=rec-no-capture)
+  </div>
+
+  <div class="card">
+    <h2>Sensitive text (masked)</h2>
+    <p>Normal visible text</p>
+    <p class="rec-mask">CONFIDENTIAL: salary data here — recorder sees *** instead</p>
+  </div>
+
+  <div class="card">
+    <h2>Event log</h2>
+    <div id="log">Waiting for interactions...</div>
+    <button onclick="logAction('manual_event')">Fire custom event</button>
+  </div>
+
+  <script>
+    var actionCount = 0;
+    function logAction(name) {
+      actionCount++;
+      var log = document.getElementById('log');
+      var line = document.createElement('div');
+      line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + name;
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+
+      // If SDK is loaded (Variant B), fire custom event
+      if (window.PamRecorder) {
+        window.PamRecorder.addCustomEvent('user_action', { name: name, seq: actionCount });
+      }
+    }
+  </script>
+</body>
+</html>

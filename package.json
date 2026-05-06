@@ -1,0 +1,25 @@
+{
+  "name": "@pam/web-session-recorder-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Corporate web session recorder — rrweb-based, supports both nginx proxy injection (Variant A) and npm SDK (Variant B)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ildar58/test"
+  },
+  "license": "MIT",
+  "author": "Ildar Dautov",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm --filter @pam/web-session-recorder --filter @pam/ingestion test",
+    "test:e2e": "pnpm -F e2e test",
+    "typecheck": "pnpm -r exec tsc --noEmit",
+    "dev:ingestion": "pnpm -F ingestion dev",
+    "dev:proxy": "docker compose -f proxy/docker-compose.yml up"
+  }
+}

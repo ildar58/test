@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Session Replayer</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/rrweb-player@latest/dist/style.css"
+  />
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f5f5f5; }
+    #header { background: #1a1a2e; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
+    #header h1 { margin: 0; font-size: 18px; }
+    #session-list { width: 300px; background: #fff; height: calc(100vh - 56px); overflow-y: auto; border-right: 1px solid #ddd; float: left; }
+    .session-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #eee; }
+    .session-item:hover { background: #f0f0f0; }
+    .session-item.active { background: #e8f0fe; }
+    .session-meta { font-size: 11px; color: #888; margin-top: 4px; }
+    #player-container { margin-left: 300px; padding: 24px; display: flex; flex-direction: column; align-items: center; }
+    #placeholder { color: #888; margin-top: 80px; font-size: 16px; }
+    #rrweb-player { width: 100%; max-width: 900px; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <h1>Corp Session Replayer</h1>
+    <span id="status">Loading sessions...</span>
+  </div>
+
+  <div id="session-list"></div>
+  <div id="player-container">
+    <div id="placeholder">← Select a session to replay</div>
+    <div id="rrweb-player"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/rrweb-player@latest/dist/index.js"></script>
+  <script>
+    const API_BASE = window.location.origin;
+    let currentPlayer = null;
+
+    async function loadSessions() {
+      const res = await fetch(`${API_BASE}/sessions`);
+      const json = await res.json();
+      if (!json.success) return;
+
+      const list = document.getElementById('session-list');
+      const status = document.getElementById('status');
+      status.textContent = `${json.data.length} sessions`;
+
+      list.innerHTML = '';
+      json.data.forEach(function(s) {
+        const item = document.createElement('div');
+        item.className = 'session-item';
+        item.dataset.id = s.session_id;
+        item.innerHTML = `
+          <div><strong>${s.distinct_id}</strong></div>
+          <div class="session-meta">
+            ${s.session_id.slice(0, 8)}…<br/>
+            Started: ${new Date(s.started_at).toLocaleString()}<br/>
+            Batches: ${s.batch_count}
+          </div>
+        `;
+        item.addEventListener('click', function() {
+          document.querySelectorAll('.session-item').forEach(function(el) { el.classList.remove('active'); });
+          item.classList.add('active');
+          playSession(s.session_id);
+        });
+        list.appendChild(item);
+      });
+    }
+
+    async function playSession(sessionId) {
+      const placeholder = document.getElementById('placeholder');
+      const container = document.getElementById('rrweb-player');
+
+      placeholder.textContent = 'Loading events...';
+      placeholder.style.display = 'block';
+      container.innerHTML = '';
+
+      if (currentPlayer) {
+        currentPlayer.$destroy();
+        currentPlayer = null;
+      }
+
+      const res = await fetch(`${API_BASE}/sessions/${sessionId}`);
+      const json = await res.json();
+      if (!json.success || !json.data.length) {
+        placeholder.textContent = 'No events found for this session.';
+        return;
+      }
+
+      placeholder.style.display = 'none';
+
+      currentPlayer = new rrwebPlayer({
+        target: container,
+        props: {
+          events: json.data,
+          width: 860,
+          height: 540,
+          autoPlay: false,
+          showController: true,
+          speedOption: [1, 2, 4, 8],
+        },
+      });
+    }
+
+    loadSessions();
+  </script>
+</body>
+</html>
