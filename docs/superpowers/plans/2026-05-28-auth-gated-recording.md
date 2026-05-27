@@ -981,7 +981,18 @@ describe('Recorder state machine', () => {
     r.stop();
   });
 
-  it('IDLE → ACTIVE when marker appears: rrweb starts, sessionId persisted', () => {
+  it('activates immediately when marker is present at start() (reload while logged in)', () => {
+    setCookie('session_present=1');
+    const r = new Recorder({ ...DEFAULT_CONFIG, markerPollMs: 60_000 });
+    r.start();
+
+    expect(recordMock).toHaveBeenCalledOnce();
+    expect(sessionStorage.getItem('_pam_sid')).toMatch(/^[0-9a-f-]{36}$/);
+
+    r.stop();
+  });
+
+  it('IDLE → ACTIVE when marker appears via watcher edge', () => {
     const r = new Recorder({ ...DEFAULT_CONFIG, markerPollMs: 1_000 });
     r.start();
 
@@ -994,11 +1005,22 @@ describe('Recorder state machine', () => {
     r.stop();
   });
 
+  it('reuses persisted sessionId across reload (sessionStorage continuity)', () => {
+    sessionStorage.setItem('_pam_sid', 'persisted-uuid');
+    setCookie('session_present=1');
+    const r = new Recorder({ ...DEFAULT_CONFIG, markerPollMs: 60_000 });
+    r.start();
+
+    expect(recordMock).toHaveBeenCalledOnce();
+    expect(sessionStorage.getItem('_pam_sid')).toBe('persisted-uuid');
+
+    r.stop();
+  });
+
   it('ACTIVE → IDLE when marker disappears: rrweb stops, sessionId cleared', () => {
     setCookie('session_present=1');
     const r = new Recorder({ ...DEFAULT_CONFIG, markerPollMs: 1_000 });
     r.start();
-    vi.advanceTimersByTime(1_000);
     expect(recordMock).toHaveBeenCalledOnce();
     const firstSid = sessionStorage.getItem('_pam_sid');
     expect(firstSid).toBeTruthy();
@@ -1038,10 +1060,8 @@ describe('Recorder state machine', () => {
     setCookie('session_present=1');
     const r = new Recorder({ ...DEFAULT_CONFIG, markerPollMs: 60_000 });
     r.start();
-    vi.advanceTimersByTime(60_000);
     expect(recordMock).toHaveBeenCalledOnce();
 
-    // Trigger one flush
     const emit = recordMock.mock.calls[0]![0].emit;
     emit({ type: 0, data: {}, timestamp: 1 });
     vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
@@ -1052,7 +1072,31 @@ describe('Recorder state machine', () => {
     r.stop();
   });
 
-  it('after unauthorizedThreshold consecutive 401s, suppresses IDLE→ACTIVE for cool-down', async () => {
+  it('below threshold: schedules a retry that re-activates while marker is still present', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }));
+    setCookie('session_present=1');
+    const r = new Recorder({
+      ...DEFAULT_CONFIG,
+      markerPollMs: 1_000,
+      unauthorizedThreshold: 5,
+    });
+    r.start();
+    expect(recordMock).toHaveBeenCalledTimes(1);
+
+    // First 401 → deactivate → schedule retry after markerPollMs
+    recordMock.mock.calls[0]![0].emit({ type: 0, data: {}, timestamp: 1 });
+    vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
+    await vi.waitFor(() => expect(recordStop).toHaveBeenCalledTimes(1));
+
+    // Subsequent flushes succeed
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
+    vi.advanceTimersByTime(1_000);
+    expect(recordMock).toHaveBeenCalledTimes(2);
+
+    r.stop();
+  });
+
+  it('after unauthorizedThreshold consecutive 401s, suppresses retry until cool-down expires', async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 401 }));
     setCookie('session_present=1');
     const r = new Recorder({
@@ -1062,26 +1106,58 @@ describe('Recorder state machine', () => {
       unauthorizedCooldownMs: 10_000,
     });
     r.start();
+    expect(recordMock).toHaveBeenCalledTimes(1);
 
-    // Trigger 2 ACTIVE→IDLE 401 cycles
-    for (let i = 0; i < 2; i++) {
-      setCookie('session_present=1');
-      vi.advanceTimersByTime(1_000);
-      const emit = recordMock.mock.calls[i]![0].emit;
-      emit({ type: 0, data: {}, timestamp: 1 });
-      vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
-      await vi.waitFor(() => expect(recordStop).toHaveBeenCalledTimes(i + 1));
-    }
+    // First 401 (count=1, below threshold) → retry scheduled at 1s
+    recordMock.mock.calls[0]![0].emit({ type: 0, data: {}, timestamp: 1 });
+    vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
+    await vi.waitFor(() => expect(recordStop).toHaveBeenCalledTimes(1));
+    vi.advanceTimersByTime(1_000);
+    expect(recordMock).toHaveBeenCalledTimes(2);
 
-    // Marker still present, but cool-down should suppress re-activation
-    setCookie('session_present=1');
+    // Second 401 (count=2, at threshold) → cool-down (10s) instead of retry
+    recordMock.mock.calls[1]![0].emit({ type: 0, data: {}, timestamp: 1 });
+    vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
+    await vi.waitFor(() => expect(recordStop).toHaveBeenCalledTimes(2));
+
+    // Within cool-down: no re-activation even though marker is still present
     vi.advanceTimersByTime(5_000);
-    expect(recordMock).toHaveBeenCalledTimes(2); // no third start
+    expect(recordMock).toHaveBeenCalledTimes(2);
 
-    // After cool-down expires, IDLE→ACTIVE allowed again
+    // Server recovers; cool-down expires → retry fires → re-activate
     fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
-    vi.advanceTimersByTime(10_000);
+    vi.advanceTimersByTime(5_000);
     expect(recordMock).toHaveBeenCalledTimes(3);
+
+    r.stop();
+  });
+
+  it('concurrent 401s within one ACTIVE phase increment counter only once', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 401 }));
+    setCookie('session_present=1');
+    const r = new Recorder({
+      ...DEFAULT_CONFIG,
+      markerPollMs: 60_000,
+      unauthorizedThreshold: 2,
+      unauthorizedCooldownMs: 10_000,
+    });
+    r.start();
+    expect(recordMock).toHaveBeenCalledTimes(1);
+
+    // Push two events into the buffer and fire two flushes back-to-back —
+    // both fetches resolve with 401; counter must increment only once.
+    const emit = recordMock.mock.calls[0]![0].emit;
+    emit({ type: 0, data: {}, timestamp: 1 });
+    vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
+    emit({ type: 0, data: {}, timestamp: 2 });
+    vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
+    await vi.waitFor(() => expect(recordStop).toHaveBeenCalledTimes(1));
+
+    // count=1, below threshold=2 → retry at markerPollMs (60s away).
+    // If the race had counted twice (=2), cool-down would block this retry.
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
+    vi.advanceTimersByTime(60_000);
+    expect(recordMock).toHaveBeenCalledTimes(2);
 
     r.stop();
   });
@@ -1100,7 +1176,7 @@ import { record } from 'rrweb';
 import type { eventWithTime, listenerHandler } from '@rrweb/types';
 import type { RecorderConfig } from './config';
 import { Transport } from './transport';
-import { watchMarker } from './auth';
+import { readMarker, watchMarker } from './auth';
 
 const SESSION_STORAGE_KEY = '_pam_sid';
 
@@ -1108,6 +1184,14 @@ type State = 'IDLE' | 'ACTIVE' | 'STOPPED';
 
 function newSessionId(): string {
   return crypto.randomUUID();
+}
+
+function readPersistedSessionId(): string | null {
+  try {
+    return sessionStorage.getItem(SESSION_STORAGE_KEY);
+  } catch {
+    return null;
+  }
 }
 
 function persistSessionId(id: string): void {
@@ -1132,6 +1216,7 @@ export class Recorder {
   private rrwebStop: listenerHandler | null = null;
   private transport: Transport | null = null;
   private disposeWatcher: (() => void) | null = null;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private unauthorizedCount = 0;
   private cooldownUntil = 0;
 
@@ -1148,14 +1233,27 @@ export class Recorder {
       },
       this.config.markerPollMs
     );
+
+    // watchMarker only fires on edges. If the marker is already present at
+    // start() (e.g. page reload while logged in), kick off ACTIVE explicitly.
+    if (readMarker(this.config.markerCookieName)) {
+      this.tryActivate();
+    }
   }
 
   private tryActivate(): void {
     if (this.state !== 'IDLE') return;
     if (Date.now() < this.cooldownUntil) return;
 
-    this.sessionId = newSessionId();
-    persistSessionId(this.sessionId);
+    this.clearRetryTimer();
+
+    // Reload continuity: if a sessionStorage UUID survives this page load,
+    // reuse it so the server appends to the existing <sid>.jsonl. New ACTIVE
+    // phases after logout (deactivate clears sessionStorage) get a fresh UUID.
+    const persisted = readPersistedSessionId();
+    const sid = persisted ?? newSessionId();
+    if (!persisted) persistSessionId(sid);
+    this.sessionId = sid;
 
     this.transport = new Transport(
       this.config.endpoint,
@@ -1163,7 +1261,6 @@ export class Recorder {
       this.config.maxBufferSize,
       () => this.onUnauthorized()
     );
-    const sid = this.sessionId;
     this.transport.start(sid);
 
     this.rrwebStop =
@@ -1200,17 +1297,52 @@ export class Recorder {
     this.state = 'IDLE';
   }
 
+  /**
+   * Called by Transport when a batch returns 401. Multiple in-flight batches
+   * can race here, so the state guard at the top ensures the counter advances
+   * at most once per ACTIVE phase.
+   */
   private onUnauthorized(): void {
+    if (this.state !== 'ACTIVE') return;
     this.deactivate();
     this.unauthorizedCount += 1;
-    if (this.unauthorizedCount >= this.config.unauthorizedThreshold) {
+
+    const atThreshold = this.unauthorizedCount >= this.config.unauthorizedThreshold;
+    let delay: number;
+    if (atThreshold) {
       this.cooldownUntil = Date.now() + this.config.unauthorizedCooldownMs;
       this.unauthorizedCount = 0;
+      delay = this.config.unauthorizedCooldownMs;
+    } else {
+      delay = this.config.markerPollMs;
+    }
+
+    // The watcher will not fire an edge while the marker stays present, so
+    // schedule an explicit retry here. If logout happens in the meantime,
+    // tryActivate's state guard or the watcher's edge callback handles it.
+    this.scheduleRetry(delay);
+  }
+
+  private scheduleRetry(delayMs: number): void {
+    this.clearRetryTimer();
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      if (this.state === 'IDLE' && readMarker(this.config.markerCookieName)) {
+        this.tryActivate();
+      }
+    }, delayMs);
+  }
+
+  private clearRetryTimer(): void {
+    if (this.retryTimer !== null) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
     }
   }
 
   stop(): void {
     this.deactivate();
+    this.clearRetryTimer();
     if (this.disposeWatcher) {
       this.disposeWatcher();
       this.disposeWatcher = null;
@@ -1223,7 +1355,7 @@ export class Recorder {
 - [ ] **Step 4: Run recorder tests to verify they pass**
 
 Run: `pnpm --filter @pam/web-session-recorder test -- recorder`
-Expected: PASS (6/6 recorder tests).
+Expected: PASS (9/9 recorder tests).
 
 - [ ] **Step 5: Commit**
 
