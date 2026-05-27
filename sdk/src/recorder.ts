@@ -106,6 +106,7 @@ export class Recorder {
       }) ?? null;
 
     this.state = 'ACTIVE';
+    this.unauthorizedCount = 0;
   }
 
   private deactivate(): void {
