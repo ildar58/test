@@ -39,6 +39,18 @@ export interface RecorderConfig {
 
   /** Max events buffered before forced flush */
   maxBufferSize: number;
+
+  /** Name of the JS-readable marker cookie set by the backend on login */
+  markerCookieName: string;
+
+  /** Marker cookie poll interval in ms (defensive; watcher also reacts to focus/visibility) */
+  markerPollMs: number;
+
+  /** Consecutive 401-induced transitions before suspending IDLE→ACTIVE */
+  unauthorizedThreshold: number;
+
+  /** Cool-down window after the threshold is reached */
+  unauthorizedCooldownMs: number;
 }
 
 export const DEFAULT_CONFIG: RecorderConfig = {
@@ -54,4 +66,8 @@ export const DEFAULT_CONFIG: RecorderConfig = {
   checkoutEveryNms: 30 * 60 * 1000, // 30 min
   flushIntervalMs: 2_000,
   maxBufferSize: 500,
+  markerCookieName: 'session_present',
+  markerPollMs: 5_000,
+  unauthorizedThreshold: 3,
+  unauthorizedCooldownMs: 60_000,
 };

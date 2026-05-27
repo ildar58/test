@@ -26,4 +26,14 @@ describe('DEFAULT_CONFIG', () => {
     expect(merged.endpoint).toBe('https://other.example/s/');
     expect(JSON.stringify(DEFAULT_CONFIG)).toBe(before);
   });
+
+  it('has marker-cookie defaults', () => {
+    expect(DEFAULT_CONFIG.markerCookieName).toBe('session_present');
+    expect(DEFAULT_CONFIG.markerPollMs).toBe(5_000);
+  });
+
+  it('has 401 cool-down defaults', () => {
+    expect(DEFAULT_CONFIG.unauthorizedThreshold).toBe(3);
+    expect(DEFAULT_CONFIG.unauthorizedCooldownMs).toBe(60_000);
+  });
 });
