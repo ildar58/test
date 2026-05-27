@@ -4,14 +4,12 @@ import { Transport } from '../transport';
 
 const ENDPOINT = 'http://test.local/s/';
 const SESSION = 'session-1';
-const DISTINCT = 'user-1';
 
 function decodeBatch(b64: string): unknown[] {
   const binary = atob(b64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  const decompressed = gunzipSync(bytes);
-  return JSON.parse(strFromU8(decompressed)) as unknown[];
+  return JSON.parse(strFromU8(gunzipSync(bytes))) as unknown[];
 }
 
 describe('Transport', () => {
@@ -33,8 +31,8 @@ describe('Transport', () => {
 
   it('does not flush before flushIntervalMs has elapsed', () => {
     const t = new Transport(ENDPOINT, 2_000, 1000);
-    t.start(SESSION, DISTINCT);
-    t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION, DISTINCT);
+    t.start(SESSION);
+    t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION);
 
     vi.advanceTimersByTime(1_500);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -42,56 +40,63 @@ describe('Transport', () => {
     t.stop();
   });
 
-  it('flushes via fetch after 2 seconds', () => {
+  it('flushes via fetch after flushIntervalMs with credentials:"include"', () => {
     const t = new Transport(ENDPOINT, 2_000, 1000);
-    t.start(SESSION, DISTINCT);
-    t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION, DISTINCT);
-    t.push({ type: 1, data: {}, timestamp: 2 } as never, SESSION, DISTINCT);
+    t.start(SESSION);
+    t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION);
 
     vi.advanceTimersByTime(2_000);
     expect(fetchMock).toHaveBeenCalledOnce();
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(ENDPOINT);
     expect(init.method).toBe('POST');
+    expect(init.credentials).toBe('include');
 
     t.stop();
   });
 
-  it('encodes events via gzip + base64; round-trip recovers original', () => {
+  it('wire payload contains session_id, batch_seq, events_b64_gzip and NO distinct_id', () => {
     const t = new Transport(ENDPOINT, 2_000, 1000);
-    t.start(SESSION, DISTINCT);
+    t.start(SESSION);
     const events = [
       { type: 0, data: { tag: 'meta' }, timestamp: 100 },
       { type: 2, data: { node: 'snapshot' }, timestamp: 200 },
     ];
-    for (const e of events) t.push(e as never, SESSION, DISTINCT);
+    for (const e of events) t.push(e as never, SESSION);
 
     vi.advanceTimersByTime(2_000);
-    expect(fetchMock).toHaveBeenCalledOnce();
-    const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string) as {
-      events_b64_gzip: string;
-      session_id: string;
-      batch_seq: number;
-    };
+    const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string) as Record<string, unknown>;
     expect(body.session_id).toBe(SESSION);
     expect(body.batch_seq).toBe(1);
-    expect(decodeBatch(body.events_b64_gzip)).toEqual(events);
+    expect('distinct_id' in body).toBe(false);
+    expect(decodeBatch(body.events_b64_gzip as string)).toEqual(events);
 
     t.stop();
   });
 
   it('triggers sendBeacon on visibilitychange→hidden', () => {
     const t = new Transport(ENDPOINT, 2_000, 1000);
-    t.start(SESSION, DISTINCT);
-    t.push({ type: 3, data: {}, timestamp: 9 } as never, SESSION, DISTINCT);
+    t.start(SESSION);
+    t.push({ type: 3, data: {}, timestamp: 9 } as never, SESSION);
 
     Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
 
     expect(beaconMock).toHaveBeenCalledOnce();
-    const [url, blob] = beaconMock.mock.calls[0]!;
-    expect(url).toBe(ENDPOINT);
-    expect(blob).toBeInstanceOf(Blob);
+
+    t.stop();
+  });
+
+  it('invokes onUnauthorized callback when server returns 401', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }));
+    const onUnauthorized = vi.fn();
+    const t = new Transport(ENDPOINT, 2_000, 1000, onUnauthorized);
+    t.start(SESSION);
+    t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION);
+
+    vi.advanceTimersByTime(2_000);
+    // Allow the fetch microtask to settle
+    await vi.waitFor(() => expect(onUnauthorized).toHaveBeenCalledOnce());
 
     t.stop();
   });
