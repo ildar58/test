@@ -21,12 +21,11 @@ function metaFile(sessionId: string): string {
   return path.join(dataDir(), `${sessionId}.meta.json`);
 }
 
-export function appendBatch(batch: EventBatch): void {
+export function appendBatch(batch: EventBatch, userId: string): void {
   ensureDataDir();
   const line = JSON.stringify(batch) + '\n';
   fs.appendFileSync(sessionFile(batch.session_id), line, 'utf-8');
 
-  // Upsert meta
   const metaPath = metaFile(batch.session_id);
   const now = new Date().toISOString();
   let meta: SessionMeta;
@@ -37,7 +36,7 @@ export function appendBatch(batch: EventBatch): void {
   } else {
     meta = {
       session_id: batch.session_id,
-      distinct_id: batch.distinct_id,
+      user_id: userId,
       started_at: now,
       last_batch_at: now,
       batch_count: 1,
