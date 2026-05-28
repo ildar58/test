@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import fs from 'fs';
 import path from 'path';
 import type { Request, Response } from 'express';
 import type { EventBatch } from './types';
@@ -24,7 +25,16 @@ app.use(cors({ credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 
-app.use('/replay', express.static(path.resolve(__dirname, '../../replayer')));
+// Resolve the replayer directory across both dev (tsx → __dirname=ingestion/src)
+// and the compiled Docker image (node → __dirname=/app/dist, replayer
+// bind-mounted at /app/replayer). Pick whichever candidate actually exists.
+const replayerDir = [
+  path.resolve(__dirname, '../replayer'),
+  path.resolve(__dirname, '../../replayer'),
+].find((p) => fs.existsSync(p));
+if (replayerDir) {
+  app.use('/replay', express.static(replayerDir));
+}
 
 /**
  * Demo auth backend.
