@@ -102,8 +102,11 @@ importers:
 
   tools/video:
     dependencies:
-      rrvideo:
-        specifier: 2.0.0-alpha.20
+      playwright:
+        specifier: ^1.59.1
+        version: 1.59.1
+      rrweb-player:
+        specifier: ^2.0.0-alpha.20
         version: 2.0.0-alpha.20
     devDependencies:
       '@types/node':
@@ -594,20 +597,6 @@ packages:
   '@noble/hashes@1.8.0':
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
     engines: {node: ^14.21.3 || >=16}
-
-  '@open-tech-world/cli-progress-bar@2.0.2':
-    resolution: {integrity: sha512-miNmdKNdKp7Lhy295wxnJcWFrbIAoQmypoCynlG8HTQPxsG5dhOpPL5udsZFoW99RxcLAj2JTCaEhrosTzPE3g==}
-    deprecated: Please use @opentf/cli-pbar
-
-  '@open-tech-world/es-cli-styles@0.3.0':
-    resolution: {integrity: sha512-0SyxBAUkUDkjt83snx1QvPDk6zJJIb/xRbY0daWGG6ONCfx5RITxc0qty2tLmyBNsCM41+V1shtHNeSrEBu8KQ==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-    deprecated: Please use @opentf/cli-styles
-
-  '@open-tech-world/es-utils@0.10.0':
-    resolution: {integrity: sha512-JqpxcVk3Go4RAArI3oB18fhIMeeuNSThwmSQM7ScygVv2/AHRAxkkiodtggC7QniJvLs7i5AzL9pILNvAEBYDg==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-    deprecated: Please use @opentf/utils
 
   '@paralleldrive/cuid2@2.3.1':
     resolution: {integrity: sha512-XO7cAxhnTZl0Yggq6jOgjiOHhbgcO4NqFqwSmQpjK3b6TEE6Uj/jfSk6wzYyemh3+I0sHirKSetjQwn5cZktFw==}
@@ -1134,10 +1123,6 @@ packages:
     resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
     engines: {node: '>= 0.6'}
 
-  fs-extra@11.3.5:
-    resolution: {integrity: sha512-eKpRKAovdpZtR1WopLHxlBWvAgPny3c4gX1G5Jhwmmw4XJj0ifSD5qB5TOo8hmA0wlRKDAOAhEE1yVPgs6Fgcg==}
-    engines: {node: '>=14.14'}
-
   fsevents@2.3.2:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -1180,9 +1165,6 @@ packages:
   gopd@1.2.0:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
-
-  graceful-fs@4.2.11:
-    resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
   has-symbols@1.1.0:
     resolution: {integrity: sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ==}
@@ -1269,9 +1251,6 @@ packages:
       canvas:
         optional: true
 
-  jsonfile@6.2.1:
-    resolution: {integrity: sha512-zwOTdL3rFQ/lRdBnntKVOX6k5cKJwEc1HdilT71BWEu7J41gXIB2MRp+vxduPSwZJPWBxEzv4yH1wYLJGUHX4Q==}
-
   local-pkg@0.5.1:
     resolution: {integrity: sha512-9rrA30MRRP3gBD3HTGnC6cDFpaE1kVDWxWgqWJUN0RvDNAo+Nz/9GxB+nHOH0ifbVFy0hSA1V6vFDvnx54lTEQ==}
     engines: {node: '>=14'}
@@ -1324,9 +1303,6 @@ packages:
   mimic-fn@4.0.0:
     resolution: {integrity: sha512-vqiC06CuhBTUdZH+RYl8sFrL096vA45Ok5ISO6sE/Mr1jRbGH4Csnhi8f3wKVl7x8mO4Au7Ir9D3Oyv1VYMFJw==}
     engines: {node: '>=12'}
-
-  minimist@1.2.8:
-    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
   mitt@3.0.1:
     resolution: {integrity: sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==}
@@ -1489,10 +1465,6 @@ packages:
   rrdom@2.0.0-alpha.20:
     resolution: {integrity: sha512-hoqjS4662LtBp82qEz9GrqU36UpEmCvTA2Hns3qdF7cklLFFy3G+0Th8hLytJENleHHWxsB5nWJ3eXz5mSRxdQ==}
 
-  rrvideo@2.0.0-alpha.20:
-    resolution: {integrity: sha512-CvNBCMf80yK558+/X1XHzcmxBoWwRdb4nAZHgX0ofKKnnouQCWS0rDniYCcY26eziGlPrgeOPaZsS9FbO6mVcw==}
-    hasBin: true
-
   rrweb-cssom@0.7.1:
     resolution: {integrity: sha512-TrEMa7JGdVm0UThDJSx7ddw5nVm3UJS9o9CCIZ72B1vSyEZoziDqBYP3XIoi/12lKrJR8rE3jeFHMok2F/Mnsg==}
 
@@ -1650,10 +1622,6 @@ packages:
   universalify@0.2.0:
     resolution: {integrity: sha512-CJ1QgKmNg3CwvAv/kOFmtnEN05f0D/cn9QntgNOQlQF9dgvVTHj3t+8JPdjqawCHk7V/KA+fbUqzZ9XWhcqPUg==}
     engines: {node: '>= 4.0.0'}
-
-  universalify@2.0.1:
-    resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
-    engines: {node: '>= 10.0.0'}
 
   unpipe@1.0.0:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}
@@ -2045,15 +2013,6 @@ snapshots:
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
   '@noble/hashes@1.8.0': {}
-
-  '@open-tech-world/cli-progress-bar@2.0.2':
-    dependencies:
-      '@open-tech-world/es-cli-styles': 0.3.0
-      '@open-tech-world/es-utils': 0.10.0
-
-  '@open-tech-world/es-cli-styles@0.3.0': {}
-
-  '@open-tech-world/es-utils@0.10.0': {}
 
   '@paralleldrive/cuid2@2.3.1':
     dependencies:
@@ -2643,12 +2602,6 @@ snapshots:
 
   fresh@0.5.2: {}
 
-  fs-extra@11.3.5:
-    dependencies:
-      graceful-fs: 4.2.11
-      jsonfile: 6.2.1
-      universalify: 2.0.1
-
   fsevents@2.3.2:
     optional: true
 
@@ -2691,8 +2644,6 @@ snapshots:
       resolve-pkg-maps: 1.0.0
 
   gopd@1.2.0: {}
-
-  graceful-fs@4.2.11: {}
 
   has-symbols@1.1.0: {}
 
@@ -2788,12 +2739,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  jsonfile@6.2.1:
-    dependencies:
-      universalify: 2.0.1
-    optionalDependencies:
-      graceful-fs: 4.2.11
-
   local-pkg@0.5.1:
     dependencies:
       mlly: 1.8.2
@@ -2830,8 +2775,6 @@ snapshots:
   mime@2.6.0: {}
 
   mimic-fn@4.0.0: {}
-
-  minimist@1.2.8: {}
 
   mitt@3.0.1: {}
 
@@ -3003,14 +2946,6 @@ snapshots:
   rrdom@2.0.0-alpha.20:
     dependencies:
       rrweb-snapshot: 2.0.0-alpha.20
-
-  rrvideo@2.0.0-alpha.20:
-    dependencies:
-      '@open-tech-world/cli-progress-bar': 2.0.2
-      fs-extra: 11.3.5
-      minimist: 1.2.8
-      playwright: 1.59.1
-      rrweb-player: 2.0.0-alpha.20
 
   rrweb-cssom@0.7.1: {}
 
@@ -3194,8 +3129,6 @@ snapshots:
   unicorn-magic@0.3.0: {}
 
   universalify@0.2.0: {}
-
-  universalify@2.0.1: {}
 
   unpipe@1.0.0: {}
 
