@@ -1,6 +1,6 @@
 {
   "name": "@pam/web-session-recorder",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "rrweb-based session recorder SDK with batched gzip transport (Variant B — npm import)",
   "repository": {
     "type": "git",

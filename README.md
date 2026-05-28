@@ -60,11 +60,9 @@ In your app:
 ```ts
 import { init } from '@pam/web-session-recorder';
 
-init({
-  endpoint: 'http://localhost:3001/s/',
-  sessionId: crypto.randomUUID(),
-  distinctId: 'user@example.com',
-});
+// User identity is derived server-side from the auth cookie.
+// The recorder stays idle until the backend sets `session_present=1` after login.
+init({ endpoint: 'http://localhost:3001/s/' });
 ```
 
 ### Variant A — full proxy stack via Docker
@@ -123,7 +121,6 @@ Batches sent by the SDK to `POST /s/`:
 ```ts
 {
   session_id: string;        // UUID
-  distinct_id: string;       // your user identifier
   batch_seq: number;         // monotonic per session, starts at 0
   events_b64_gzip: string;   // base64(gzip(JSON.stringify(eventWithTime[])))
 }
