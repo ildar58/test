@@ -1,7 +1,8 @@
 {
   "name": "@pam/web-session-recorder",
   "version": "0.2.0",
-  "description": "rrweb-based session recorder SDK with batched gzip transport (Variant B — npm import)",
+  "private": true,
+  "description": "rrweb-based session recorder — source for the IIFE bundle served by the nginx proxy",
   "repository": {
     "type": "git",
     "url": "https://github.com/ildar58/test",
@@ -10,14 +11,9 @@
   "license": "MIT",
   "author": "Ildar Dautov",
   "keywords": ["rrweb", "session-replay", "session-recording", "monitoring"],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "module": "dist/index.esm.js",
-  "files": ["dist", "README.md"],
   "scripts": {
-    "build": "tsc && esbuild src/index.ts --bundle --format=esm --outfile=dist/index.esm.js --external:rrweb",
-    "build:iife": "esbuild src/index.ts --bundle --format=iife --global-name=PamRecorder --outfile=dist/recorder.iife.js",
-    "dev": "tsc --watch",
+    "build": "esbuild src/index.ts --bundle --format=iife --global-name=PamRecorder --outfile=dist/recorder.iife.js",
+    "dev": "esbuild src/index.ts --bundle --format=iife --global-name=PamRecorder --outfile=dist/recorder.iife.js --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },

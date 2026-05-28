@@ -1,4 +1,4 @@
-# Variant A — nginx proxy injection
+# nginx proxy stack
 
 nginx sits in front of the corp app. It injects `recorder.iife.js` into every
 HTML response via `sub_filter`. The app itself is unchanged.
@@ -12,7 +12,7 @@ HTML response via `sub_filter`. The app itself is unchanged.
 
 ```bash
 # 1. Build IIFE bundle
-cd sdk && pnpm install && pnpm build:iife
+cd sdk && pnpm install && pnpm build
 cp sdk/dist/recorder.iife.js proxy/recorder-bundle/recorder.iife.js
 
 # 2. Start the stack

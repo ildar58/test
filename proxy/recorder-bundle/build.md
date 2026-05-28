@@ -9,7 +9,7 @@ This bundle is built from the SDK source using esbuild.
 # From repo root
 cd sdk
 pnpm install
-pnpm build:iife
+pnpm build
 # Output: sdk/dist/recorder.iife.js
 
 # Copy to proxy bundle dir
@@ -18,26 +18,14 @@ cp sdk/dist/recorder.iife.js proxy/recorder-bundle/recorder.iife.js
 
 ## What the bundle does
 
-The IIFE bundle exports nothing globally except `PamRecorder`.
-nginx injects a small inline script that reads `window.__REC_SESSION_ID`
-and `window.__REC_DISTINCT_ID` (set by the injection snippet in nginx.conf),
-then calls `PamRecorder.init({ ... })`.
+The IIFE exports a single global `PamRecorder` with two methods: `init` and `stop`.
+nginx injects a small inline script that calls `PamRecorder.init({ endpoint: '/s/' })`
+unconditionally on every HTML response.
 
-The bundle auto-initializes when `window.__REC_SESSION_ID` is present:
+The recorder begins in IDLE. It activates only when the backend sets the
+non-HttpOnly `session_present=1` marker cookie on login, and deactivates when
+that cookie disappears on logout. The session UUID is managed inside the SDK
+via `sessionStorage` — no identity is passed in from the host page.
 
-```js
-// recorder.iife.js auto-init tail (produced by esbuild)
-(function() {
-  if (window.__REC_SESSION_ID) {
-    PamRecorder.init({
-      endpoint: '/s/',
-      sessionId: window.__REC_SESSION_ID,
-      distinctId: window.__REC_DISTINCT_ID || 'anonymous',
-    });
-  }
-})();
-```
-
-## placeholder
-
-See `recorder.iife.placeholder.js` for the expected structure.
+See [`docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md`](../../docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md)
+for the full contract.

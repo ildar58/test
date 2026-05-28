@@ -2,7 +2,7 @@
   "name": "@pam/web-session-recorder-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Corporate web session recorder — rrweb-based, supports both nginx proxy injection (Variant A) and npm SDK (Variant B)",
+  "description": "Corporate web session recorder — rrweb-based, integrated via nginx proxy injection",
   "repository": {
     "type": "git",
     "url": "https://github.com/ildar58/test"
@@ -13,7 +13,6 @@
     "node": ">=20",
     "pnpm": ">=9"
   },
-  "packageManager": "pnpm@9.0.0",
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm --filter @pam/web-session-recorder --filter @pam/ingestion test",

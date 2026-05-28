@@ -17,11 +17,6 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'variant-b',
-      testMatch: '**/variant-b.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
       name: 'variant-a',
       testMatch: '**/variant-a.spec.ts',
       use: { ...devices['Desktop Chrome'] },

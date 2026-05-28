@@ -1,55 +1,29 @@
-# @pam/web-session-recorder SDK (Variant B)
+# @pam/web-session-recorder (internal)
 
-npm SDK for modern apps. Import, init, done.
+Source for the recorder IIFE bundle injected by the nginx proxy.
 
-## Install
+This package is **not published to npm** — it exists only to produce
+`dist/recorder.iife.js`, which `proxy/nginx.conf` serves at `/_rec/recorder.iife.js`.
 
-```bash
-pnpm add @pam/web-session-recorder
-```
-
-## Usage
-
-### Vanilla JS / React / Vue
-
-```ts
-import { init, stop, identify, addCustomEvent } from '@pam/web-session-recorder';
-
-init({
-  endpoint: '/s/',
-  sessionId: crypto.randomUUID(),
-  distinctId: 'user@example.com',
-});
-
-// optional
-identify('user@example.com', { role: 'admin' });
-addCustomEvent('checkout_started', { cart_size: 3 });
-
-// on SPA unmount
-stop();
-```
-
-### Angular
-
-```ts
-// app.component.ts
-import { init, stop } from '@pam/web-session-recorder';
-
-@Component({ ... })
-export class AppComponent implements OnInit, OnDestroy {
-  ngOnInit() {
-    init({ endpoint: '/s/', sessionId: crypto.randomUUID(), distinctId: this.authService.userId });
-  }
-  ngOnDestroy() { stop(); }
-}
-```
-
-## Build IIFE bundle for proxy injection
+## Build
 
 ```bash
-pnpm build:iife
-# produces dist/recorder.iife.js — copy to proxy/recorder-bundle/
+pnpm --filter @pam/web-session-recorder build
+cp sdk/dist/recorder.iife.js proxy/recorder-bundle/recorder.iife.js
 ```
+
+## Runtime contract
+
+`init({ endpoint })` registers the recorder. It stays IDLE until the
+backend sets a `session_present=1` marker cookie on login; on logout,
+when the marker disappears, the recorder stops and clears its session id.
+
+User identity is **not** part of the wire format — the server derives it
+from the HttpOnly `session` cookie that browsers send automatically with
+each batch.
+
+See [`docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md`](../docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md)
+for the full architecture.
 
 ## Config defaults
 
