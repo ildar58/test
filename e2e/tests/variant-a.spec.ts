@@ -6,6 +6,12 @@ type DockerStackHandle = Awaited<ReturnType<typeof startDockerStack>>;
 
 let stack: DockerStackHandle;
 
+async function login(page: Page, user = 'alice', password = 'alice'): Promise<void> {
+  await page.locator('#auth-user').fill(user);
+  await page.locator('#auth-password').fill(password);
+  await page.locator('#auth-login').click();
+}
+
 async function countBatchPosts(page: Page, durationMs: number): Promise<number> {
   let count = 0;
   const handler = (req: import('@playwright/test').Request) => {
@@ -52,7 +58,7 @@ test.describe('variant-a: auth-gated nginx injection', () => {
 
   test('login starts recording → batches appear in storage', async ({ page }) => {
     await page.goto(stack.url);
-    await page.locator('#auth-login').click();
+    await login(page);
     await expect(page.locator('#auth-status')).toHaveText('logged in');
 
     const inputs = page.locator('input[type="text"]');
@@ -74,7 +80,7 @@ test.describe('variant-a: auth-gated nginx injection', () => {
 
   test('logout stops recording within poll interval', async ({ page }) => {
     await page.goto(stack.url);
-    await page.locator('#auth-login').click();
+    await login(page);
     await expect(page.locator('#auth-status')).toHaveText('logged in');
     await page.waitForTimeout(3_000);
 
@@ -91,11 +97,11 @@ test.describe('variant-a: auth-gated nginx injection', () => {
   test('logout → re-login produces two distinct session_ids for the same user', async ({ page }) => {
     await page.goto(stack.url);
 
-    await page.locator('#auth-login').click();
+    await login(page);
     await page.waitForTimeout(3_000);
     await page.locator('#auth-logout').click();
     await page.waitForTimeout(7_500);
-    await page.locator('#auth-login').click();
+    await login(page);
     await page.waitForTimeout(3_000);
 
     const res = await fetch(`${stack.url}/sessions`);
