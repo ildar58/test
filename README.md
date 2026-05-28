@@ -121,7 +121,7 @@ Batches sent by the SDK to `POST /s/`:
 ```ts
 {
   session_id: string;        // UUID
-  batch_seq: number;         // monotonic per session, starts at 0
+  batch_seq: number;         // monotonic per session, starts at 1
   events_b64_gzip: string;   // base64(gzip(JSON.stringify(eventWithTime[])))
 }
 ```
@@ -130,7 +130,7 @@ Storage: append each batch as a line to `data/<session_id>.jsonl`. Replay recons
 
 ## What's NOT in MVP (production checklist)
 
-- **Auth on ingestion** — `POST /s/` is open. Add mTLS / JWT / shared secret in your gateway.
+- **Real auth backend** — `POST /s/` requires a `session` cookie, but the included Node ingestion stub treats the cookie value as the user id and does not validate it. Production deployments must point recorder traffic at the real Go service (or equivalent) whose middleware validates the auth cookie cryptographically.
 - **Sampling / feature flags** — record always, no per-user gating.
 - **Real database** — JSONL on local disk; replace with ClickHouse / S3 / PostgreSQL for production volumes.
 - **Network plugin with deny-list** — outgoing fetch/XHR not recorded. If you add it later, **must** redact `Authorization`, `Cookie`, `x-api-key` etc. (see PostHog's `network-plugin.ts` for reference).

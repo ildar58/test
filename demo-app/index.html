@@ -96,11 +96,6 @@
       line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + name;
       log.appendChild(line);
       log.scrollTop = log.scrollHeight;
-
-      // If SDK is loaded (Variant B), fire custom event
-      if (window.PamRecorder) {
-        window.PamRecorder.addCustomEvent('user_action', { name: name, seq: actionCount });
-      }
     }
   </script>
 </body>

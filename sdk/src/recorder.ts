@@ -38,7 +38,6 @@ function clearSessionId(): void {
 
 export class Recorder {
   private state: State = 'IDLE';
-  private sessionId: string | null = null;
   private rrwebStop: listenerHandler | null = null;
   private transport: Transport | null = null;
   private disposeWatcher: (() => void) | null = null;
@@ -79,7 +78,6 @@ export class Recorder {
     const persisted = readPersistedSessionId();
     const sid = persisted ?? newSessionId();
     if (!persisted) persistSessionId(sid);
-    this.sessionId = sid;
 
     this.transport = new Transport(
       this.config.endpoint,
@@ -120,7 +118,6 @@ export class Recorder {
       this.transport = null;
     }
     clearSessionId();
-    this.sessionId = null;
     this.state = 'IDLE';
   }
 
