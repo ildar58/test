@@ -19,6 +19,7 @@
     "test:e2e": "pnpm --filter @pam/e2e test",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "dev:ingestion": "pnpm --filter @pam/ingestion dev",
-    "dev:proxy": "docker compose -f proxy/docker-compose.yml up"
+    "dev:proxy": "docker compose -f proxy/docker-compose.yml up",
+    "video": "pnpm --filter @pam/video export --"
   }
 }
