@@ -11,13 +11,19 @@ services:
 
   # ---------------------------------------------------------------------------
   # Session ingestion + replayer backend (Node/Express)
+  #
+  # ./data is a host bind-mount so recorded sessions land in the repo's
+  # ingestion/data/ directory — `ls`/`cat` from outside the container.
+  # ./replayer is mounted read-only so the static replayer UI served at
+  # /replay is reachable from the Docker stack without rebuilding the image.
   # ---------------------------------------------------------------------------
   ingestion:
     build:
       context: ../ingestion
       dockerfile: Dockerfile
     volumes:
-      - ingestion-data:/app/data
+      - ../ingestion/data:/app/data
+      - ../replayer:/app/replayer:ro
     expose:
       - "3001"
     environment:
@@ -37,6 +43,3 @@ services:
     depends_on:
       - demo-app
       - ingestion
-
-volumes:
-  ingestion-data:
