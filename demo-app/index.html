@@ -20,11 +20,15 @@
 <body>
   <h1>Corp Demo Application</h1>
   <div class="card" id="auth-panel">
-    <h2>Auth (stub)</h2>
+    <h2>Auth (demo)</h2>
     <p>Status: <span id="auth-status">checking…</span></p>
     <input id="auth-user" type="text" placeholder="username" value="alice" />
+    <input id="auth-password" type="password" placeholder="password" value="alice" />
     <button id="auth-login">Log in</button>
     <button id="auth-logout">Log out</button>
+    <p class="rec-no-capture" style="font-size:11px;margin-top:8px">
+      Demo creds: <code>alice/alice</code> or <code>bob/bob</code>. The password input is masked by the recorder (maskInputOptions.password=true).
+    </p>
   </div>
   <script>
     function refreshStatus() {
@@ -35,12 +39,16 @@
     }
     document.getElementById('auth-login').addEventListener('click', async function () {
       var u = document.getElementById('auth-user').value || 'alice';
-      await fetch('/auth/login', {
+      var p = document.getElementById('auth-password').value || '';
+      var res = await fetch('/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: u }),
+        body: JSON.stringify({ user: u, password: p }),
         credentials: 'include',
       });
+      if (!res.ok) {
+        alert('Login failed — try alice/alice or bob/bob.');
+      }
       refreshStatus();
     });
     document.getElementById('auth-logout').addEventListener('click', async function () {
