@@ -1,31 +1,32 @@
-# How to build the IIFE bundle for proxy injection
+# Как собрать IIFE-бандл для proxy-инжекта
 
-The nginx proxy serves `/_rec/recorder.iife.js` as a static file.
-This bundle is built from the SDK source using esbuild.
+nginx-прокси раздаёт `/_rec/recorder.iife.js` как статический файл.
+Этот бандл собирается из исходников SDK через esbuild.
 
-## Build steps
+## Шаги сборки
 
 ```bash
-# From repo root
+# Из корня репо
 cd sdk
 pnpm install
 pnpm build
 # Output: sdk/dist/recorder.iife.js
 
-# Copy to proxy bundle dir
+# Скопировать в proxy-bundle dir
 cp sdk/dist/recorder.iife.js proxy/recorder-bundle/recorder.iife.js
 ```
 
-## What the bundle does
+## Что делает бандл
 
-The IIFE exports a single global `PamRecorder` with two methods: `init` and `stop`.
-nginx injects a small inline script that calls `PamRecorder.init({ endpoint: '/s/' })`
-unconditionally on every HTML response.
+IIFE экспортирует один глобал `PamRecorder` с двумя методами: `init`
+и `stop`. nginx инжектит маленький inline-скрипт, который зовёт
+`PamRecorder.init({ endpoint: '/s/' })` безусловно в каждом HTML-ответе.
 
-The recorder begins in IDLE. It activates only when the backend sets the
-non-HttpOnly `session_present=1` marker cookie on login, and deactivates when
-that cookie disappears on logout. The session UUID is managed inside the SDK
-via `sessionStorage` — no identity is passed in from the host page.
+Рекордер стартует в IDLE. Активируется только когда бэкенд выставит
+non-HttpOnly cookie-маркер `session_present=1` на логине, и
+деактивируется, когда эта cookie исчезает на logout. UUID сессии
+управляется внутри SDK через `sessionStorage` — со страницы хоста
+никакая идентичность не передаётся.
 
-See [`docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md`](../../docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md)
-for the full contract.
+См. [`docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md`](../../docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md)
+для полного контракта.

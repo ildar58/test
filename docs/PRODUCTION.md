@@ -1,261 +1,300 @@
-# Porting to production
+# Порт в продакшн
 
-What the demo Node ingestion stub fakes versus what the real Go service has
-to do. Read this before you point a real product at this code.
+Что демо-стаб подменяет vs что должен делать настоящий Go-сервис.
+Прочитай это, прежде чем направить продукт на этот код.
 
-For the architecture-as-shipped, see [`ARCHITECTURE.md`](ARCHITECTURE.md).
-
----
-
-## 1. Mental model: stub vs. production
-
-The recorder, nginx config, demo page, and replayer are **production-shaped**.
-They make assumptions about the backend contract — same-origin via nginx,
-HttpOnly + marker cookies, opaque session token, `user_id` derived
-server-side — and those assumptions match the design spec.
-
-The Node service in [`ingestion/`](../ingestion) implements the **same
-contract** with stub semantics, so the recorder loop, the lifecycle, and
-the e2e tests are real, but identity, persistence, and security
-hardening are deliberately fake. The list below is the explicit gap.
+Архитектура «как сейчас» — в [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ---
 
-## 2. Auth & session
+## 1. Ментальная модель: стаб vs продакшн
 
-### Replace the user store
+Рекордер, конфиг nginx, демо-страница и реплеер — **production-shaped**.
+Они исходят из предположений о бэкенд-контракте — same-origin через
+nginx, HttpOnly + marker cookies, opaque session token, `user_id`
+выводится сервером — и эти предположения соответствуют design-спеке.
 
-Today: [`ingestion/src/auth.ts`](../ingestion/src/auth.ts) hardcodes
-`alice` and `bob` with bcryptjs hashes committed to the repo. The `users`
-array is a `ReadonlyArray<DemoUser>`.
-
-Production: integrate with the corporate identity provider (LDAP / SSO /
-the existing auth backend that owns user records and password hashes).
-The contract on `/auth/login` should accept the same `{user, password}`
-shape and emit the same two cookies — beyond that, swap the
-`verifyPassword` implementation.
-
-### Replace the session store
-
-Today: in-memory `Map<token, SessionEntry>` in
-[`auth.ts`](../ingestion/src/auth.ts). No TTL, no eviction, no size cap;
-restart wipes everyone out.
-
-Production:
-
-- Persist tokens (Redis / Postgres / Keydb) so restarts don't log
-  everyone out.
-- Enforce an absolute and an idle TTL. After expiry, `getSession` returns
-  `null` → recorder's transport gets 401 → state machine deactivates.
-- Enforce a max-sessions-per-user cap (defence in depth against token
-  flooding).
-- Audit-log token issuance and revocation.
-
-### Use a real token format
-
-Today: 32-byte random hex token, opaque, no embedded claims.
-
-Production: either keep opaque tokens (simplest, requires lookup) or
-switch to short-lived signed JWTs with a denylist for early revocation.
-Either is fine for the recorder — it only ever sees the cookie value,
-which is treated as an opaque string.
-
-### Add `Secure` to the cookies
-
-Today: `httpOnly: true, sameSite: 'lax', path: '/'`. No `Secure` flag
-because the demo runs over HTTP localhost.
-
-Production: add `secure: true` to **both** `res.cookie` calls in
-[`ingestion/src/server.ts`](../ingestion/src/server.ts). The `TODO(prod)`
-comments mark the exact lines. Once that flag is on, the browser will
-refuse to send the cookie over plain HTTP — make sure nginx is doing
-HTTPS termination first.
-
-### Tighten CORS
-
-Today: `cors({ credentials: true })` reflects the request `Origin` header
-for any caller, with credentials allowed.
-
-Production: pin `origin` to the list of known front-end hosts. CSRF
-posture currently relies on (a) nginx serving recorder + app + ingestion
-same-origin and (b) `SameSite=Lax`. Anything that breaks (a) — a separate
-deployment domain for the ingestion service, for instance — needs a real
-CSRF token on every state-changing request.
+Node-сервис в [`ingestion/`](../ingestion) реализует **тот же контракт**
+со stub-семантикой, поэтому recorder-цикл, lifecycle и e2e-тесты —
+настоящие, но identity, persistence и security-hardening намеренно
+упрощены. Список ниже — явный gap-анализ.
 
 ---
 
-## 3. Known vulnerabilities to fix
+## 2. Auth и сессии
 
-These were caught by the post-implementation security review and are
-**deliberately tracked here** rather than fixed in the stub:
+### Заменить хранилище юзеров
 
-### Path traversal in storage
+Сейчас: [`ingestion/src/auth.ts`](../ingestion/src/auth.ts) хардкодит
+`alice` и `bob` с bcryptjs-хэшами, закоммиченными в репо. Массив `users`
+типизирован как `ReadonlyArray<DemoUser>`.
 
-**File:** [`ingestion/src/storage.ts:17`](../ingestion/src/storage.ts#L17)
-**Severity:** High in a production deployment.
+Прод: интеграция с корпоративным identity provider (LDAP / SSO /
+существующий auth-бэкенд, владеющий записями юзеров и хэшами паролей).
+Контракт `/auth/login` должен принимать тот же шейп `{user, password}`
+и эмитить те же две cookie — за этим уже свободно меняй реализацию
+`verifyPassword`.
 
-`session_id` from the request body flows directly into
-`path.join(dataDir(), sessionId + '.jsonl')` without format validation.
-An authenticated client can submit `session_id: "../etc/cron.d/x"` and
-write outside the data directory.
+### Заменить session store
 
-Fix: validate `session_id` against the UUID format in the server handler
-before calling `appendBatch`. If you keep the JSONL-on-disk persistence
-in prod, additionally assert
-`path.resolve(file).startsWith(path.resolve(dataDir()) + path.sep)`
-inside `appendBatch` as defence in depth.
+Сейчас: in-memory `Map<token, SessionEntry>` в
+[`auth.ts`](../ingestion/src/auth.ts). Нет TTL, eviction'а, cap'а;
+рестарт разлогинивает всех.
 
-### Path traversal in GET /sessions/:id
+Прод:
 
-**File:** [`ingestion/src/server.ts:78`](../ingestion/src/server.ts#L78)
-**Severity:** High in a production deployment.
+- Persistent токены (Redis / Postgres / Keydb) — чтобы рестарт никого
+  не разлогинивал.
+- Абсолютный и idle TTL. По истечении `getSession` возвращает `null`
+  → transport ловит 401 → state machine деактивируется.
+- Cap на максимум сессий-на-юзера (defence in depth от token flooding'а).
+- Аудит-лог выдачи и отзыва токенов.
 
-`req.params.id` passes the same gauntlet via `getSessionEvents`. Express
-URL-decodes path params, so `%2F` slashes survive the route matcher and
-land in `path.join` as traversal. The route is also unauthenticated
-(see next item), so the read primitive is reachable to anonymous
-attackers.
+### Использовать настоящий формат токена
 
-Fix: same UUID-format check.
+Сейчас: 32-byte random hex token, opaque, без вложенных claim'ов.
 
-### Unauthenticated read endpoints
+Прод: либо опаковые токены (проще, требует lookup), либо short-lived
+подписанные JWT с denylist'ом для ранней ревокации. Рекордеру всё равно —
+он видит только значение cookie, которое трактует как opaque string.
 
-**File:** [`ingestion/src/server.ts:74,78`](../ingestion/src/server.ts#L74)
-**Severity:** Critical in a production deployment.
+### Добавить `Secure` к cookies
 
-`GET /sessions` and `GET /sessions/:id` have no auth check. The
-[design spec §4.3](superpowers/specs/2026-05-28-auth-gated-recording-design.md#43-go-service-contract)
-mandates "Admin-only role guard" but the stub never implemented it.
-nginx exposes `/sessions` on the public port 80, so anonymous attackers
-can list and download all recordings.
+Сейчас: `httpOnly: true, sameSite: 'lax', path: '/'`. Без `Secure`,
+потому что демо ходит по HTTP localhost.
 
-Fix: add an admin-role guard to both handlers. The guard is best
-implemented as an Express middleware that:
+Прод: добавить `secure: true` **обеим** `res.cookie`-вызовам в
+[`ingestion/src/server.ts`](../ingestion/src/server.ts). Комментарии
+`TODO(prod)` помечают точные строки. Как только этот флаг включён,
+браузер откажется слать cookie по чистому HTTP — убедись, что HTTPS
+терминируется на nginx.
 
-1. Reads the `session` cookie via the same `getSession` lookup.
-2. Verifies the username belongs to an admin role.
-3. Returns 401 / 403 otherwise.
+### Затянуть CORS
 
-In nginx, also consider removing the `location /sessions` block from
-the public port-80 server and serving session reads only from the
-restricted admin port (currently `8081`).
+Сейчас: `cors({ credentials: true })` reflect'ит request `Origin` для
+любого вызывающего, с credentials включёнными.
 
----
-
-## 4. Storage
-
-### Replace JSONL-on-disk
-
-Today: every batch is appended as a JSON line to `data/<sid>.jsonl`, with
-metadata in `data/<sid>.meta.json`. Storage lives in the
-`ingestion-data` Docker volume.
-
-Production:
-
-- Pick a real store. ClickHouse for analytics + S3 for blobs is one
-  shape; pure-S3 keyed by `<user>/<session_id>/<batch_seq>` is simpler
-  for replay-only workloads.
-- Make `appendBatch` idempotent on `(session_id, batch_seq)` so a
-  network retry doesn't double-store events.
-- Add retention. Sessions shouldn't live forever; pick a TTL aligned
-  with your DPIA / GDPR posture.
-- Encrypt at rest.
-
-### Make the replayer scale
-
-The replayer at [`replayer/index.html`](../replayer/index.html) calls
-`GET /sessions/:id` and pulls the full event stream into memory. For
-long sessions this is fine (rrweb compresses well) but for hour-long
-captures you'll want chunked or paginated reads.
-
-### Replayer mounted (fixed)
-
-The replayer is now bind-mounted from `replayer/` into the ingestion
-container via [`proxy/docker-compose.yml`](../proxy/docker-compose.yml).
-The route is reachable at `http://localhost:8081/` in the local stack
-and at `http://localhost:8080/replay/` via the main port. The admin
-auth gap on `GET /sessions[/:id]` is still tracked above.
+Прод: пин'нить `origin` на список известных хостов фронтенда. CSRF-поза
+сейчас опирается на (a) nginx, раздающий recorder + app + ingestion
+same-origin, и (b) `SameSite=Lax`. Что-то, что ломает (a) — например,
+отдельный домен для ingestion — требует настоящего CSRF-токена на
+каждый state-changing запрос.
 
 ---
 
-## 5. Recorder hardening
+## 3. Известные уязвимости
 
-The recorder bundle is production-shaped already, but a few things are
-deliberately not in MVP:
+Эти вещи поймал post-implementation security-review и **намеренно
+зафиксированы здесь**, а не пофикшены в стабе:
 
-- **No `MutationThrottler`.** rrweb 2.0-alpha can crash on pathological
-  DOMs (deep React trees, SVG animations). PostHog's fork has a throttler
-  + max-depth guard — port them before production.
-- **No network plugin.** `fetch`/`XHR` calls are not recorded. If you
-  add the plugin later, you **must** redact `Authorization`, `Cookie`,
-  `x-api-key` and any other secret-bearing headers in the deny-list.
-  See PostHog's `network-plugin.ts` for reference.
-- **No CSP nonce automation.** The nginx config injects an inline
-  `<script>` calling `init({...})`. With a strict CSP that disallows
-  inline scripts you need per-request nonces. Options:
-  - `nginx-plus` with `set_secure_random_alphanum`.
-  - `lua-nginx-module` with `resty.random`.
-  - Upstream app generates the nonce server-side, passes it via response
-    header, nginx reads it with `$upstream_http_x_csp_nonce`.
-- **Cross-origin iframes not recorded.** Default is intentional.
-  Per-iframe opt-in via `recordCrossOriginIframes: true` requires you
-  to inject the bundle inside each iframe origin too.
+### Path traversal в storage
+
+**Файл:** [`ingestion/src/storage.ts:17`](../ingestion/src/storage.ts#L17)
+**Severity:** High в продакшен-деплое.
+
+`session_id` из тела запроса идёт прямо в
+`path.join(dataDir(), sessionId + '.jsonl')` без валидации формата.
+Аутентифицированный клиент может прислать `session_id: "../etc/cron.d/x"`
+и писать вне data-директории.
+
+Fix: валидировать `session_id` по UUID-формату в server-handler'е до
+вызова `appendBatch`. Если оставляешь JSONL-на-диске в проде — ещё и
+ассерт `path.resolve(file).startsWith(path.resolve(dataDir()) + path.sep)`
+внутри `appendBatch` как defence in depth.
+
+### Path traversal в GET /sessions/:id
+
+**Файл:** [`ingestion/src/server.ts:78`](../ingestion/src/server.ts#L78)
+**Severity:** High в продакшен-деплое.
+
+`req.params.id` проходит ту же дорогу через `getSessionEvents`. Express
+URL-decod'ит path-параметры, поэтому слэши `%2F` переживают
+route-matcher и приземляются в `path.join` как traversal. Маршрут ещё и
+без аутентификации (см. следующий пункт), так что read-примитив
+доступен анонимным атакующим.
+
+Fix: та же проверка UUID-формата.
+
+### Читающие эндпоинты без auth
+
+**Файл:** [`ingestion/src/server.ts:74,78`](../ingestion/src/server.ts#L74)
+**Severity:** Critical в продакшен-деплое.
+
+`GET /sessions` и `GET /sessions/:id` не проверяют auth никак. Дизайн-спека
+[§4.3](superpowers/specs/2026-05-28-auth-gated-recording-design.md#43-go-service-contract)
+требует «Admin-only role guard», но стаб его не реализовал. Nginx
+выставляет `/sessions` на публичный 80 порт — анонимы могут листать
+и скачивать все записи.
+
+Fix: добавить middleware admin-роли на оба хендлера. Лучше всего —
+Express middleware, который:
+
+1. Читает `session` cookie через тот же `getSession` lookup.
+2. Проверяет, что username принадлежит admin-роли.
+3. Возвращает 401 / 403 иначе.
+
+В nginx — рассмотри удаление блока `location /sessions` с публичного
+порта 80, оставив reads только на admin-порту (сейчас `8081`).
 
 ---
 
-## 6. Operational concerns
+## 4. Хранилище
+
+### Заменить JSONL на диске
+
+Сейчас: каждый батч append'ится JSON-строкой в `data/<sid>.jsonl`,
+с метаданными в `data/<sid>.meta.json`. Хранится в bind-mount'е
+`ingestion/data/` на хосте (раньше был именованный Docker-volume).
+
+Прод:
+
+- Выбрать настоящий store. ClickHouse для аналитики + S3 для блобов —
+  один вариант; чистый S3 с ключом `<user>/<session_id>/<batch_seq>` —
+  проще для replay-only нагрузки.
+- Сделать `appendBatch` идемпотентным по `(session_id, batch_seq)` —
+  чтобы сетевой ретрай не складывал события дважды.
+- Добавить retention. Сессии не должны жить вечно; выбери TTL,
+  согласованный с DPIA / GDPR.
+- Шифровать at-rest.
+
+### Сделать реплеер масштабируемым
+
+Реплеер в [`replayer/index.html`](../replayer/index.html) дёргает
+`GET /sessions/:id` и тащит полный поток событий в память. Для коротких
+сессий нормально (rrweb хорошо жмётся), но для часовых записей нужны
+chunk'и или пагинированное чтение.
+
+### Реплеер замаунчен (исправлено)
+
+Реплеер теперь bind-mount'ится из `replayer/` в контейнер ingestion
+через [`proxy/docker-compose.yml`](../proxy/docker-compose.yml).
+Маршрут доступен на `http://localhost:8081/` в локальном стеке и на
+`http://localhost:8080/replay/` через основной порт. Admin-auth gap на
+`GET /sessions[/:id]` всё ещё отслеживается выше.
+
+---
+
+## 5. Hardening рекордера
+
+Бандл рекордера уже production-shaped, но несколько вещей намеренно
+вне MVP:
+
+- **Нет `MutationThrottler`.** rrweb 2.0-alpha может крашить на
+  патологических DOM (глубокие React-деревья, SVG-анимации). У форка
+  PostHog есть throttler + max-depth guard — порти их до прода.
+- **Нет network-plugin'а.** `fetch`/`XHR` не записываются. Если будешь
+  добавлять — **обязательно** редактируй deny-list по `Authorization`,
+  `Cookie`, `x-api-key` и прочим заголовкам с секретами. См. PostHog
+  `network-plugin.ts` для референса.
+- **Нет автоматизации CSP-nonce.** Конфиг nginx инжектит inline
+  `<script>`, который зовёт `init({...})`. При строгом CSP без inline
+  нужны per-request nonce'ы:
+  - `nginx-plus` с `set_secure_random_alphanum`.
+  - `lua-nginx-module` с `resty.random`.
+  - Upstream-приложение генерит nonce server-side, отдаёт через
+    response-header, nginx читает `$upstream_http_x_csp_nonce`.
+- **Cross-origin iframe'ы не записываются.** По умолчанию намеренно.
+  Per-iframe opt-in через `recordCrossOriginIframes: true` требует
+  инжектить бандл и в каждом cross-origin'е iframe тоже.
+
+---
+
+## 6. Video pipeline
+
+`tools/video/` — CLI для экспорта сессии в `.webm`. Сейчас он лежит
+рядом с проектом и работает локально; чтобы вынести в прод-инструмент
+(батч-конвертер, GET endpoint), нужно:
+
+### Браузер и ffmpeg в окружении
+
+Сейчас CLI авто-находит Chrome for Testing под `~/chrome/` (от
+`npx @puppeteer/browsers install chrome@stable`) или берёт путь из
+`CHROME_EXECUTABLE`. В контейнерном окружении: либо ставить Chrome в
+Docker-образ, либо использовать готовый образ `mcr.microsoft.com/playwright`.
+
+На macOS arm64 встроенный Playwright'ом `ffmpeg-mac` приходит без
+подписи и убивается Gatekeeper'ом — CLI содержит «auto-heal»: при
+старте пробует запустить `ffmpeg-mac -version`, если падает — копирует
+системный ffmpeg (`brew install ffmpeg`) в кэш Playwright. В Linux-контейнере
+эта проблема не возникает, авто-fix просто ничего не делает.
+
+### Превратить в server-side endpoint
+
+Сейчас CLI зовётся вручную из локального cwd. Чтобы сделать `GET
+/sessions/:id/video`:
+
+1. Положи `transformToVideo` логику в общий модуль (вынести из export.ts).
+2. Поставь worker (BullMQ / Inngest / Temporal) — конвертация занимает
+   2-3 секунды на минуту сессии и блокирует CPU.
+3. Сохраняй `.webm` в тот же storage, что и `.jsonl`.
+4. Не забудь добавить admin-guard, тот же, что для `/sessions[/:id]`.
+
+### Альтернативный пайплайн
+
+Если хочешь MP4 вместо .webm:
+
+```bash
+ffmpeg -i <sid>.webm -c:v libx264 -preset fast <sid>.mp4
+```
+
+Можно встроить пост-шаг в `tools/video/src/export.ts`, если стейкхолдеры
+требуют MP4. В демо это YAGNI.
+
+---
+
+## 7. Операционные вопросы
 
 ### Multi-tenancy
 
-The recorder + ingestion design assumes a single tenant. Multi-tenant
-deployments need:
+Рекордер + ingestion-дизайн рассчитан на single tenant. Multi-tenant
+деплои требуют:
 
-- Tenant id in the cookie (or derived from the auth token's claims).
-- Tenant id as part of the storage key.
-- Per-tenant rate-limits + storage quotas.
-- Tenant-isolated admin role guards.
+- Tenant id в cookie (или выводится из claim'ов auth-токена).
+- Tenant id как часть storage-ключа.
+- Per-tenant rate-limit'ы + storage-квоты.
+- Tenant-isolated admin-role guards.
 
 ### Rate limiting
 
-The stub has none. Production needs limits on:
+В стабе нет. В проде нужны лимиты на:
 
-- `POST /auth/login` per IP and per username (lockout after N failed
-  attempts).
-- `POST /s/` per session_id (cap on batches-per-second and total batches
-  per session).
-- `GET /sessions/:id` per admin role (replay endpoint is heavy).
+- `POST /auth/login` per IP и per username (lockout после N failed
+  попыток).
+- `POST /s/` per session_id (cap на batches-per-second и общий лимит
+  на сессию).
+- `GET /sessions/:id` per admin-role (replay-эндпоинт тяжёлый).
 
 ### Observability
 
-The stub has zero. At minimum:
+В стабе ноль. Минимум:
 
-- Structured request logs (without bodies — events contain PII even
-  when masked).
-- Metrics on the SDK side via the existing `onUnauthorized` / cool-down
-  pathway: how many sessions enter cool-down per hour tells you about
-  cookie-expiry races.
-- A health endpoint on the ingestion service.
+- Структурированные логи запросов (без тел — события содержат PII даже
+  замаскированные).
+- Метрики SDK через существующий `onUnauthorized` / cool-down путь:
+  сколько сессий уходит в cool-down в час — расскажет о cookie-expiry
+  гонках.
+- Health-endpoint на ingestion-сервисе.
 
 ---
 
-## 7. Migration checklist
+## 8. Migration checklist
 
-If you're porting today's stub to a real Go service, here's a sane
-order:
+Если портируешь сегодняшний стаб в настоящий Go-сервис, разумный
+порядок такой:
 
-1. ✅ Recorder, nginx, demo, e2e — already done, no change required.
-2. **Implement the Go auth backend** — match the wire contract in
-   [`ARCHITECTURE.md`](ARCHITECTURE.md#6-wire-format). Add the
-   `Secure` cookie flag and the bullet-list cookie-store changes.
-3. **Implement the Go ingestion handler** — same contract for `POST /s/`,
-   but with UUID validation on `session_id` and a real storage backend.
-4. **Add the admin-role guard** to the read endpoints.
-5. **Add observability + rate limiting + audit logs.**
-6. Point nginx at the Go service (replace the `ingestion` upstream in
+1. ✅ Recorder, nginx, demo, e2e — уже сделано, ничего менять не нужно.
+2. **Реализовать Go auth-бэкенд** — матчить wire-контракт в
+   [`ARCHITECTURE.md`](ARCHITECTURE.md#6-wire-формат). Добавить
+   `Secure`-флаг cookie и изменения cookie-store из списка выше.
+3. **Реализовать Go ingestion-хендлер** — тот же контракт `POST /s/`,
+   но с UUID-валидацией `session_id` и настоящим storage-бэкендом.
+4. **Добавить admin-role guard** на читающие эндпоинты.
+5. **Добавить observability + rate limiting + аудит-логи.**
+6. Направить nginx на Go-сервис (заменить `ingestion` upstream в
    [`proxy/nginx.conf`](../proxy/nginx.conf)).
-7. Delete the Node `ingestion/` package — once the Go service serves the
-   same contract, the stub has no purpose. The recorder doesn't change.
+7. Удалить Node `ingestion/`-пакет — как только Go-сервис раздаёт тот
+   же контракт, стаб не нужен. Рекордер не меняется.
 
-The recorder's wire format and lifecycle are explicitly designed so step
-7 is a drop-in replacement: as long as the Go service issues the same
-two cookies and gates `POST /s/` on them, the SDK won't notice.
+Wire-формат и lifecycle рекордера специально спроектированы так, чтобы
+шаг 7 был drop-in заменой: пока Go-сервис эмитит те же две cookie и
+гейтит `POST /s/`, SDK ничего не заметит.

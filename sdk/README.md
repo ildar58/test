@@ -1,33 +1,34 @@
-# @pam/web-session-recorder (internal)
+# @pam/web-session-recorder (внутренний)
 
-Source for the recorder IIFE bundle injected by the nginx proxy.
+Исходник IIFE-бандла рекордера, который инжектится nginx'ом.
 
-This package is **not published to npm** — it exists only to produce
-`dist/recorder.iife.js`, which `proxy/nginx.conf` serves at `/_rec/recorder.iife.js`.
+Этот пакет **не публикуется в npm** — он существует только для того,
+чтобы собирать `dist/recorder.iife.js`, который `proxy/nginx.conf`
+раздаёт по `/_rec/recorder.iife.js`.
 
-## Build
+## Сборка
 
 ```bash
 pnpm --filter @pam/web-session-recorder build
 cp sdk/dist/recorder.iife.js proxy/recorder-bundle/recorder.iife.js
 ```
 
-## Runtime contract
+## Runtime-контракт
 
-`init({ endpoint })` registers the recorder. It stays IDLE until the
-backend sets a `session_present=1` marker cookie on login; on logout,
-when the marker disappears, the recorder stops and clears its session id.
+`init({ endpoint })` регистрирует рекордер. Он сидит в IDLE, пока
+бэкенд не выставит cookie-маркер `session_present=1` на логине; на
+logout, когда маркер исчезает, рекордер стопает и чистит session id.
 
-User identity is **not** part of the wire format — the server derives it
-from the HttpOnly `session` cookie that browsers send automatically with
-each batch.
+Идентичность пользователя **не** входит в wire-формат — сервер
+выводит её из HttpOnly cookie `session`, которую браузер шлёт
+автоматически с каждым батчем.
 
-See [`docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md`](../docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md)
-for the full architecture.
+См. [`docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md`](../docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md)
+для полной архитектуры.
 
-## Config defaults
+## Дефолты конфига
 
-See `src/config.ts`. Key privacy defaults:
+См. `src/config.ts`. Ключевые privacy-дефолты:
 - `maskAllInputs: true`
 - `blockClass: 'rec-no-capture'`
 - `maskTextClass: 'rec-mask'`

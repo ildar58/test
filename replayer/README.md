@@ -1,22 +1,24 @@
 # Replayer UI
 
-Single HTML page that loads `rrweb-player` from CDN and plays back sessions
-fetched from the ingestion service.
+Однофайловая HTML-страница, которая грузит `rrweb-player` с CDN и
+воспроизводит сессии, полученные из ingestion-сервиса.
 
-## Access
+## Доступ
 
-After starting the stack:
+После поднятия стека:
 
-- Via ingestion service: `http://localhost:3001/replay`
-- Via nginx admin port: `http://localhost:8080`
+- Через ingestion-сервис напрямую: `http://localhost:3001/replay`
+  (при `pnpm dev:ingestion`)
+- Через nginx admin-порт: `http://localhost:8081`
+- Через основной nginx-порт: `http://localhost:8080/replay/`
 
-## Dependencies (CDN — no install needed)
+## Зависимости (CDN — установка не нужна)
 
-- `rrweb-player` latest from jsDelivr
+- `rrweb-player` latest с jsDelivr
 
-## Customization
+## Кастомизация
 
-Replace CDN links with local builds for air-gapped environments:
+Замени CDN-ссылки на локальные сборки для air-gapped окружений:
 
 ```html
 <link rel="stylesheet" href="/assets/rrweb-player.css" />

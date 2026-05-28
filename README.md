@@ -1,34 +1,34 @@
 # @pam/web-session-recorder
 
-A browser session recorder built on [rrweb](https://github.com/rrweb-io/rrweb).
-An **nginx reverse proxy** injects the recorder into every HTML response — the
-host application needs no source changes. Recording is **gated by authentication**:
-the recorder stays idle until the backend sets a marker cookie on login, then
-captures DOM mutations and user interactions and ships them to an ingestion service.
+Рекордер браузерных сессий поверх [rrweb](https://github.com/rrweb-io/rrweb).
+**Reverse-прокси на nginx** вставляет рекордер в каждый HTML-ответ — приложение
+не нужно править. Запись **гейтится по аутентификации**: рекордер сидит в idle,
+пока бэкенд не выставит маркер-cookie на логине, потом захватывает DOM-мутации
+и пользовательские действия и шлёт батчи в ingestion-сервис.
 
-This is a study/reference implementation. The recorder, nginx, demo app, and
-replayer are production-shaped. The ingestion service is an explicit Node stub
-of the real Go service; see [`docs/PRODUCTION.md`](docs/PRODUCTION.md) for what
-needs to change before shipping.
+Это учебная / референс-реализация. Рекордер, nginx, демо-приложение и реплеер
+сделаны в production-форме. Ingestion-сервис — это явный Node-стаб настоящего
+Go-сервиса; что нужно изменить перед продом — см.
+[`docs/PRODUCTION.md`](docs/PRODUCTION.md).
 
 ---
 
-## At a glance
+## Кратко
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                            Browser                                      │
+│                            Браузер                                      │
 │                                                                         │
-│   Angular SPA (or any HTML app) with /login route                       │
+│   Angular SPA (или любое HTML-приложение) с маршрутом /login            │
 │   ┌──────────────────────────────────────────────────────────────┐      │
-│   │ recorder.iife.js (injected by nginx into every page)         │      │
+│   │ recorder.iife.js (инжектится nginx'ом в каждую страницу)      │      │
 │   │   ┌─────────────────────────────────────────────────────┐    │      │
-│   │   │ Idle until backend sets `session_present=1` cookie  │    │      │
-│   │   │ → captures DOM events                                │    │      │
-│   │   │ → POSTs gzip+base64 batches to /s/ with credentials  │    │      │
+│   │   │ Idle, пока бэкенд не выставит cookie `session_present=1` │    │      │
+│   │   │ → захватывает DOM-события                            │    │      │
+│   │   │ → шлёт gzip+base64 батчи в /s/ с credentials         │    │      │
 │   │   └─────────────────────────────────────────────────────┘    │      │
 │   └──────────────────────────────────────────────────────────────┘      │
-│   cookies: session (HttpOnly, opaque token), session_present (JS-readable) │
+│   cookies: session (HttpOnly, opaque token), session_present (JS читает) │
 └──────────────────────────────────┬─────────────────────────────────────┘
                                     │
                                     ▼
@@ -36,7 +36,7 @@ needs to change before shipping.
                        │       nginx             │
                        │  /  → upstream app      │
                        │       (sub_filter       │
-                       │        injects script)  │
+                       │        вставляет скрипт)│
                        │  /_rec/ → static bundle │
                        │  /s/    → ingestion     │
                        │  /auth/ → ingestion     │
@@ -45,200 +45,201 @@ needs to change before shipping.
                                    │
                                    ▼
                     ┌─────────────────────────────┐
-                    │  Node ingestion (stub)      │
+                    │  Node ingestion (стаб)       │
                     │  POST /auth/login           │
                     │  POST /auth/logout          │
                     │  POST /s/    (cookie-gated) │
                     │  GET  /sessions[/:id]       │
                     │                             │
-                    │  bcryptjs password verify   │
-                    │  in-memory session store    │
-                    │  data/<sid>.jsonl on disk   │
+                    │  bcryptjs проверка пароля    │
+                    │  in-memory store сессий      │
+                    │  data/<sid>.jsonl на диске   │
                     └─────────────────────────────┘
 ```
 
-The recorder gates itself on a non-HttpOnly `session_present=1` marker cookie
-set by the backend on login. The real auth token is a separate HttpOnly cookie
-the JavaScript never touches. User identity is derived server-side from that
-HttpOnly cookie — it never appears in the wire format.
+Рекордер гейтится по non-HttpOnly cookie-маркеру `session_present=1`,
+которую бэкенд ставит на логине. Настоящий auth-токен — это отдельная
+HttpOnly cookie, JS до неё не дотягивается. Идентичность пользователя
+выводится сервером из той самой HttpOnly cookie — она не появляется в
+wire-формате.
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full lifecycle, the
-state machine, and what each cookie does.
+См. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) для полного жизненного
+цикла, state machine и того, что делает каждая cookie.
 
 ---
 
 ## Quick start
 
-You need Docker, Node ≥ 20 (Node 24 LTS recommended), and pnpm ≥ 9.
+Нужны Docker, Node ≥ 20 (рекомендуется Node 24 LTS) и pnpm ≥ 9.
 
 ```bash
-# 1. Install workspace dependencies
+# 1. Установить зависимости workspace'а
 pnpm install
 
-# 2. Build the recorder bundle and copy it where nginx will serve it
+# 2. Собрать бандл рекордера и положить его туда, где nginx его раздаёт
 pnpm build
 cp sdk/dist/recorder.iife.js proxy/recorder-bundle/recorder.iife.js
 
-# 3. Start the full stack (nginx + demo app + ingestion)
+# 3. Поднять полный стек (nginx + demo app + ingestion)
 pnpm dev:proxy
 ```
 
-Open <http://localhost:8080>. You'll see a demo page with an Auth panel.
-Click **Log in** (default creds `alice` / `alice`), interact with the page,
-then click **Log out**.
+Открой <http://localhost:8080>. Увидишь демо-страницу с панелью Auth.
+Жми **Log in** (дефолтные креды `alice` / `alice`), пощёлкай по странице,
+потом **Log out**.
 
-For a step-by-step development walkthrough including troubleshooting see
+Пошаговый dev-walkthrough с траблшутингом — в
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
 ---
 
-## Viewing recordings
+## Просмотр записей
 
-Recordings land in `ingestion/data/` on the host filesystem — one
-`<session_id>.jsonl` (events) and one `<session_id>.meta.json` (user,
-timestamps, batch count) per session. Three ways to inspect them:
+Записи лежат в `ingestion/data/` на хосте — один файл `<session_id>.jsonl`
+(события) и один `<session_id>.meta.json` (юзер, таймстампы, счётчик батчей)
+на каждую сессию. Три способа их посмотреть:
 
 ```bash
-# 1. List sessions as JSON via the HTTP API
+# 1. Список сессий через HTTP API
 curl http://localhost:8080/sessions | jq
 
-# 2. Play a session in the in-browser replayer
+# 2. Воспроизвести сессию в браузерном реплеере
 open http://localhost:8081
-# (pick a session_id from the list above, paste into the input)
+# (возьми session_id из списка выше, вставь в поле ввода)
 
-# 3. Export a session to a .webm video file
+# 3. Экспортировать сессию в .webm видеофайл
 pnpm video <session_id>
 # → ingestion/data/<session_id>.webm
 ```
 
-The video export uses Playwright + `rrweb-player` directly (no `rrvideo`
-binary needed — its hardcoded `chromium.launch()` no longer matches
-modern Playwright's headless model). Requirements:
+Видеоэкспорт сделан через Playwright + `rrweb-player` напрямую (без бинарника
+`rrvideo` — у него хардкод `chromium.launch()`, который не совместим с
+современной headless-моделью Playwright). Требования:
 
-- **Chrome for Testing** installed via `npx @puppeteer/browsers install chrome@stable`
-  (the CLI auto-detects it under `~/chrome/`). Override via the
-  `CHROME_EXECUTABLE` env var if you have it elsewhere.
-- **ffmpeg** in `$PATH` (e.g. `brew install ffmpeg`) — Playwright's
-  bundled `ffmpeg-mac` ships unsigned on macOS arm64 and Gatekeeper
-  blocks it. The CLI auto-heals by copying the system ffmpeg into
-  Playwright's cache once per machine; without a system ffmpeg
-  `recordVideo` would fail.
-
----
-
-## Repository layout
-
-| Path | What it is |
-|------|------------|
-| [`sdk/`](sdk) | TypeScript source for the recorder IIFE bundle. Internal package; not published to npm. |
-| [`ingestion/`](ingestion) | Express service — demo Node stub of the real Go auth/ingestion service. |
-| [`proxy/`](proxy) | nginx configuration + Docker Compose for the local stack. |
-| [`demo-app/`](demo-app) | Minimal HTML app sitting behind nginx as the recorded application. |
-| [`replayer/`](replayer) | Single-file replayer UI built on rrweb-player. |
-| [`e2e/`](e2e) | Playwright end-to-end tests that drive the full Docker stack. |
-| [`docs/`](docs) | This documentation set; design specs and implementation plans for past changes. |
-
-Each package has its own README with focused details. Start from this one.
+- **Chrome for Testing** установлен через `npx @puppeteer/browsers install chrome@stable`
+  (CLI авто-находит его в `~/chrome/`). Если у тебя бинарь лежит в другом
+  месте — задай его путь в env-переменной `CHROME_EXECUTABLE`.
+- **ffmpeg** в `$PATH` (например `brew install ffmpeg`) — на macOS arm64
+  Playwright ставит unsigned бинарник `ffmpeg-mac`, и Gatekeeper его убивает.
+  CLI авто-чинит это, копируя системный ffmpeg в кэш Playwright один раз на
+  машину; без системного ffmpeg `recordVideo` не работает.
 
 ---
 
-## Documentation map
+## Структура репозитория
 
-| Doc | When to read it |
-|-----|-----------------|
-| [`README.md`](README.md) | You are here. Overview, quick start. |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the cookies, state machine, and data flow work in detail. Read this before touching the SDK. |
-| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | Local dev, hot-reload, troubleshooting Docker / Playwright / Node versions. Read this when something doesn't run. |
-| [`docs/PRODUCTION.md`](docs/PRODUCTION.md) | What the demo stub fakes vs what the real Go service must do; security checklist; deployment posture. Read this when porting. |
-| [`docs/superpowers/specs/`](docs/superpowers/specs) | Design specs for past architectural changes (auth gating, demo auth). Historical context. |
-| [`docs/superpowers/plans/`](docs/superpowers/plans) | TDD implementation plans matching those specs. Useful if you want to replay how a change was built. |
+| Путь | Что это |
+|------|---------|
+| [`sdk/`](sdk) | Исходники IIFE-бандла рекордера на TypeScript. Внутренний пакет; в npm не публикуется. |
+| [`ingestion/`](ingestion) | Express-сервис — Node-стаб настоящего Go auth/ingestion сервиса. |
+| [`proxy/`](proxy) | Конфиг nginx + Docker Compose локального стека. |
+| [`demo-app/`](demo-app) | Минимальное HTML-приложение, которое сидит за nginx как «продуктовое». |
+| [`replayer/`](replayer) | Однофайловый реплеер на rrweb-player. |
+| [`e2e/`](e2e) | E2E-тесты на Playwright, гоняют полный Docker-стек. |
+| [`tools/video/`](tools/video) | CLI экспорта сессии в `.webm` (Playwright + rrweb-player). |
+| [`docs/`](docs) | Эта документация; design-спеки и планы прошлых изменений. |
 
----
-
-## Recorder configuration
-
-Sane privacy-first defaults (mirroring PostHog's preset):
-
-| Option | Default | Notes |
-|--------|---------|-------|
-| `maskAllInputs` | `true` | All `<input>` values masked on every event. |
-| `maskInputOptions` | `{ password: true }` | Password inputs always masked even if `maskAllInputs: false`. |
-| `blockClass` | `'rec-no-capture'` | Add this class to an element to skip it and its subtree entirely. |
-| `maskTextClass` | `'rec-mask'` | Add this class to replace text content with `***`. |
-| `ignoreClass` | `'rec-ignore-input'` | Add to inputs to ignore typing entirely. |
-| `inlineStylesheet` | `true` | Inline `<style>` content into the snapshot. |
-| `collectFonts` | `false` | Don't capture web fonts (privacy + size). |
-| `recordCrossOriginIframes` | `false` | Cross-origin iframes are not recorded. |
-| `markerCookieName` | `'session_present'` | Non-HttpOnly companion cookie the backend sets on login. |
-| `markerPollMs` | `5_000` | Marker observation cadence (also reacts to `focus` and `visibilitychange`). |
-| `unauthorizedThreshold` | `3` | Consecutive 401-induced deactivations before cool-down. |
-| `unauthorizedCooldownMs` | `60_000` | Cool-down window after the threshold is reached. |
-
-These are passed through to `init({ ... })`. In the Variant A nginx flow, the
-default snippet calls `init({ endpoint: '/s/' })` with no overrides — change
-the snippet in [`proxy/nginx.conf`](proxy/nginx.conf) to override.
+В каждом пакете свой README с подробностями. Начинать читать — отсюда.
 
 ---
 
-## Wire format
+## Карта документации
 
-Batches sent by the recorder to `POST /s/`:
+| Документ | Когда читать |
+|----------|-------------|
+| [`README.md`](README.md) | Ты здесь. Обзор, quick start. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Как работают cookies, state machine и поток данных в деталях. Прочитай **до** того, как лезть в SDK. |
+| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | Локальная разработка, hot-reload, траблшутинг Docker / Playwright / версий Node. Читать, когда что-то не запускается. |
+| [`docs/PRODUCTION.md`](docs/PRODUCTION.md) | Что демо-стаб подменяет vs что должен делать настоящий Go-сервис; security-чеклист; deployment-поза. Читать, когда портируешь в прод. |
+| [`docs/superpowers/specs/`](docs/superpowers/specs) | Design-спеки прошлых архитектурных изменений (auth gating, demo auth, view recordings). Исторический контекст. Написаны на английском — это session-артефакты. |
+| [`docs/superpowers/plans/`](docs/superpowers/plans) | TDD-планы реализации, соответствующие этим спекам. Полезно, если интересно, как именно строили изменение. |
+
+---
+
+## Конфиг рекордера
+
+Sane privacy-first дефолты (зеркалят пресет PostHog):
+
+| Опция | Default | Заметки |
+|-------|---------|---------|
+| `maskAllInputs` | `true` | Все значения `<input>` маскируются в каждом событии. |
+| `maskInputOptions` | `{ password: true }` | Пароли маскируются всегда, даже если `maskAllInputs: false`. |
+| `blockClass` | `'rec-no-capture'` | Добавь этот класс к элементу — он и его поддерево полностью игнорируются. |
+| `maskTextClass` | `'rec-mask'` | Добавь этот класс — текст содержимого заменится на `***`. |
+| `ignoreClass` | `'rec-ignore-input'` | Добавь к input'у — печать в нём игнорируется. |
+| `inlineStylesheet` | `true` | Инлайнить содержимое `<style>` в снапшот. |
+| `collectFonts` | `false` | Не собирать веб-шрифты (приватность + размер). |
+| `recordCrossOriginIframes` | `false` | Cross-origin iframe'ы не пишутся. |
+| `markerCookieName` | `'session_present'` | Имя non-HttpOnly cookie-маркера, который бэкенд ставит на логине. |
+| `markerPollMs` | `5_000` | Период опроса маркера (плюс реакция на `focus` и `visibilitychange`). |
+| `unauthorizedThreshold` | `3` | Сколько 401-induced деактиваций подряд до cool-down. |
+| `unauthorizedCooldownMs` | `60_000` | Окно cool-down после достижения порога. |
+
+Передаются в `init({ ... })`. В nginx-варианте дефолтный сниппет зовёт
+`init({ endpoint: '/s/' })` без оверрайдов — для оверрайда правь сниппет
+в [`proxy/nginx.conf`](proxy/nginx.conf).
+
+---
+
+## Wire-формат
+
+Батчи, которые рекордер шлёт в `POST /s/`:
 
 ```ts
 {
-  session_id: string;        // UUID, generated client-side per ACTIVE phase
-  batch_seq: number;         // monotonic per session, starts at 1
+  session_id: string;        // UUID, генерируется на клиенте на каждую ACTIVE-фазу
+  batch_seq: number;         // монотонно растёт внутри сессии, начинается с 1
   events_b64_gzip: string;   // base64(gzip(JSON.stringify(eventWithTime[])))
 }
 ```
 
-The browser sends the auth cookies automatically (`credentials: 'include'`).
-`user_id` is **not** in the wire format — the server derives it server-side
-from the `session` HttpOnly cookie. Storage appends each batch as a line to
-`data/<session_id>.jsonl`; the replayer reconstructs by ungzipping and
-concatenating in order.
+Браузер шлёт auth-cookies автоматически (`credentials: 'include'`).
+`user_id` **отсутствует** в wire-формате — сервер выводит его на сервере
+из HttpOnly cookie `session`. Хранилище кладёт каждый батч строкой в
+`data/<session_id>.jsonl`; реплеер восстанавливает, разжимая и
+конкатенируя по порядку.
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#wire-format) for the full
-contract including the auth endpoints.
+См. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#6-wire-формат) — полный
+контракт включая auth-эндпоинты.
 
 ---
 
-## Testing
+## Тестирование
 
 ```bash
-pnpm test           # unit + integration (vitest) — fast, runs in CI
-pnpm test:e2e       # Playwright + full Docker stack — local only
-pnpm typecheck      # tsc --noEmit across all packages
+pnpm test           # unit + интеграционные (vitest) — быстро, гоняется в CI
+pnpm test:e2e       # Playwright + полный Docker-стек — только локально
+pnpm typecheck      # tsc --noEmit по всем пакетам
 ```
 
-E2E tests require Docker. Playwright installs its own headless Chromium on
-first run; if you already have Chrome for Testing installed somewhere else,
-see [`e2e/README.md`](e2e/README.md#using-an-already-installed-chrome) for
-the `CHROME_EXECUTABLE` opt-in.
+E2E требуют Docker. Playwright скачивает свой headless Chromium при первом
+запуске; если у тебя уже стоит Chrome for Testing где-то ещё — смотри
+[`e2e/README.md`](e2e/README.md#использование-уже-установленного-chrome)
+про опт-ин через `CHROME_EXECUTABLE`.
 
-Current coverage: 33 SDK + 21 ingestion unit/integration tests, plus 5
-Playwright scenarios exercising the full Variant A lifecycle.
-
----
-
-## Known limitations
-
-The following are **deliberate gaps** in this study implementation. Each is
-covered in detail in [`docs/PRODUCTION.md`](docs/PRODUCTION.md):
-
-- **Path-traversal in `ingestion/src/storage.ts`** — `session_id` from the
-  request body flows into a file path without validation. Authenticated
-  attacker can write outside the data directory. Tracked.
-- **`GET /sessions` and `GET /sessions/:id` are unauthenticated** — the
-  design spec calls for an admin role guard. The Node stub never implemented
-  it. Tracked.
-- **In-memory session store has no TTL or cap** — restart wipes all sessions.
-  Fine for the stub; production must add eviction.
-- **Demo passwords are committed in plaintext-hash** — `alice/alice`,
-  `bob/bob`. The whole `ingestion/src/auth.ts` users array is a fixture.
+Текущее покрытие: 33 SDK + 21 ingestion + 9 video unit/integration тестов,
+плюс 5 сценариев Playwright, гоняющих полный Variant A lifecycle.
 
 ---
 
-## License
+## Известные ограничения
 
-MIT — see [LICENSE](LICENSE).
+Это **намеренные пробелы** в учебной реализации. Подробности — в
+[`docs/PRODUCTION.md`](docs/PRODUCTION.md):
+
+- **Path-traversal в `ingestion/src/storage.ts`** — `session_id` из тела
+  запроса попадает в путь к файлу без валидации. Аутентифицированный
+  атакующий может писать вне data-директории. Зафиксировано как
+  follow-up.
+- **`GET /sessions` и `GET /sessions/:id` не требуют auth** — design-спека
+  требует admin-role guard. В Node-стабе не реализовано. Зафиксировано.
+- **In-memory session store без TTL и cap** — рестарт сервера разлогинивает
+  всех. ОК для стаба; в проде нужно eviction.
+- **Демо-пароли закоммичены в виде plaintext-хэшей** — `alice/alice`,
+  `bob/bob`. Весь массив `users` в `ingestion/src/auth.ts` — фикстура.
+
+---
+
+## Лицензия
+
+MIT — см. [LICENSE](LICENSE).

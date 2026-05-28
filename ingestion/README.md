@@ -1,34 +1,34 @@
-# Ingestion Service (stub of the Go contract)
+# Ingestion-сервис (стаб Go-контракта)
 
-Express server that accepts session batches from the nginx-injected recorder.
-This is a stub of the production Go service — sufficient to drive the local
-demo and E2E tests, but not a production-grade implementation.
+Express-сервер, принимающий батчи событий от nginx-инжектированного
+рекордера. Это стаб настоящего Go-сервиса — достаточно, чтобы гонять
+локальное демо и E2E, но не production-grade реализация.
 
-## Endpoints
+## Эндпоинты
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/auth/login` | Stub: sets `session=<user>; HttpOnly` and `session_present=1` cookies. |
-| POST | `/auth/logout` | Stub: clears both cookies (`Max-Age=0`). |
-| POST | `/s/` | Ingest event batch. Requires `session` cookie — returns 401 otherwise. `user_id` is derived from the cookie value and stored alongside the batch. |
-| GET | `/sessions` | List all sessions. |
-| GET | `/sessions/:id` | Get full event array for a session. |
+| Method | Path | Описание |
+|--------|------|----------|
+| POST | `/auth/login` | Стаб: ставит cookies `session=<token>; HttpOnly` (token — random hex) и `session_present=1`. Проверяет пароль через bcryptjs против захардкоженных юзеров. |
+| POST | `/auth/logout` | Стаб: чистит обе cookie (`Max-Age=0`) и убивает запись в in-memory session-store. |
+| POST | `/s/` | Приём батча событий. Требует cookie `session` — иначе 401. `user_id` выводится из значения cookie и сохраняется рядом с батчем. |
+| GET | `/sessions` | Список всех сессий. |
+| GET | `/sessions/:id` | Полный массив событий по сессии. |
 
-## Run
+## Запуск
 
 ```bash
 cd ingestion
 pnpm install
 pnpm dev        # tsx watch
-# or
+# или
 pnpm build && pnpm start
 ```
 
-Default port: `3001`. Override via `PORT` env var.
+Дефолтный порт: `3001`. Переопределяется через env `PORT`.
 
-## Storage
+## Хранилище
 
-Batches are stored in `./data/<session_id>.jsonl` (one JSON line per batch).
-Session metadata in `./data/<session_id>.meta.json` includes the server-derived
-`user_id`. No database needed for the stub. Replace `storage.ts` with a real
-DB adapter when porting to Go.
+Батчи append'ятся в `./data/<session_id>.jsonl` (одна JSON-строка на
+батч). Метаданные сессии — в `./data/<session_id>.meta.json`, включая
+выведенный сервером `user_id`. БД не нужна для стаба. Замени
+`storage.ts` на адаптер настоящей БД при портировании в Go.

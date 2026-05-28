@@ -1,22 +1,23 @@
-# Local development guide
+# Локальная разработка
 
-Step-by-step from `git clone` to seeing a recording. Covers the common
-failure modes you'll hit on a fresh machine.
+Пошагово от `git clone` до просмотра записи. Покрывает типовые грабли,
+которые поймаешь на свежей машине.
 
-For the architecture itself see [`ARCHITECTURE.md`](ARCHITECTURE.md).
+Архитектура — в [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ---
 
-## 1. Prerequisites
+## 1. Что нужно
 
-| Tool | Minimum | Recommended | Why |
-|------|---------|-------------|-----|
-| Node | 20 | **24 LTS** | Project's `engines.node` is `>=20`, but `pnpm` v11 requires Node ≥ 22. If you only have Node 20, downgrade pnpm or upgrade Node. |
-| pnpm | 9 | **11.x** | Workspace and the lockfile expect modern pnpm. |
-| Docker Desktop | running | latest | The proxy stack and E2E need it. |
-| macOS / Linux | — | macOS arm64 / Linux x64 | Tested on macOS arm64; should work on Linux x64. Windows untested. |
+| Инструмент | Минимум | Рекомендуется | Зачем |
+|------------|---------|---------------|-------|
+| Node | 20 | **24 LTS** | `engines.node` проекта `>=20`, но `pnpm` v11 требует Node ≥ 22. Если только Node 20 — даунгрейди pnpm или апгрейди Node. |
+| pnpm | 9 | **11.x** | Workspace и lockfile рассчитаны на современный pnpm. |
+| Docker Desktop | запущен | свежий | Для прокси-стека и E2E. |
+| ffmpeg | — | `brew install ffmpeg` | Нужен для `pnpm video` (см. ниже). |
+| macOS / Linux | — | macOS arm64 / Linux x64 | Тестировалось на macOS arm64; на Linux x64 должно работать. Windows не тестировался. |
 
-If you use `nvm`, switch before doing anything else:
+Если у тебя `nvm`, переключи перед всем остальным:
 
 ```bash
 nvm use 24
@@ -24,146 +25,233 @@ nvm use 24
 
 ---
 
-## 2. Install + first build
+## 2. Установка + первая сборка
 
 ```bash
-git clone <this-repo>
+git clone <repo>
 cd rrweb-testing
 pnpm install
 pnpm build
 cp sdk/dist/recorder.iife.js proxy/recorder-bundle/recorder.iife.js
 ```
 
-The last line copies the freshly built IIFE bundle to where nginx serves
-it from. It's manual on purpose so you can also bring your own bundle
-(see "Bring your own Chromium / your own bundle" below).
+Последняя строка копирует свежесобранный IIFE-бандл туда, где nginx
+будет его раздавать. Это сделано вручную намеренно — можешь принести
+свой бандл.
 
 ---
 
-## 3. Run the full stack
+## 3. Запуск полного стека
 
 ```bash
 pnpm dev:proxy
 ```
 
-This brings up three containers via Docker Compose:
+Поднимает три контейнера через Docker Compose:
 
-- **nginx** on `localhost:8080` — serves the demo app with the recorder
-  injected, proxies `/auth/*`, `/s/`, `/sessions` to ingestion.
-- **demo-app** — static nginx serving [`demo-app/index.html`](../demo-app/index.html).
-- **ingestion** — the Node stub from [`ingestion/`](../ingestion).
+- **nginx** на `localhost:8080` — раздаёт демо-приложение с
+  встроенным рекордером, проксирует `/auth/*`, `/s/`, `/sessions`
+  в ingestion.
+- **demo-app** — статический nginx, раздаёт [`demo-app/index.html`](../demo-app/index.html).
+- **ingestion** — Node-стаб из [`ingestion/`](../ingestion).
 
-Open <http://localhost:8080>:
+Открой <http://localhost:8080>:
 
-1. The page loads with the Auth panel showing "logged out".
-2. Type `alice` / `alice` (or `bob`/`bob`), click **Log in**. Status flips
-   to "logged in".
-3. Interact with the page — type in inputs, click buttons. The recorder
-   is capturing.
-4. After ~2 seconds you'll see `POST /s/` calls in the network tab
-   returning 200.
-5. Click **Log out**. The status flips back to "logged out" and `/s/`
-   traffic stops.
+1. Страница загрузилась с панелью Auth, статус «logged out».
+2. Введи `alice` / `alice` (или `bob`/`bob`), жми **Log in**. Статус
+   станет «logged in».
+3. Пощёлкай по странице — поля input'ов, кнопки. Рекордер захватывает.
+4. Через ~2 секунды увидишь `POST /s/` в network-вкладке с 200.
+5. Жми **Log out**. Статус flip'нется обратно, `/s/`-трафик прекратится.
 
-To see what's been stored: `curl http://localhost:8080/sessions | jq`.
-To stop the stack: `Ctrl+C` then `docker compose -f proxy/docker-compose.yml down`.
+Что сохранилось: `curl http://localhost:8080/sessions | jq`.
+Воспроизведение: открой `http://localhost:8081` и вставь session_id.
+Остановить стек: `Ctrl+C`, потом
+`docker compose -f proxy/docker-compose.yml down`.
 
 ---
 
-## 4. Run only the ingestion service (no Docker)
+## 4. Только ingestion (без Docker)
 
-Useful for backend changes:
+Полезно для бэкенд-изменений:
 
 ```bash
 pnpm --filter @pam/ingestion dev
 ```
 
-Runs `tsx watch src/server.ts` on `localhost:3001`. Hot-reloads on source
-changes. Use `curl` to drive it:
+Гоняет `tsx watch src/server.ts` на `localhost:3001`. Hot-reload на
+исходниках. Драйв через `curl`:
 
 ```bash
-# Login
+# Логин
 curl -c /tmp/jar -X POST http://localhost:3001/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"user":"alice","password":"alice"}'
 
-# Ingest a batch
+# Залить батч
 EVENTS=$(node -e "console.log(require('zlib').gzipSync(JSON.stringify([{type:0,timestamp:1,data:{}}])).toString('base64'))")
 curl -b /tmp/jar -X POST http://localhost:3001/s/ \
   -H 'Content-Type: application/json' \
   -d "{\"session_id\":\"$(uuidgen)\",\"batch_seq\":1,\"events_b64_gzip\":\"$EVENTS\"}"
 
-# List sessions
+# Список сессий
 curl http://localhost:3001/sessions | jq
 ```
 
 ---
 
-## 5. Tests
+## 5. Просмотр записей
+
+После работы в демо записи появляются в `ingestion/data/` **на хосте**
+(благодаря bind-mount'у — раньше прятались внутри Docker volume).
 
 ```bash
-pnpm test           # unit + integration (vitest), no Docker — 54 tests, ~2s
-pnpm typecheck      # tsc --noEmit across all 4 workspaces
-pnpm test:e2e       # Playwright + full Docker stack, ~40s
+ls ingestion/data/
+# 8d551208-…jsonl
+# 8d551208-…meta.json
 ```
 
-The unit tests cover the SDK state machine, auth module, transport, and
-the ingestion server. The E2E tests run real Chromium against the live
-Docker stack — see [`e2e/README.md`](../e2e/README.md).
+Три способа посмотреть:
+
+```bash
+# 1. JSON-список через HTTP API
+curl http://localhost:8080/sessions | jq
+
+# 2. Реплеер в браузере
+open http://localhost:8081   # или http://localhost:8080/replay/
+
+# 3. Экспорт в .webm
+pnpm video <session_id>
+```
+
+Экспорт видео требует Chrome for Testing и ffmpeg в `$PATH` — см.
+[Видео-экспорт](#видео-экспорт-pnpm-video) ниже.
 
 ---
 
-## 6. Common problems
+## 6. Тесты
 
-### "Docker is not running"
+```bash
+pnpm test           # unit + интеграционные (vitest), без Docker — 63 теста, ~2с
+pnpm typecheck      # tsc --noEmit по всем 5 пакетам
+pnpm test:e2e       # Playwright + полный Docker-стек, ~40с
+```
 
-Start Docker Desktop and wait until `docker info` succeeds.
-`pnpm test:e2e` auto-skips variant-a if Docker is down.
+Unit-тесты покрывают SDK state machine, auth-модуль, transport,
+ingestion-сервер и JSONL-декодер video CLI. E2E гоняют настоящий Chromium
+против живого Docker-стека — см. [`e2e/README.md`](../e2e/README.md).
 
-### Playwright complains "Executable doesn't exist at .../chrome-headless-shell"
+---
 
-You haven't run `pnpm --filter @pam/e2e exec playwright install chromium`.
-On a fresh machine this downloads ~200 MB of Chromium.
+## 7. Видео-экспорт (pnpm video)
 
-If `playwright install` itself fails with `proper-lockfile` errors, the
-cache has stale lock files from an aborted install:
+`tools/video/` экспортирует сессию в `.webm` через Playwright +
+rrweb-player. CLI лежит здесь, потому что зависимости (Playwright +
+Chrome + ffmpeg) тяжёлые — не хочется тащить их в основной ingestion-образ.
+
+### Что нужно один раз
+
+```bash
+# Chrome for Testing — стандартное место, CLI авто-найдёт
+npx @puppeteer/browsers install chrome@stable
+
+# ffmpeg в $PATH (см. ниже зачем)
+brew install ffmpeg
+```
+
+### Использование
+
+```bash
+pnpm video <session_id>
+# → ingestion/data/<session_id>.webm
+```
+
+CLI декодирует JSONL, инлайнит rrweb-player + события в HTML, запускает
+Chrome через Playwright и записывает через `recordVideo`. Первый запуск
+длиннее (Playwright докачивает свой кэш), последующие — секунды.
+
+### Почему ffmpeg именно из brew
+
+Playwright поставляет свой `ffmpeg-mac` бинарник, но на macOS arm64 он
+не подписан — Gatekeeper его убивает с exit 137, и `recordVideo` падает
+с криптической ошибкой `spawn Unknown system error -88`. Наш CLI
+авто-чинит это: при старте пробует запустить `ffmpeg-mac -version`,
+если падает — копирует `$(which ffmpeg)` поверх. Без системного ffmpeg
+авто-фикс ничего сделать не сможет, CLI выведет понятную ошибку.
+
+### Если Chrome лежит в другом месте
+
+```bash
+export CHROME_EXECUTABLE='/полный/путь/к/Google Chrome for Testing'
+pnpm video <session_id>
+```
+
+---
+
+## 8. Типичные проблемы
+
+### «Docker is not running»
+
+Запусти Docker Desktop и дождись, пока `docker info` пройдёт.
+`pnpm test:e2e` авто-скипает variant-a, если Docker лежит.
+
+### Playwright ругается на «Executable doesn't exist at .../chrome-headless-shell»
+
+Это уже неактуальный вариант — `chromium-headless-shell` больше не
+ставится. Используй Chrome for Testing (`npx @puppeteer/browsers install
+chrome@stable`) и переменную `CHROME_EXECUTABLE` — в
+[`e2e/playwright.config.ts`](../e2e/playwright.config.ts) уже есть
+опт-ин под это.
+
+Если `playwright install` падает с `proper-lockfile` ошибками — почисти
+кэш и попробуй снова:
 
 ```bash
 rm -rf ~/Library/Caches/ms-playwright   # macOS
-# then retry
 pnpm --filter @pam/e2e exec playwright install chromium
 ```
 
-### Bring your own Chromium
+### `pnpm video` падает на ffmpeg
 
-If you already have Chrome for Testing installed via `@puppeteer/browsers`
-(or any other source), point Playwright at it without polluting its own
-cache:
+`brew install ffmpeg`. CLI один раз скопирует системный ffmpeg в
+кэш Playwright и забудет.
 
-```bash
-export CHROME_EXECUTABLE='/path/to/Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
-pnpm test:e2e
-```
+### `pnpm install` падает на Node 20
 
-The override is opt-in via [`e2e/playwright.config.ts`](../e2e/playwright.config.ts).
+`pnpm` v11 требует Node ≥ 22 (импортит `node:sqlite`). Либо:
 
-### `pnpm install` fails on Node 20
+- Апгрейд Node: `nvm use 24`.
+- Либо пин старого pnpm: `corepack prepare pnpm@10.0.0 --activate`.
 
-`pnpm` v11 needs Node ≥ 22 (it imports `node:sqlite`). Either:
+### Конфликты портов 8080 / 8081 / 3001
 
-- Upgrade Node: `nvm use 24`.
-- Or pin an older pnpm: `corepack prepare pnpm@10.0.0 --activate`.
+Что-то ещё на машине держит порт. `lsof -i :8080` покажет. Останови
+или поменяй mapping в [`proxy/docker-compose.yml`](../proxy/docker-compose.yml).
 
-### Port conflicts on 8080 / 8081 / 3001
+### `ingestion/data/` файлы root-овые
 
-Something else on your machine is holding the port. `lsof -i :8080`
-shows what. Stop it, or edit the port mapping in
-[`proxy/docker-compose.yml`](../proxy/docker-compose.yml).
+Контейнер ingestion бежит как root, поэтому файлы на хосте имеют
+root-овладельца. Используй `sudo` для удаления, либо `sudo chown -R
+$USER ingestion/data/` после `docker compose down`.
 
-### `appendBatch is not a function` / TypeScript errors after pull
+### Запись не стартует после логина
 
-Run `pnpm install` again to refresh workspace links. If still broken,
-nuke `node_modules` and reinstall:
+В DevTools проверь:
+
+1. На вкладке Console — не упал ли бандл при инициализации.
+2. На вкладке Application → Cookies — обе ли cookie выставлены
+   (`session` HttpOnly + `session_present` non-HttpOnly).
+3. На вкладке Network — `recorder.iife.js` отдался 200? Если 404 —
+   ты забыл скопировать бандл в `proxy/recorder-bundle/` после
+   `pnpm build`.
+
+SDK опрашивает маркер каждые `markerPollMs` (default 5 с). Если
+залогинился меньше 5 с назад и нет `visibilitychange` / `focus` —
+подожди тик.
+
+### `appendBatch is not a function` / TypeScript-ошибки после pull
+
+`pnpm install` ещё раз. Если не помогает — снеси `node_modules`:
 
 ```bash
 pnpm -r exec rm -rf node_modules
@@ -171,41 +259,28 @@ rm -rf node_modules
 pnpm install
 ```
 
-### Recording doesn't start after login
-
-Check the browser console for errors loading
-`http://localhost:8080/_rec/recorder.iife.js`. If 404, you forgot step 2
-(`cp sdk/dist/recorder.iife.js …`).
-
-If the bundle loads but you still see no `POST /s/` traffic:
-
-1. Open DevTools → Application → Cookies. After login you should see
-   **both** `session` (HttpOnly checked) and `session_present` (HttpOnly
-   unchecked). If only one is set, the backend didn't issue both.
-2. The SDK polls the marker every `markerPollMs` (default 5 s). If you
-   logged in less than 5 s ago and there's no `visibilitychange` or
-   `focus` event, wait a tick.
-
 ---
 
-## 7. Editing workflow
+## 9. Workflow при редактировании
 
-| What you're changing | Run | After |
-|----------------------|-----|-------|
-| `sdk/src/**` | `pnpm --filter @pam/web-session-recorder dev` (esbuild watch) | `cp sdk/dist/recorder.iife.js proxy/recorder-bundle/`, then refresh page |
-| `ingestion/src/**` | `pnpm --filter @pam/ingestion dev` (tsx watch) | Hot-reloaded |
-| `demo-app/index.html` | none | Refresh page |
+| Что меняешь | Команда | После |
+|-------------|---------|-------|
+| `sdk/src/**` | `pnpm --filter @pam/web-session-recorder dev` (esbuild watch) | `cp sdk/dist/recorder.iife.js proxy/recorder-bundle/`, потом refresh страницы |
+| `ingestion/src/**` | `pnpm --filter @pam/ingestion dev` (tsx watch) | Hot-reload |
+| `demo-app/index.html` | ничего | Refresh страницы |
 | `proxy/nginx.conf` | `docker compose -f proxy/docker-compose.yml restart nginx` | — |
-| Tests | `pnpm --filter @pam/web-session-recorder test:watch` etc. | — |
+| `tools/video/src/**` | `pnpm --filter @pam/video typecheck` | — (CLI зовётся как одноразовая команда) |
+| Тесты | `pnpm --filter @pam/web-session-recorder test:watch` и т.д. | — |
 
 ---
 
-## 8. Where to ask "where does X live?"
+## 10. Где что искать
 
-| You're looking for | Look in |
-|--------------------|---------|
-| How the state machine works | [`sdk/src/recorder.ts`](../sdk/src/recorder.ts) + [`ARCHITECTURE.md`](ARCHITECTURE.md) |
-| Auth flow contract | [`docs/superpowers/specs/2026-05-28-demo-auth-design.md`](superpowers/specs/2026-05-28-demo-auth-design.md) |
-| Why a thing was built that way | [`docs/superpowers/specs/`](superpowers/specs/) |
-| The exact steps taken | [`docs/superpowers/plans/`](superpowers/plans/) |
-| What's missing for prod | [`PRODUCTION.md`](PRODUCTION.md) |
+| Ищешь | Смотри |
+|-------|--------|
+| Как работает state machine | [`sdk/src/recorder.ts`](../sdk/src/recorder.ts) + [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| Контракт auth-флоу | [`docs/superpowers/specs/2026-05-28-demo-auth-design.md`](superpowers/specs/2026-05-28-demo-auth-design.md) |
+| Как сделан video-pipeline | [`tools/video/src/export.ts`](../tools/video/src/export.ts) + [`ARCHITECTURE.md`](ARCHITECTURE.md#8-video-pipeline-pnpm-video) |
+| Почему именно так | [`docs/superpowers/specs/`](superpowers/specs/) |
+| Какие именно шаги делались | [`docs/superpowers/plans/`](superpowers/plans/) |
+| Что нужно для прода | [`PRODUCTION.md`](PRODUCTION.md) |
