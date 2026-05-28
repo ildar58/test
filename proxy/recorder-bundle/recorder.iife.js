@@ -13430,7 +13430,6 @@ var PamRecorder = (() => {
     constructor(config) {
       this.config = config;
       this.state = "IDLE";
-      this.sessionId = null;
       this.rrwebStop = null;
       this.transport = null;
       this.disposeWatcher = null;
@@ -13465,7 +13464,6 @@ var PamRecorder = (() => {
       const sid = persisted ?? newSessionId();
       if (!persisted)
         persistSessionId(sid);
-      this.sessionId = sid;
       this.transport = new Transport(
         this.config.endpoint,
         this.config.flushIntervalMs,
@@ -13503,7 +13501,6 @@ var PamRecorder = (() => {
         this.transport = null;
       }
       clearSessionId();
-      this.sessionId = null;
       this.state = "IDLE";
     }
     /**
