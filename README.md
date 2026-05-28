@@ -111,10 +111,18 @@ pnpm video <session_id>
 # → ingestion/data/<session_id>.webm
 ```
 
-The video export uses [`rrvideo`](https://www.npmjs.com/package/rrvideo)
-under the hood — Playwright-based rendering, no system ffmpeg needed.
-The first invocation downloads ~200 MB of Chromium; subsequent runs take
-seconds per recorded minute.
+The video export uses Playwright + `rrweb-player` directly (no `rrvideo`
+binary needed — its hardcoded `chromium.launch()` no longer matches
+modern Playwright's headless model). Requirements:
+
+- **Chrome for Testing** installed via `npx @puppeteer/browsers install chrome@stable`
+  (the CLI auto-detects it under `~/chrome/`). Override via the
+  `CHROME_EXECUTABLE` env var if you have it elsewhere.
+- **ffmpeg** in `$PATH` (e.g. `brew install ffmpeg`) — Playwright's
+  bundled `ffmpeg-mac` ships unsigned on macOS arm64 and Gatekeeper
+  blocks it. The CLI auto-heals by copying the system ffmpeg into
+  Playwright's cache once per machine; without a system ffmpeg
+  `recordVideo` would fail.
 
 ---
 
