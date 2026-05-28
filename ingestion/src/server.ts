@@ -15,6 +15,11 @@ import {
 const app = express();
 const PORT = process.env.PORT ?? 3001;
 
+// CSRF posture for this stub relies on (a) the nginx proxy serving recorder,
+// app, and ingestion same-origin in production, and (b) SameSite=Lax on the
+// session cookies. CORS is enabled with credentials only to support local
+// dev where the demo HTML may be opened from a non-proxied origin; the real
+// Go service should pin `origin` to the known list of allowed front-ends.
 app.use(cors({ credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
@@ -37,6 +42,7 @@ app.post('/auth/login', async (req: Request, res: Response) => {
   }
 
   const token = createSession(user);
+  // TODO(prod): set `secure: true` on both cookies once nginx terminates HTTPS.
   res.cookie('session', token, { httpOnly: true, sameSite: 'lax', path: '/' });
   res.cookie('session_present', '1', { httpOnly: false, sameSite: 'lax', path: '/' });
   res.json({ success: true, user });
@@ -44,6 +50,7 @@ app.post('/auth/login', async (req: Request, res: Response) => {
 
 app.post('/auth/logout', (req: Request, res: Response) => {
   destroySession(req.cookies?.session as string | undefined);
+  // TODO(prod): set `secure: true` on both cookies once nginx terminates HTTPS.
   res.cookie('session', '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 });
   res.cookie('session_present', '', { httpOnly: false, sameSite: 'lax', path: '/', maxAge: 0 });
   res.json({ success: true });

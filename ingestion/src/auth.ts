@@ -19,11 +19,19 @@ export const users: ReadonlyArray<DemoUser> = [
   { username: 'bob',   passwordHash: '$2b$10$.tpof/zk3Lijpl9vLHJoj.4D54F5J981ITkqPW2IylqMzD4VvgOOO' },
 ];
 
+// TODO(prod): the real Go service must add TTL eviction and a hard size cap.
+// In the stub this grows until process restart, which is acceptable for demo
+// runs but would be a memory leak in production.
 const sessions = new Map<string, SessionEntry>();
 
 /**
- * Always runs a bcrypt compare even for unknown users so login response
- * timing does not trivially leak which usernames exist.
+ * Runs a bcrypt compare against a real-shape dummy hash even for unknown
+ * users so the dominant cost — the bcrypt round — is paid on both paths.
+ * The preceding `users.find` is O(n) over the demo user list and is not
+ * constant-time itself; with a two-user list this is sub-microsecond noise,
+ * but for any port to a real user table swap the linear search for a
+ * constant-time lookup (e.g. hashed-username index) before relying on this
+ * mitigation.
  */
 export async function verifyPassword(
   user: string,
@@ -31,9 +39,6 @@ export async function verifyPassword(
 ): Promise<boolean> {
   if (!user || !password) return false;
   const found = users.find((u) => u.username === user);
-  // Compare against a real-shape dummy hash when the user is missing so the
-  // path is the same length. The dummy hash is one of the real ones — that
-  // is fine because we never return its result.
   const hashToCompare = found?.passwordHash ?? users[0]!.passwordHash;
   const matches = await bcrypt.compare(password, hashToCompare);
   return !!found && matches;
@@ -53,4 +58,13 @@ export function getSession(token: string | undefined): SessionEntry | null {
 export function destroySession(token: string | undefined): void {
   if (!token) return;
   sessions.delete(token);
+}
+
+/**
+ * Test-only: wipes the in-memory session store. Not exported through any
+ * production code path. Tests call this in `afterEach` to keep cases
+ * independent of each other.
+ */
+export function _clearSessionsForTests(): void {
+  sessions.clear();
 }

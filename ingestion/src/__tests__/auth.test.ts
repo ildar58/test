@@ -1,10 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
   verifyPassword,
   createSession,
   getSession,
   destroySession,
+  _clearSessionsForTests,
 } from '../auth';
+
+afterEach(() => {
+  _clearSessionsForTests();
+});
 
 describe('verifyPassword', () => {
   it('returns true for the right user with the right password', async () => {
