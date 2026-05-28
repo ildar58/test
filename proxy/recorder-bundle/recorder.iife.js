@@ -13311,7 +13311,7 @@ var PamRecorder = (() => {
       window.addEventListener("pagehide", this.onPageHide);
     }
     push(event, sessionId) {
-      this.buffer = [...this.buffer, event];
+      this.buffer.push(event);
       if (this.buffer.length >= this.maxBufferSize)
         this.flush(sessionId);
     }
@@ -13437,6 +13437,11 @@ var PamRecorder = (() => {
       this.unauthorizedCount = 0;
       this.cooldownUntil = 0;
     }
+    /**
+     * Idempotent. No-op if the recorder is already ACTIVE or has been stop()ped
+     * — a single Recorder instance is single-use; create a new one if you need
+     * to restart after stop().
+     */
     start() {
       if (this.state !== "IDLE")
         return;

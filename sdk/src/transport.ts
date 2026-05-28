@@ -53,7 +53,7 @@ export class Transport {
   }
 
   push(event: eventWithTime, sessionId: string): void {
-    this.buffer = [...this.buffer, event];
+    this.buffer.push(event);
     if (this.buffer.length >= this.maxBufferSize) this.flush(sessionId);
   }
 

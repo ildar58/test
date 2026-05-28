@@ -47,6 +47,11 @@ export class Recorder {
 
   constructor(private readonly config: RecorderConfig) {}
 
+  /**
+   * Idempotent. No-op if the recorder is already ACTIVE or has been stop()ped
+   * — a single Recorder instance is single-use; create a new one if you need
+   * to restart after stop().
+   */
   start(): void {
     if (this.state !== 'IDLE') return;
 
