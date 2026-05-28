@@ -168,21 +168,13 @@ The replayer at [`replayer/index.html`](../replayer/index.html) calls
 long sessions this is fine (rrweb compresses well) but for hour-long
 captures you'll want chunked or paginated reads.
 
-### Replayer not mounted in Docker
+### Replayer mounted (fixed)
 
-The `ingestion/Dockerfile` doesn't copy `replayer/` into the image, so
-`/replay` returns 404 in the docker-compose stack today. Easiest fix:
-add a volume mount in [`proxy/docker-compose.yml`](../proxy/docker-compose.yml):
-
-```yaml
-ingestion:
-  build: …
-  volumes:
-    - ingestion-data:/app/data
-    - ../replayer:/app/replayer:ro   # <-- add this
-```
-
-`server.ts` already resolves the path correctly relative to `__dirname`.
+The replayer is now bind-mounted from `replayer/` into the ingestion
+container via [`proxy/docker-compose.yml`](../proxy/docker-compose.yml).
+The route is reachable at `http://localhost:8081/` in the local stack
+and at `http://localhost:8080/replay/` via the main port. The admin
+auth gap on `GET /sessions[/:id]` is still tracked above.
 
 ---
 

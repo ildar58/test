@@ -87,13 +87,34 @@ Open <http://localhost:8080>. You'll see a demo page with an Auth panel.
 Click **Log in** (default creds `alice` / `alice`), interact with the page,
 then click **Log out**.
 
-To watch a recorded session: the JSONL files live in the `ingestion-data`
-Docker volume and the session list is at <http://localhost:8080/sessions>.
-A built-in replayer UI exists at <http://localhost:8081> but is not yet wired
-up in the Docker image — see [Known limitations](#known-limitations).
-
 For a step-by-step development walkthrough including troubleshooting see
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
+
+---
+
+## Viewing recordings
+
+Recordings land in `ingestion/data/` on the host filesystem — one
+`<session_id>.jsonl` (events) and one `<session_id>.meta.json` (user,
+timestamps, batch count) per session. Three ways to inspect them:
+
+```bash
+# 1. List sessions as JSON via the HTTP API
+curl http://localhost:8080/sessions | jq
+
+# 2. Play a session in the in-browser replayer
+open http://localhost:8081
+# (pick a session_id from the list above, paste into the input)
+
+# 3. Export a session to a .webm video file
+pnpm video <session_id>
+# → ingestion/data/<session_id>.webm
+```
+
+The video export uses [`rrvideo`](https://www.npmjs.com/package/rrvideo)
+under the hood — Playwright-based rendering, no system ffmpeg needed.
+The first invocation downloads ~200 MB of Chromium; subsequent runs take
+seconds per recorded minute.
 
 ---
 
@@ -197,9 +218,6 @@ Playwright scenarios exercising the full Variant A lifecycle.
 The following are **deliberate gaps** in this study implementation. Each is
 covered in detail in [`docs/PRODUCTION.md`](docs/PRODUCTION.md):
 
-- **Replayer UI behind Docker is broken** — the `replayer/` directory is not
-  copied into the ingestion image. Working around it is one Docker volume
-  mount in `proxy/docker-compose.yml`.
 - **Path-traversal in `ingestion/src/storage.ts`** — `session_id` from the
   request body flows into a file path without validation. Authenticated
   attacker can write outside the data directory. Tracked.

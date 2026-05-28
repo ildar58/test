@@ -186,14 +186,6 @@ If the bundle loads but you still see no `POST /s/` traffic:
    logged in less than 5 s ago and there's no `visibilitychange` or
    `focus` event, wait a tick.
 
-### Replayer UI returns 404
-
-Known issue. The [`replayer/`](../replayer/) directory isn't copied into
-the ingestion Docker image. The replayer code works — `pnpm dev:ingestion`
-serves it on `http://localhost:3001/replay/`. See
-[`docs/PRODUCTION.md`](PRODUCTION.md#replayer-not-mounted-in-docker)
-for the fix.
-
 ---
 
 ## 7. Editing workflow
