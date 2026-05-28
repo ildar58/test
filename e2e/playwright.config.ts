@@ -19,7 +19,12 @@ export default defineConfig({
     {
       name: 'variant-a',
       testMatch: '**/variant-a.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        ...(process.env['CHROME_EXECUTABLE']
+          ? { launchOptions: { executablePath: process.env['CHROME_EXECUTABLE'] } }
+          : {}),
+      },
     },
   ],
 });
