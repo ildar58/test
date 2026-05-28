@@ -5,6 +5,12 @@ import path from 'path';
 import type { Request, Response } from 'express';
 import type { EventBatch } from './types';
 import { appendBatch, listSessions, getSessionEvents } from './storage';
+import {
+  verifyPassword,
+  createSession,
+  getSession,
+  destroySession,
+} from './auth';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -16,26 +22,36 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/replay', express.static(path.resolve(__dirname, '../../replayer')));
 
 /**
- * Stub Go auth contract.
- * Real auth lives in the Go service; this is just enough to exercise the
- * recorder lifecycle locally and in E2E.
+ * Demo auth backend.
+ * Real auth lives in the Go service; this is just enough to drive the
+ * recorder lifecycle locally and in E2E with a real-looking flow.
  */
-app.post('/auth/login', (req: Request, res: Response) => {
-  const user = (req.body?.user as string | undefined) ?? 'anonymous';
-  res.cookie('session', user, { httpOnly: true, sameSite: 'lax', path: '/' });
+app.post('/auth/login', async (req: Request, res: Response) => {
+  const user = (req.body?.user as string | undefined) ?? '';
+  const password = (req.body?.password as string | undefined) ?? '';
+
+  const ok = await verifyPassword(user, password);
+  if (!ok) {
+    res.status(401).json({ success: false, error: 'invalid credentials' });
+    return;
+  }
+
+  const token = createSession(user);
+  res.cookie('session', token, { httpOnly: true, sameSite: 'lax', path: '/' });
   res.cookie('session_present', '1', { httpOnly: false, sameSite: 'lax', path: '/' });
   res.json({ success: true, user });
 });
 
-app.post('/auth/logout', (_req: Request, res: Response) => {
+app.post('/auth/logout', (req: Request, res: Response) => {
+  destroySession(req.cookies?.session as string | undefined);
   res.cookie('session', '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 });
   res.cookie('session_present', '', { httpOnly: false, sameSite: 'lax', path: '/', maxAge: 0 });
   res.json({ success: true });
 });
 
 app.post('/s/', (req: Request, res: Response) => {
-  const userId = req.cookies?.session as string | undefined;
-  if (!userId) {
+  const entry = getSession(req.cookies?.session as string | undefined);
+  if (!entry) {
     res.status(401).json({ success: false, error: 'unauthorized' });
     return;
   }
@@ -47,7 +63,7 @@ app.post('/s/', (req: Request, res: Response) => {
   }
 
   try {
-    appendBatch(batch, userId);
+    appendBatch(batch, entry.username);
     res.json({ success: true });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
