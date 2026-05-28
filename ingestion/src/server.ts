@@ -25,12 +25,14 @@ app.use(cors({ credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 
-// Resolve the replayer directory across both dev (tsx → __dirname=ingestion/src)
-// and the compiled Docker image (node → __dirname=/app/dist, replayer
-// bind-mounted at /app/replayer). Pick whichever candidate actually exists.
+// Resolve the replayer directory across both dev (tsx → __dirname=ingestion/src,
+// real replayer at repo-root/replayer = '../../replayer') and the compiled
+// Docker image (node → __dirname=/app/dist, replayer bind-mounted at
+// /app/replayer = '../replayer'). Try the dev-correct path FIRST so an
+// accidentally-created ingestion/replayer/ dir can't silently shadow it.
 const replayerDir = [
-  path.resolve(__dirname, '../replayer'),
   path.resolve(__dirname, '../../replayer'),
+  path.resolve(__dirname, '../replayer'),
 ].find((p) => fs.existsSync(p));
 if (replayerDir) {
   app.use('/replay', express.static(replayerDir));

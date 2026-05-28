@@ -201,9 +201,12 @@ async function main(): Promise<void> {
   });
 
   // exposeFunction must happen before setContent so the replayer can call back.
+  // Await it so a registration error surfaces here instead of being swallowed.
+  let resolveFinished!: () => void;
   const finished = new Promise<void>((resolve) => {
-    void page.exposeFunction('onReplayFinish', () => resolve());
+    resolveFinished = resolve;
   });
+  await page.exposeFunction('onReplayFinish', () => resolveFinished());
 
   console.log(`[video] launching replayer…`);
   await page.setContent(buildHtml(events, viewport, umd, css), { waitUntil: 'domcontentloaded' });
