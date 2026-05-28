@@ -21,8 +21,6 @@ var PamRecorder = (() => {
   // src/index.ts
   var src_exports = {};
   __export(src_exports, {
-    addCustomEvent: () => addCustomEvent2,
-    identify: () => identify,
     init: () => init,
     stop: () => stop
   });
@@ -41,7 +39,11 @@ var PamRecorder = (() => {
     checkoutEveryNms: 30 * 60 * 1e3,
     // 30 min
     flushIntervalMs: 2e3,
-    maxBufferSize: 500
+    maxBufferSize: 500,
+    markerCookieName: "session_present",
+    markerPollMs: 5e3,
+    unauthorizedThreshold: 3,
+    unauthorizedCooldownMs: 6e4
   };
 
   // ../node_modules/.pnpm/rrweb@2.0.0-alpha.20/node_modules/rrweb/dist/rrweb.js
@@ -13279,15 +13281,14 @@ var PamRecorder = (() => {
 
   // src/transport.ts
   function encodeBatch(events) {
-    const json = JSON.stringify(events);
-    const u82 = strToU8(json);
+    const u82 = strToU8(JSON.stringify(events));
     const compressed = gzipSync(u82, { level: 6 });
     let binary = "";
     compressed.forEach((b) => binary += String.fromCharCode(b));
     return btoa(binary);
   }
   var Transport = class {
-    constructor(endpoint, flushIntervalMs, maxBufferSize) {
+    constructor(endpoint, flushIntervalMs, maxBufferSize, onUnauthorized, onAuthorized) {
       this.buffer = [];
       this.batchSeq = 0;
       this.timer = null;
@@ -13296,34 +13297,31 @@ var PamRecorder = (() => {
       this.endpoint = endpoint;
       this.flushIntervalMs = flushIntervalMs;
       this.maxBufferSize = maxBufferSize;
+      this.onUnauthorized = onUnauthorized;
+      this.onAuthorized = onAuthorized;
     }
-    start(sessionId, distinctId) {
-      this.timer = setInterval(
-        () => this.flush(sessionId, distinctId),
-        this.flushIntervalMs
-      );
-      this.onPageHide = () => this.beaconFlush(sessionId, distinctId);
+    start(sessionId) {
+      this.timer = setInterval(() => this.flush(sessionId), this.flushIntervalMs);
+      this.onPageHide = () => this.beaconFlush(sessionId);
       this.onVisibilityChange = () => {
         if (document.visibilityState === "hidden")
-          this.beaconFlush(sessionId, distinctId);
+          this.beaconFlush(sessionId);
       };
       document.addEventListener("visibilitychange", this.onVisibilityChange);
       window.addEventListener("pagehide", this.onPageHide);
     }
-    push(event, sessionId, distinctId) {
+    push(event, sessionId) {
       this.buffer = [...this.buffer, event];
-      if (this.buffer.length >= this.maxBufferSize) {
-        this.flush(sessionId, distinctId);
-      }
+      if (this.buffer.length >= this.maxBufferSize)
+        this.flush(sessionId);
     }
-    flush(sessionId, distinctId) {
+    flush(sessionId) {
       if (this.buffer.length === 0)
         return;
       const events = this.buffer;
       this.buffer = [];
       const batch = {
         session_id: sessionId,
-        distinct_id: distinctId,
         batch_seq: ++this.batchSeq,
         events_b64_gzip: encodeBatch(events)
       };
@@ -13331,24 +13329,27 @@ var PamRecorder = (() => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(batch),
+        credentials: "include",
         keepalive: true
+      }).then((res) => {
+        if (res.status === 401 && this.onUnauthorized)
+          this.onUnauthorized();
+        else if (res.ok && this.onAuthorized)
+          this.onAuthorized();
       }).catch(() => {
       });
     }
-    beaconFlush(sessionId, distinctId) {
+    beaconFlush(sessionId) {
       if (this.buffer.length === 0)
         return;
       const events = this.buffer;
       this.buffer = [];
       const batch = {
         session_id: sessionId,
-        distinct_id: distinctId,
         batch_seq: ++this.batchSeq,
         events_b64_gzip: encodeBatch(events)
       };
-      const blob2 = new Blob([JSON.stringify(batch)], {
-        type: "application/json"
-      });
+      const blob2 = new Blob([JSON.stringify(batch)], { type: "application/json" });
       navigator.sendBeacon(this.endpoint, blob2);
     }
     stop() {
@@ -13367,22 +13368,113 @@ var PamRecorder = (() => {
     }
   };
 
+  // src/auth.ts
+  function readMarker(name) {
+    const raw = typeof document !== "undefined" ? document.cookie : "";
+    if (!raw)
+      return false;
+    const parts = raw.split(";");
+    for (const part of parts) {
+      const [k, ...v] = part.trim().split("=");
+      if (k === name)
+        return v.join("=").length > 0;
+    }
+    return false;
+  }
+  function watchMarker(name, onChange, pollMs) {
+    let last = readMarker(name);
+    const check = () => {
+      const now = readMarker(name);
+      if (now !== last) {
+        last = now;
+        onChange(now);
+      }
+    };
+    const interval = setInterval(check, pollMs);
+    const onVisibility = () => check();
+    const onFocus = () => check();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+    };
+  }
+
   // src/recorder.ts
+  var SESSION_STORAGE_KEY = "_pam_sid";
+  function newSessionId() {
+    return crypto.randomUUID();
+  }
+  function readPersistedSessionId() {
+    try {
+      return sessionStorage.getItem(SESSION_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  }
+  function persistSessionId(id) {
+    try {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, id);
+    } catch {
+    }
+  }
+  function clearSessionId() {
+    try {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+    }
+  }
   var Recorder = class {
-    constructor(config, sessionId, distinctId) {
+    constructor(config) {
       this.config = config;
-      this.sessionId = sessionId;
-      this.distinctId = distinctId;
-      this.stopFn = null;
-      this.transport = new Transport(
-        config.endpoint,
-        config.flushIntervalMs,
-        config.maxBufferSize
-      );
+      this.state = "IDLE";
+      this.sessionId = null;
+      this.rrwebStop = null;
+      this.transport = null;
+      this.disposeWatcher = null;
+      this.retryTimer = null;
+      this.unauthorizedCount = 0;
+      this.cooldownUntil = 0;
     }
     start() {
-      this.transport.start(this.sessionId, this.distinctId);
-      this.stopFn = record({
+      if (this.state !== "IDLE")
+        return;
+      this.disposeWatcher = watchMarker(
+        this.config.markerCookieName,
+        (present) => {
+          if (present)
+            this.tryActivate();
+          else
+            this.deactivate();
+        },
+        this.config.markerPollMs
+      );
+      if (readMarker(this.config.markerCookieName)) {
+        this.tryActivate();
+      }
+    }
+    tryActivate() {
+      if (this.state !== "IDLE")
+        return;
+      if (Date.now() < this.cooldownUntil)
+        return;
+      this.clearRetryTimer();
+      const persisted = readPersistedSessionId();
+      const sid = persisted ?? newSessionId();
+      if (!persisted)
+        persistSessionId(sid);
+      this.sessionId = sid;
+      this.transport = new Transport(
+        this.config.endpoint,
+        this.config.flushIntervalMs,
+        this.config.maxBufferSize,
+        () => this.onUnauthorized(),
+        () => this.onAuthorized()
+      );
+      this.transport.start(sid);
+      this.rrwebStop = record({
         blockClass: this.config.blockClass,
         ignoreClass: this.config.ignoreClass,
         maskTextClass: this.config.maskTextClass,
@@ -13393,59 +13485,89 @@ var PamRecorder = (() => {
         recordCrossOriginIframes: this.config.recordCrossOriginIframes,
         checkoutEveryNms: this.config.checkoutEveryNms,
         emit: (event) => {
-          this.transport.push(event, this.sessionId, this.distinctId);
+          if (this.transport)
+            this.transport.push(event, sid);
         }
       }) ?? null;
+      this.state = "ACTIVE";
     }
-    addCustomEvent(tag, payload) {
-      record.addCustomEvent(tag, payload);
+    deactivate() {
+      if (this.state !== "ACTIVE")
+        return;
+      if (this.rrwebStop) {
+        this.rrwebStop();
+        this.rrwebStop = null;
+      }
+      if (this.transport) {
+        this.transport.stop();
+        this.transport = null;
+      }
+      clearSessionId();
+      this.sessionId = null;
+      this.state = "IDLE";
+    }
+    /**
+     * Called by Transport when a batch returns 401. Multiple in-flight batches
+     * can race here, so the state guard at the top ensures the counter advances
+     * at most once per ACTIVE phase.
+     */
+    onUnauthorized() {
+      if (this.state !== "ACTIVE")
+        return;
+      this.deactivate();
+      this.unauthorizedCount += 1;
+      const atThreshold = this.unauthorizedCount >= this.config.unauthorizedThreshold;
+      let delay;
+      if (atThreshold) {
+        this.cooldownUntil = Date.now() + this.config.unauthorizedCooldownMs;
+        this.unauthorizedCount = 0;
+        delay = this.config.unauthorizedCooldownMs;
+      } else {
+        delay = this.config.markerPollMs;
+      }
+      this.scheduleRetry(delay);
+    }
+    onAuthorized() {
+      this.unauthorizedCount = 0;
+    }
+    scheduleRetry(delayMs) {
+      this.clearRetryTimer();
+      this.retryTimer = setTimeout(() => {
+        this.retryTimer = null;
+        if (this.state === "IDLE" && readMarker(this.config.markerCookieName)) {
+          this.tryActivate();
+        }
+      }, delayMs);
+    }
+    clearRetryTimer() {
+      if (this.retryTimer !== null) {
+        clearTimeout(this.retryTimer);
+        this.retryTimer = null;
+      }
     }
     stop() {
-      this.transport.flush(this.sessionId, this.distinctId);
-      this.transport.stop();
-      if (this.stopFn) {
-        this.stopFn();
-        this.stopFn = null;
+      this.deactivate();
+      this.clearRetryTimer();
+      if (this.disposeWatcher) {
+        this.disposeWatcher();
+        this.disposeWatcher = null;
       }
+      this.state = "STOPPED";
     }
   };
 
   // src/index.ts
   var instance = null;
-  var SESSION_STORAGE_KEY = "_pam_sid";
-  function resolveSessionId(provided) {
-    if (provided)
-      return provided;
-    try {
-      const existing = sessionStorage.getItem(SESSION_STORAGE_KEY);
-      if (existing)
-        return existing;
-      const fresh = crypto.randomUUID();
-      sessionStorage.setItem(SESSION_STORAGE_KEY, fresh);
-      return fresh;
-    } catch {
-      return crypto.randomUUID();
-    }
-  }
-  function init(options) {
+  function init(options = {}) {
     if (instance)
       return;
-    const { sessionId, distinctId, ...overrides } = options;
-    const config = { ...DEFAULT_CONFIG, ...overrides };
-    const resolvedSessionId = resolveSessionId(sessionId);
-    const resolvedDistinctId = distinctId ?? "anonymous";
-    instance = new Recorder(config, resolvedSessionId, resolvedDistinctId);
+    const config = { ...DEFAULT_CONFIG, ...options };
+    instance = new Recorder(config);
     instance.start();
   }
   function stop() {
     instance?.stop();
     instance = null;
-  }
-  function identify(userId, traits) {
-    instance?.addCustomEvent("identify", { userId, ...traits });
-  }
-  function addCustomEvent2(tag, payload) {
-    instance?.addCustomEvent(tag, payload);
   }
   return __toCommonJS(src_exports);
 })();
