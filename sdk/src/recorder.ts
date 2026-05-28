@@ -85,7 +85,8 @@ export class Recorder {
       this.config.endpoint,
       this.config.flushIntervalMs,
       this.config.maxBufferSize,
-      () => this.onUnauthorized()
+      () => this.onUnauthorized(),
+      () => this.onAuthorized()
     );
     this.transport.start(sid);
 
@@ -106,7 +107,6 @@ export class Recorder {
       }) ?? null;
 
     this.state = 'ACTIVE';
-    this.unauthorizedCount = 0;
   }
 
   private deactivate(): void {
@@ -148,6 +148,13 @@ export class Recorder {
     // schedule an explicit retry here. If logout happens in the meantime,
     // tryActivate's state guard or the watcher's edge callback handles it.
     this.scheduleRetry(delay);
+  }
+
+  private onAuthorized(): void {
+    // A successful batch confirms the auth cookie is valid — reset the
+    // consecutive-401 counter so future transient failures get the full
+    // threshold of retries again.
+    this.unauthorizedCount = 0;
   }
 
   private scheduleRetry(delayMs: number): void {

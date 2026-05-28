@@ -168,25 +168,32 @@ describe('Recorder state machine', () => {
     const r = new Recorder({
       ...DEFAULT_CONFIG,
       markerPollMs: 1_000,
-      unauthorizedThreshold: 1,
+      unauthorizedThreshold: 2,
       unauthorizedCooldownMs: 10_000,
     });
     r.start();
     expect(recordMock).toHaveBeenCalledTimes(1);
 
-    // First 401 (count=1, at threshold) → cool-down (10s) instead of retry
+    // First 401 (count=1, below threshold) → retry scheduled at 1s
     recordMock.mock.calls[0]![0].emit({ type: 0, data: {}, timestamp: 1 });
     vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
     await vi.waitFor(() => expect(recordStop).toHaveBeenCalledTimes(1));
+    vi.advanceTimersByTime(1_000);
+    expect(recordMock).toHaveBeenCalledTimes(2);
+
+    // Second 401 (count=2, at threshold) → cool-down (10s) instead of retry
+    recordMock.mock.calls[1]![0].emit({ type: 0, data: {}, timestamp: 1 });
+    vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
+    await vi.waitFor(() => expect(recordStop).toHaveBeenCalledTimes(2));
 
     // Within cool-down: no re-activation even though marker is still present
     vi.advanceTimersByTime(5_000);
-    expect(recordMock).toHaveBeenCalledTimes(1);
+    expect(recordMock).toHaveBeenCalledTimes(2);
 
     // Server recovers; cool-down expires → retry fires → re-activate
     fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
     vi.advanceTimersByTime(5_000);
-    expect(recordMock).toHaveBeenCalledTimes(2);
+    expect(recordMock).toHaveBeenCalledTimes(3);
 
     r.stop();
   });
@@ -221,7 +228,7 @@ describe('Recorder state machine', () => {
     r.stop();
   });
 
-  it('resets unauthorizedCount on successful re-activation (non-consecutive 401s)', async () => {
+  it('resets unauthorizedCount when a batch succeeds with 200 (non-consecutive 401s)', async () => {
     setCookie('session_present=1');
     const r = new Recorder({
       ...DEFAULT_CONFIG,
@@ -232,7 +239,7 @@ describe('Recorder state machine', () => {
     r.start();
     expect(recordMock).toHaveBeenCalledTimes(1);
 
-    // First 401 (count=1) → retry → re-activate cleanly
+    // First 401 (count=1) → retry → re-activate
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }));
     recordMock.mock.calls[0]![0].emit({ type: 0, data: {}, timestamp: 1 });
     vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
@@ -240,14 +247,21 @@ describe('Recorder state machine', () => {
     vi.advanceTimersByTime(1_000);
     expect(recordMock).toHaveBeenCalledTimes(2);
 
-    // Some time later, another single 401. count should reset to 1, not 2.
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }));
+    // Subsequent batch succeeds (200) — counter must reset to 0
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 200 }));
     recordMock.mock.calls[1]![0].emit({ type: 0, data: {}, timestamp: 2 });
+    vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    // Now another isolated 401 — count goes from 0 to 1, not 2.
+    // If reset hadn't worked, count would be 2 → cool-down (60s) and the
+    // next retry would not fire at 1s.
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }));
+    recordMock.mock.calls[1]![0].emit({ type: 0, data: {}, timestamp: 3 });
     vi.advanceTimersByTime(DEFAULT_CONFIG.flushIntervalMs);
     await vi.waitFor(() => expect(recordStop).toHaveBeenCalledTimes(2));
 
-    // If count had accumulated to 2, this would enter the 60s cool-down.
-    // Because it resets on success, it's at 1 and the next retry fires at markerPollMs=1s.
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
     vi.advanceTimersByTime(1_000);
     expect(recordMock).toHaveBeenCalledTimes(3);
 

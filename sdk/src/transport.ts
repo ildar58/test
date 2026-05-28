@@ -23,6 +23,7 @@ export class Transport {
   private readonly flushIntervalMs: number;
   private readonly maxBufferSize: number;
   private readonly onUnauthorized?: () => void;
+  private readonly onAuthorized?: () => void;
   private onVisibilityChange: (() => void) | null = null;
   private onPageHide: (() => void) | null = null;
 
@@ -30,12 +31,14 @@ export class Transport {
     endpoint: string,
     flushIntervalMs: number,
     maxBufferSize: number,
-    onUnauthorized?: () => void
+    onUnauthorized?: () => void,
+    onAuthorized?: () => void
   ) {
     this.endpoint = endpoint;
     this.flushIntervalMs = flushIntervalMs;
     this.maxBufferSize = maxBufferSize;
     this.onUnauthorized = onUnauthorized;
+    this.onAuthorized = onAuthorized;
   }
 
   start(sessionId: string): void {
@@ -72,6 +75,7 @@ export class Transport {
     })
       .then((res) => {
         if (res.status === 401 && this.onUnauthorized) this.onUnauthorized();
+        else if (res.ok && this.onAuthorized) this.onAuthorized();
       })
       .catch(() => {
         // silently drop on network error

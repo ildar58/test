@@ -100,4 +100,16 @@ describe('Transport', () => {
 
     t.stop();
   });
+
+  it('invokes onAuthorized callback when server returns 200', async () => {
+    const onAuthorized = vi.fn();
+    const t = new Transport(ENDPOINT, 2_000, 1000, undefined, onAuthorized);
+    t.start(SESSION);
+    t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION);
+
+    vi.advanceTimersByTime(2_000);
+    await vi.waitFor(() => expect(onAuthorized).toHaveBeenCalledOnce());
+
+    t.stop();
+  });
 });
