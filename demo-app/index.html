@@ -19,6 +19,36 @@
 </head>
 <body>
   <h1>Corp Demo Application</h1>
+  <div class="card" id="auth-panel">
+    <h2>Auth (stub)</h2>
+    <p>Status: <span id="auth-status">checking…</span></p>
+    <input id="auth-user" type="text" placeholder="username" value="alice" />
+    <button id="auth-login">Log in</button>
+    <button id="auth-logout">Log out</button>
+  </div>
+  <script>
+    function refreshStatus() {
+      var hasMarker = document.cookie.split('; ').some(function (c) {
+        return c.indexOf('session_present=') === 0 && c.length > 'session_present='.length;
+      });
+      document.getElementById('auth-status').textContent = hasMarker ? 'logged in' : 'logged out';
+    }
+    document.getElementById('auth-login').addEventListener('click', async function () {
+      var u = document.getElementById('auth-user').value || 'alice';
+      await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: u }),
+        credentials: 'include',
+      });
+      refreshStatus();
+    });
+    document.getElementById('auth-logout').addEventListener('click', async function () {
+      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      refreshStatus();
+    });
+    refreshStatus();
+  </script>
   <p>This page is recorded by rrweb (injected by nginx proxy — Variant A).<br/>
      Or by the SDK directly if you include <code>@pam/web-session-recorder</code> — Variant B.</p>
 
