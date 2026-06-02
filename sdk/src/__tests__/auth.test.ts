@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { readMarker, watchMarker } from '../auth';
+import { readMarker, watchMarker, readCookieValue } from '../auth';
 
 function setCookie(value: string): void {
   Object.defineProperty(document, 'cookie', { configurable: true, value, writable: true });
@@ -29,6 +29,23 @@ describe('readMarker', () => {
   it('does not match a prefix of another cookie', () => {
     setCookie('session_present_other=1');
     expect(readMarker('session_present')).toBe(false);
+  });
+});
+
+describe('readCookieValue', () => {
+  it('returns the value when present among other cookies', () => {
+    setCookie('a=1; session_id=abc-123; b=2');
+    expect(readCookieValue('session_id')).toBe('abc-123');
+  });
+
+  it('returns null when the cookie is absent', () => {
+    setCookie('a=1');
+    expect(readCookieValue('session_id')).toBeNull();
+  });
+
+  it('returns null for an empty value', () => {
+    setCookie('session_id=');
+    expect(readCookieValue('session_id')).toBeNull();
   });
 });
 
@@ -97,5 +114,25 @@ describe('watchMarker', () => {
     vi.advanceTimersByTime(10_000);
 
     expect(cb).not.toHaveBeenCalled();
+  });
+
+  it('fires onChange via cookieStore change event without waiting for the poll', () => {
+    const listeners: Array<() => void> = [];
+    vi.stubGlobal('cookieStore', {
+      addEventListener: (_t: string, l: () => void) => listeners.push(l),
+      removeEventListener: () => {},
+    });
+
+    const cb = vi.fn();
+    const dispose = watchMarker('session_present', cb, 60_000);
+
+    setCookie('session_present=1');
+    listeners.forEach((l) => l()); // simulate the browser firing 'change'
+
+    expect(cb).toHaveBeenCalledWith(true);
+    // Timers are NOT advanced and the poll is 60 s away — this proves the
+    // cookieStore path, not the poll, delivered the edge.
+    dispose();
+    vi.unstubAllGlobals();
   });
 });
