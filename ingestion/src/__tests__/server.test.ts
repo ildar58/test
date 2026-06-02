@@ -83,22 +83,34 @@ describe('ingestion server', () => {
     expect(res.status).toBe(401);
   });
 
-  it('POST /s/ stores batch tagged with the logged-in username after /auth/login', async () => {
+  it('POST /s/ stores batch under the minted session_id, tagged with username', async () => {
     const { default: app } = await import('../server');
     const agent = request.agent(app);
 
-    const login = await agent
-      .post('/auth/login')
-      .send({ user: 'alice', password: 'alice' });
-    expect(login.status).toBe(200);
+    const login = await agent.post('/auth/login').send({ user: 'alice', password: 'alice' });
+    const sid = /session_id=([0-9a-f-]{36})/.exec(
+      ([] as string[]).concat(login.headers['set-cookie'] ?? []).join(';')
+    )?.[1];
+    expect(sid).toBeTruthy();
 
     const ingest = await agent
       .post('/s/')
-      .send({ session_id: 'sA', batch_seq: 1, events_b64_gzip: gzipB64([{ x: 1 }]) });
+      .send({ session_id: sid, batch_seq: 1, events_b64_gzip: gzipB64([{ x: 1 }]) });
     expect(ingest.status).toBe(200);
 
-    const meta = JSON.parse(fs.readFileSync(path.join(tmpDir, 'sA.meta.json'), 'utf-8'));
+    const meta = JSON.parse(fs.readFileSync(path.join(tmpDir, `${sid}.meta.json`), 'utf-8'));
     expect(meta.user_id).toBe('alice');
+  });
+
+  it('POST /s/ returns 403 when body.session_id != the minted session_id', async () => {
+    const { default: app } = await import('../server');
+    const agent = request.agent(app);
+    await agent.post('/auth/login').send({ user: 'alice', password: 'alice' });
+
+    const res = await agent
+      .post('/s/')
+      .send({ session_id: 'forged-id', batch_seq: 1, events_b64_gzip: gzipB64([{ x: 1 }]) });
+    expect(res.status).toBe(403);
   });
 
   it('POST /auth/logout invalidates the session and clears both cookies', async () => {

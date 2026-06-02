@@ -102,6 +102,14 @@ app.post('/s/', (req: Request, res: Response) => {
     return;
   }
 
+  // The session_id is JS-readable (non-HttpOnly), so it could be forged. It is
+  // NOT the auth key — the HttpOnly session token above is. Here we only assert
+  // the client is writing under the id we actually minted for this session.
+  if (req.body.session_id !== entry.sessionId) {
+    res.status(403).json({ success: false, error: 'session_id mismatch' });
+    return;
+  }
+
   try {
     appendBatch(req.body, entry.username);
     res.json({ success: true });
