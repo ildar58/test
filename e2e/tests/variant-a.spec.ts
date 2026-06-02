@@ -52,7 +52,7 @@ test.describe('variant-a: auth-gated nginx injection', () => {
   test('recorder bundle is injected on every HTML response', async () => {
     const res = await fetch(stack.url + '/');
     const html = await res.text();
-    expect(html).toContain('<script src="/_rec/recorder.iife.js">');
+    expect(html).toContain('<script src="/_rec/recorder.iife.js" data-endpoint="/s/"></script>');
   });
 
   test('no POST /s/ traffic while user is logged out', async ({ page }) => {
