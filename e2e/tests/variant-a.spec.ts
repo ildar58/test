@@ -23,6 +23,17 @@ async function countBatchPosts(page: Page, durationMs: number): Promise<number> 
   return count;
 }
 
+async function msUntilFirstBatch(page: Page, action: () => Promise<void>): Promise<number> {
+  const t0 = Date.now();
+  const firstBatch = page.waitForRequest(
+    (req) => req.method() === 'POST' && req.url().endsWith('/s/'),
+    { timeout: 6_000 }
+  );
+  await action();
+  await firstBatch;
+  return Date.now() - t0;
+}
+
 test.describe('variant-a: auth-gated nginx injection', () => {
   test.beforeAll(async () => {
     try {
@@ -64,7 +75,7 @@ test.describe('variant-a: auth-gated nginx injection', () => {
     const inputs = page.locator('input[type="text"]');
     await inputs.first().fill('post-auth typing');
 
-    // Wait for at least one flush window
+    // Wait for markerPollMs=1s + flush 2s.
     await page.waitForTimeout(3_000);
 
     const res = await fetch(`${stack.url}/sessions`);
@@ -78,6 +89,22 @@ test.describe('variant-a: auth-gated nginx injection', () => {
     expect(body.data[0]!.batch_count).toBeGreaterThan(0);
   });
 
+  test('recording starts within 4s of login (no 5s poll gap)', async ({ page }) => {
+    await page.goto(stack.url);
+
+    const elapsed = await msUntilFirstBatch(page, async () => {
+      await login(page);
+      await expect(page.locator('#auth-status')).toHaveText('logged in');
+      const inputs = page.locator('input[type="text"]');
+      await inputs.first().fill('post-auth typing');
+    });
+
+    // Old behaviour waited up to markerPollMs=5s for the cookie poll.
+    // With cookieStore + 1s poll the first batch (full snapshot) arrives
+    // within one flush interval (~2s) of login.
+    expect(elapsed).toBeLessThan(4_000);
+  });
+
   test('logout stops recording within poll interval', async ({ page }) => {
     await page.goto(stack.url);
     await login(page);
@@ -87,8 +114,8 @@ test.describe('variant-a: auth-gated nginx injection', () => {
     await page.locator('#auth-logout').click();
     await expect(page.locator('#auth-status')).toHaveText('logged out');
 
-    // Allow up to markerPollMs + flushIntervalMs (= 5s + 2s) for the SDK to react
-    await page.waitForTimeout(7_500);
+    // Allow up to markerPollMs + flushIntervalMs for the SDK to react
+    await page.waitForTimeout(3_500);
 
     const posts = await countBatchPosts(page, 3_500);
     expect(posts).toBe(0);
@@ -98,9 +125,10 @@ test.describe('variant-a: auth-gated nginx injection', () => {
     await page.goto(stack.url);
 
     await login(page);
+    // Marker poll (1s) + flush (2s) — give the recorder time to actually capture.
     await page.waitForTimeout(3_000);
     await page.locator('#auth-logout').click();
-    await page.waitForTimeout(7_500);
+    await page.waitForTimeout(3_500);
     await login(page);
     await page.waitForTimeout(3_000);
 
