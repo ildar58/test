@@ -21,6 +21,7 @@ var PamRecorder = (() => {
   // src/index.ts
   var src_exports = {};
   __export(src_exports, {
+    autoInit: () => autoInit,
     init: () => init,
     stop: () => stop
   });
@@ -13602,6 +13603,48 @@ var PamRecorder = (() => {
     }
   };
 
+  // src/script-config.ts
+  var ATTR_MAP = [
+    { datasetKey: "endpoint", configKey: "endpoint", type: "string" },
+    { datasetKey: "markerCookie", configKey: "markerCookieName", type: "string" },
+    { datasetKey: "sessionIdCookie", configKey: "sessionIdCookieName", type: "string" },
+    { datasetKey: "flushIntervalMs", configKey: "flushIntervalMs", type: "number" },
+    { datasetKey: "markerPollMs", configKey: "markerPollMs", type: "number" },
+    { datasetKey: "maxBufferSize", configKey: "maxBufferSize", type: "number" },
+    { datasetKey: "checkoutEveryMs", configKey: "checkoutEveryNms", type: "number" },
+    { datasetKey: "unauthorizedThreshold", configKey: "unauthorizedThreshold", type: "number" },
+    { datasetKey: "unauthorizedCooldownMs", configKey: "unauthorizedCooldownMs", type: "number" },
+    { datasetKey: "blockClass", configKey: "blockClass", type: "string" },
+    { datasetKey: "ignoreClass", configKey: "ignoreClass", type: "string" },
+    { datasetKey: "maskTextClass", configKey: "maskTextClass", type: "string" },
+    { datasetKey: "maskAllInputs", configKey: "maskAllInputs", type: "boolean" },
+    { datasetKey: "inlineStylesheet", configKey: "inlineStylesheet", type: "boolean" },
+    { datasetKey: "collectFonts", configKey: "collectFonts", type: "boolean" },
+    { datasetKey: "recordCrossOriginIframes", configKey: "recordCrossOriginIframes", type: "boolean" }
+  ];
+  function parseDatasetConfig(dataset) {
+    const out = {};
+    for (const spec of ATTR_MAP) {
+      const raw = dataset[spec.datasetKey];
+      if (raw === void 0)
+        continue;
+      if (spec.type === "string") {
+        if (raw.length > 0)
+          out[spec.configKey] = raw;
+      } else if (spec.type === "number") {
+        const n2 = Number(raw);
+        if (raw.trim() !== "" && Number.isFinite(n2))
+          out[spec.configKey] = n2;
+      } else {
+        if (raw === "true")
+          out[spec.configKey] = true;
+        else if (raw === "false")
+          out[spec.configKey] = false;
+      }
+    }
+    return out;
+  }
+
   // src/index.ts
   var instance = null;
   function init(options = {}) {
@@ -13614,6 +13657,13 @@ var PamRecorder = (() => {
   function stop() {
     instance?.stop();
     instance = null;
+  }
+  function autoInit(script) {
+    if (script)
+      init(parseDatasetConfig(script.dataset));
+  }
+  if (typeof document !== "undefined") {
+    autoInit(document.currentScript);
   }
   return __toCommonJS(src_exports);
 })();
