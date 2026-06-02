@@ -2,38 +2,67 @@ import { record } from 'rrweb';
 import type { eventWithTime, listenerHandler } from '@rrweb/types';
 import type { RecorderConfig } from './config';
 import { Transport } from './transport';
-import { readMarker, watchMarker } from './auth';
+import { readMarker, watchMarker, readCookieValue } from './auth';
 
-const SESSION_STORAGE_KEY = '_pam_sid';
+type RecordOptions = NonNullable<Parameters<typeof record>[0]>;
+
+const SID_KEY = '_pam_sid';
+const SEQ_KEY = '_pam_seq';
 
 type State = 'IDLE' | 'ACTIVE' | 'STOPPED';
 
-function newSessionId(): string {
-  return crypto.randomUUID();
-}
+/**
+ * sessionStorage wrapper for reload-continuity. Survives reload (so we keep
+ * the same session_id AND the monotonic batch_seq), but is cleared on logout
+ * so the next ACTIVE phase starts a fresh session. Every access is guarded —
+ * sessionStorage can throw in private-browsing modes and inside cross-origin
+ * iframes.
+ */
+const sessionIdStorage = {
+  readId(): string | null {
+    try { return sessionStorage.getItem(SID_KEY); }
+    catch { return null; }
+  },
+  writeId(id: string): void {
+    try { sessionStorage.setItem(SID_KEY, id); }
+    catch { /* in-memory only */ }
+  },
+  readSeq(): number {
+    try {
+      const raw = sessionStorage.getItem(SEQ_KEY);
+      const n = raw === null ? 0 : Number.parseInt(raw, 10);
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    } catch { return 0; }
+  },
+  writeSeq(n: number): void {
+    try { sessionStorage.setItem(SEQ_KEY, String(n)); }
+    catch { /* ignore */ }
+  },
+  clear(): void {
+    try {
+      sessionStorage.removeItem(SID_KEY);
+      sessionStorage.removeItem(SEQ_KEY);
+    } catch { /* ignore */ }
+  },
+};
 
-function readPersistedSessionId(): string | null {
-  try {
-    return sessionStorage.getItem(SESSION_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function persistSessionId(id: string): void {
-  try {
-    sessionStorage.setItem(SESSION_STORAGE_KEY, id);
-  } catch {
-    // sessionStorage unavailable; fall through with in-memory only
-  }
-}
-
-function clearSessionId(): void {
-  try {
-    sessionStorage.removeItem(SESSION_STORAGE_KEY);
-  } catch {
-    // ignore
-  }
+function buildRrwebOptions(
+  config: RecorderConfig,
+  emit: (event: eventWithTime) => void
+): RecordOptions {
+  return {
+    blockClass: config.blockClass,
+    ignoreClass: config.ignoreClass,
+    maskTextClass: config.maskTextClass,
+    maskAllInputs: config.maskAllInputs,
+    maskInputOptions: config.maskInputOptions,
+    inlineStylesheet: config.inlineStylesheet,
+    collectFonts: config.collectFonts,
+    recordCrossOriginIframes: config.recordCrossOriginIframes,
+    checkoutEveryNms: config.checkoutEveryNms,
+    // rrweb types emit as `unknown` for forward-compat; widen here once.
+    emit: (event: unknown) => emit(event as eventWithTime),
+  };
 }
 
 export class Recorder {
@@ -57,72 +86,59 @@ export class Recorder {
 
     this.disposeWatcher = watchMarker(
       this.config.markerCookieName,
-      (present) => {
-        if (present) this.tryActivate();
-        else this.deactivate();
-      },
+      (present) => (present ? this.tryActivate() : this.deactivate()),
       this.config.markerPollMs
     );
 
     // watchMarker only fires on edges. If the marker is already present at
     // start() (e.g. page reload while logged in), kick off ACTIVE explicitly.
-    if (readMarker(this.config.markerCookieName)) {
-      this.tryActivate();
-    }
+    if (readMarker(this.config.markerCookieName)) this.tryActivate();
   }
 
   private tryActivate(): void {
     if (this.state !== 'IDLE') return;
     if (Date.now() < this.cooldownUntil) return;
 
+    // V1: the recording session id is minted by the backend and delivered as a
+    // cookie alongside session_present. If it isn't readable yet, stay IDLE —
+    // the backend sets both atomically, so the next auth edge will carry it.
+    const sessionId = readCookieValue(this.config.sessionIdCookieName);
+    if (!sessionId) return;
+
     this.clearRetryTimer();
-
-    // Reload continuity: if a sessionStorage UUID survives this page load,
-    // reuse it so the server appends to the existing <sid>.jsonl. New ACTIVE
-    // phases after logout (deactivate clears sessionStorage) get a fresh UUID.
-    const persisted = readPersistedSessionId();
-    const sid = persisted ?? newSessionId();
-    if (!persisted) persistSessionId(sid);
-
-    this.transport = new Transport(
-      this.config.endpoint,
-      this.config.flushIntervalMs,
-      this.config.maxBufferSize,
-      () => this.onUnauthorized(),
-      () => this.onAuthorized()
-    );
-    this.transport.start(sid);
-
+    this.transport = this.spawnTransport();
+    this.transport.start(sessionId);
     this.rrwebStop =
-      record({
-        blockClass: this.config.blockClass,
-        ignoreClass: this.config.ignoreClass,
-        maskTextClass: this.config.maskTextClass,
-        maskAllInputs: this.config.maskAllInputs,
-        maskInputOptions: this.config.maskInputOptions,
-        inlineStylesheet: this.config.inlineStylesheet,
-        collectFonts: this.config.collectFonts,
-        recordCrossOriginIframes: this.config.recordCrossOriginIframes,
-        checkoutEveryNms: this.config.checkoutEveryNms,
-        emit: (event: eventWithTime) => {
-          if (this.transport) this.transport.push(event, sid);
-        },
-      }) ?? null;
+      record(buildRrwebOptions(this.config, (event) =>
+        this.transport?.push(event, sessionId)
+      )) ?? null;
 
     this.state = 'ACTIVE';
   }
 
+  private spawnTransport(): Transport {
+    return new Transport({
+      endpoint: this.config.endpoint,
+      flushIntervalMs: this.config.flushIntervalMs,
+      maxBufferSize: this.config.maxBufferSize,
+      // Keep batch_seq monotonic across reloads. Without persistence the
+      // counter would reset to 1 every time the page reloads while logged in,
+      // violating the per-session_id ordering contract documented in
+      // ARCHITECTURE.md.
+      initialBatchSeq: sessionIdStorage.readSeq(),
+      onBatchSeqAdvance: (seq) => sessionIdStorage.writeSeq(seq),
+      onUnauthorized: () => this.onUnauthorized(),
+      onAuthorized: () => this.onAuthorized(),
+    });
+  }
+
   private deactivate(): void {
     if (this.state !== 'ACTIVE') return;
-    if (this.rrwebStop) {
-      this.rrwebStop();
-      this.rrwebStop = null;
-    }
-    if (this.transport) {
-      this.transport.stop();
-      this.transport = null;
-    }
-    clearSessionId();
+    this.rrwebStop?.();
+    this.rrwebStop = null;
+    this.transport?.stop();
+    this.transport = null;
+    sessionIdStorage.clear();
     this.state = 'IDLE';
   }
 
@@ -136,20 +152,20 @@ export class Recorder {
     this.deactivate();
     this.unauthorizedCount += 1;
 
-    const atThreshold = this.unauthorizedCount >= this.config.unauthorizedThreshold;
-    let delay: number;
-    if (atThreshold) {
-      this.cooldownUntil = Date.now() + this.config.unauthorizedCooldownMs;
-      this.unauthorizedCount = 0;
-      delay = this.config.unauthorizedCooldownMs;
-    } else {
-      delay = this.config.markerPollMs;
-    }
-
     // The watcher will not fire an edge while the marker stays present, so
     // schedule an explicit retry here. If logout happens in the meantime,
     // tryActivate's state guard or the watcher's edge callback handles it.
+    const delay = this.unauthorizedCount >= this.config.unauthorizedThreshold
+      ? this.enterCooldown()
+      : this.config.markerPollMs;
     this.scheduleRetry(delay);
+  }
+
+  /** Sets the cooldown deadline and resets the counter. Returns the cooldown duration. */
+  private enterCooldown(): number {
+    this.cooldownUntil = Date.now() + this.config.unauthorizedCooldownMs;
+    this.unauthorizedCount = 0;
+    return this.config.unauthorizedCooldownMs;
   }
 
   private onAuthorized(): void {
@@ -170,19 +186,16 @@ export class Recorder {
   }
 
   private clearRetryTimer(): void {
-    if (this.retryTimer !== null) {
-      clearTimeout(this.retryTimer);
-      this.retryTimer = null;
-    }
+    if (this.retryTimer === null) return;
+    clearTimeout(this.retryTimer);
+    this.retryTimer = null;
   }
 
   stop(): void {
     this.deactivate();
     this.clearRetryTimer();
-    if (this.disposeWatcher) {
-      this.disposeWatcher();
-      this.disposeWatcher = null;
-    }
+    this.disposeWatcher?.();
+    this.disposeWatcher = null;
     this.state = 'STOPPED';
   }
 }
