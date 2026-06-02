@@ -26,24 +26,33 @@ var PamRecorder = (() => {
   });
 
   // src/config.ts
+  var MINUTE_MS = 6e4;
   var DEFAULT_CONFIG = {
     endpoint: "/s/",
     blockClass: "rec-no-capture",
     ignoreClass: "rec-ignore-input",
     maskTextClass: "rec-mask",
-    maskAllInputs: true,
+    // Don't blanket-mask every input: maskAllInputs:true also masks <select>,
+    // <radio>, <checkbox> — controls whose values come from a fixed option set,
+    // not free user text. rrweb still records their change events, but the value
+    // is stored as asterisks, so on replay `select.value = "*****"` matches no
+    // <option> and the control silently reverts to its default — the selection
+    // looks lost. Mask only free-text-bearing inputs (password here; the auth
+    // block is also wrapped in blockClass `rec-no-capture`). PROD NOTE: tighten
+    // this for PII — add text/email/tel/etc. to maskInputOptions before shipping.
+    maskAllInputs: false,
     maskInputOptions: { password: true },
     inlineStylesheet: true,
     collectFonts: false,
     recordCrossOriginIframes: false,
-    checkoutEveryNms: 30 * 60 * 1e3,
-    // 30 min
+    checkoutEveryNms: 30 * MINUTE_MS,
     flushIntervalMs: 2e3,
     maxBufferSize: 500,
     markerCookieName: "session_present",
-    markerPollMs: 5e3,
+    sessionIdCookieName: "session_id",
+    markerPollMs: 1e3,
     unauthorizedThreshold: 3,
-    unauthorizedCooldownMs: 6e4
+    unauthorizedCooldownMs: MINUTE_MS
   };
 
   // ../node_modules/.pnpm/rrweb@2.0.0-alpha.20/node_modules/rrweb/dist/rrweb.js
@@ -13288,82 +13297,85 @@ var PamRecorder = (() => {
     return btoa(binary);
   }
   var Transport = class {
-    constructor(endpoint, flushIntervalMs, maxBufferSize, onUnauthorized, onAuthorized) {
+    constructor(opts) {
       this.buffer = [];
-      this.batchSeq = 0;
-      this.timer = null;
-      this.onVisibilityChange = null;
-      this.onPageHide = null;
-      this.endpoint = endpoint;
-      this.flushIntervalMs = flushIntervalMs;
-      this.maxBufferSize = maxBufferSize;
-      this.onUnauthorized = onUnauthorized;
-      this.onAuthorized = onAuthorized;
+      this.flushTimer = null;
+      this.flushOnVisibilityHide = null;
+      this.flushOnPageHide = null;
+      this.opts = opts;
+      this.batchSeq = opts.initialBatchSeq ?? 0;
     }
     start(sessionId) {
-      this.timer = setInterval(() => this.flush(sessionId), this.flushIntervalMs);
-      this.onPageHide = () => this.beaconFlush(sessionId);
-      this.onVisibilityChange = () => {
+      this.flushTimer = setInterval(
+        () => this.flush(sessionId),
+        this.opts.flushIntervalMs
+      );
+      this.flushOnPageHide = () => this.beaconFlush(sessionId);
+      this.flushOnVisibilityHide = () => {
         if (document.visibilityState === "hidden")
           this.beaconFlush(sessionId);
       };
-      document.addEventListener("visibilitychange", this.onVisibilityChange);
-      window.addEventListener("pagehide", this.onPageHide);
+      document.addEventListener("visibilitychange", this.flushOnVisibilityHide);
+      window.addEventListener("pagehide", this.flushOnPageHide);
     }
     push(event, sessionId) {
       this.buffer.push(event);
-      if (this.buffer.length >= this.maxBufferSize)
+      if (this.buffer.length >= this.opts.maxBufferSize)
         this.flush(sessionId);
     }
-    flush(sessionId) {
+    /** Synchronous swap: returns the current batch and clears the buffer atomically. */
+    takeBatch(sessionId) {
       if (this.buffer.length === 0)
-        return;
+        return null;
       const events = this.buffer;
       this.buffer = [];
-      const batch = {
+      this.batchSeq += 1;
+      this.opts.onBatchSeqAdvance?.(this.batchSeq);
+      return {
         session_id: sessionId,
-        batch_seq: ++this.batchSeq,
+        batch_seq: this.batchSeq,
         events_b64_gzip: encodeBatch(events)
       };
-      fetch(this.endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(batch),
-        credentials: "include",
-        keepalive: true
-      }).then((res) => {
-        if (res.status === 401 && this.onUnauthorized)
-          this.onUnauthorized();
-        else if (res.ok && this.onAuthorized)
-          this.onAuthorized();
-      }).catch(() => {
-      });
     }
-    beaconFlush(sessionId) {
-      if (this.buffer.length === 0)
+    async flush(sessionId) {
+      const batch = this.takeBatch(sessionId);
+      if (!batch)
         return;
-      const events = this.buffer;
-      this.buffer = [];
-      const batch = {
-        session_id: sessionId,
-        batch_seq: ++this.batchSeq,
-        events_b64_gzip: encodeBatch(events)
-      };
+      try {
+        const res = await fetch(this.opts.endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch),
+          credentials: "include",
+          keepalive: true
+        });
+        if (res.status === 401)
+          this.opts.onUnauthorized?.();
+        else if (res.ok)
+          this.opts.onAuthorized?.();
+      } catch {
+      }
+    }
+    /** Pagehide/visibility-hidden path: uses sendBeacon so the request survives unload. */
+    beaconFlush(sessionId) {
+      const batch = this.takeBatch(sessionId);
+      if (!batch)
+        return;
       const blob2 = new Blob([JSON.stringify(batch)], { type: "application/json" });
-      navigator.sendBeacon(this.endpoint, blob2);
+      navigator.sendBeacon(this.opts.endpoint, blob2);
     }
     stop() {
-      if (this.timer) {
-        clearInterval(this.timer);
-        this.timer = null;
+      if (this.flushTimer) {
+        clearInterval(this.flushTimer);
+        this.flushTimer = null;
       }
-      if (this.onVisibilityChange) {
-        document.removeEventListener("visibilitychange", this.onVisibilityChange);
-        this.onVisibilityChange = null;
+      if (this.flushOnVisibilityHide) {
+        document.removeEventListener("visibilitychange", this.flushOnVisibilityHide);
+        this.flushOnVisibilityHide = null;
       }
-      if (this.onPageHide) {
-        window.removeEventListener("pagehide", this.onPageHide);
-        this.onPageHide = null;
+      if (this.flushOnPageHide) {
+        window.removeEventListener("pagehide", this.flushOnPageHide);
+        this.flushOnPageHide = null;
       }
     }
   };
@@ -13381,6 +13393,19 @@ var PamRecorder = (() => {
     }
     return false;
   }
+  function readCookieValue(name) {
+    const raw = typeof document !== "undefined" ? document.cookie : "";
+    if (!raw)
+      return null;
+    for (const part of raw.split(";")) {
+      const [k, ...v] = part.trim().split("=");
+      if (k === name) {
+        const value = v.join("=");
+        return value.length > 0 ? value : null;
+      }
+    }
+    return null;
+  }
   function watchMarker(name, onChange, pollMs) {
     let last = readMarker(name);
     const check = () => {
@@ -13395,36 +13420,72 @@ var PamRecorder = (() => {
     const onFocus = () => check();
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("focus", onFocus);
+    const cookieStore = globalThis.cookieStore;
+    if (cookieStore)
+      cookieStore.addEventListener("change", check);
     return () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("focus", onFocus);
+      if (cookieStore)
+        cookieStore.removeEventListener("change", check);
     };
   }
 
   // src/recorder.ts
-  var SESSION_STORAGE_KEY = "_pam_sid";
-  function newSessionId() {
-    return crypto.randomUUID();
-  }
-  function readPersistedSessionId() {
-    try {
-      return sessionStorage.getItem(SESSION_STORAGE_KEY);
-    } catch {
-      return null;
+  var SID_KEY = "_pam_sid";
+  var SEQ_KEY = "_pam_seq";
+  var sessionIdStorage = {
+    readId() {
+      try {
+        return sessionStorage.getItem(SID_KEY);
+      } catch {
+        return null;
+      }
+    },
+    writeId(id) {
+      try {
+        sessionStorage.setItem(SID_KEY, id);
+      } catch {
+      }
+    },
+    readSeq() {
+      try {
+        const raw = sessionStorage.getItem(SEQ_KEY);
+        const n2 = raw === null ? 0 : Number.parseInt(raw, 10);
+        return Number.isFinite(n2) && n2 >= 0 ? n2 : 0;
+      } catch {
+        return 0;
+      }
+    },
+    writeSeq(n2) {
+      try {
+        sessionStorage.setItem(SEQ_KEY, String(n2));
+      } catch {
+      }
+    },
+    clear() {
+      try {
+        sessionStorage.removeItem(SID_KEY);
+        sessionStorage.removeItem(SEQ_KEY);
+      } catch {
+      }
     }
-  }
-  function persistSessionId(id) {
-    try {
-      sessionStorage.setItem(SESSION_STORAGE_KEY, id);
-    } catch {
-    }
-  }
-  function clearSessionId() {
-    try {
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    } catch {
-    }
+  };
+  function buildRrwebOptions(config, emit) {
+    return {
+      blockClass: config.blockClass,
+      ignoreClass: config.ignoreClass,
+      maskTextClass: config.maskTextClass,
+      maskAllInputs: config.maskAllInputs,
+      maskInputOptions: config.maskInputOptions,
+      inlineStylesheet: config.inlineStylesheet,
+      collectFonts: config.collectFonts,
+      recordCrossOriginIframes: config.recordCrossOriginIframes,
+      checkoutEveryNms: config.checkoutEveryNms,
+      // rrweb types emit as `unknown` for forward-compat; widen here once.
+      emit: (event) => emit(event)
+    };
   }
   var Recorder = class {
     constructor(config) {
@@ -13447,65 +13508,52 @@ var PamRecorder = (() => {
         return;
       this.disposeWatcher = watchMarker(
         this.config.markerCookieName,
-        (present) => {
-          if (present)
-            this.tryActivate();
-          else
-            this.deactivate();
-        },
+        (present) => present ? this.tryActivate() : this.deactivate(),
         this.config.markerPollMs
       );
-      if (readMarker(this.config.markerCookieName)) {
+      if (readMarker(this.config.markerCookieName))
         this.tryActivate();
-      }
     }
     tryActivate() {
       if (this.state !== "IDLE")
         return;
       if (Date.now() < this.cooldownUntil)
         return;
+      const sessionId = readCookieValue(this.config.sessionIdCookieName);
+      if (!sessionId)
+        return;
       this.clearRetryTimer();
-      const persisted = readPersistedSessionId();
-      const sid = persisted ?? newSessionId();
-      if (!persisted)
-        persistSessionId(sid);
-      this.transport = new Transport(
-        this.config.endpoint,
-        this.config.flushIntervalMs,
-        this.config.maxBufferSize,
-        () => this.onUnauthorized(),
-        () => this.onAuthorized()
-      );
-      this.transport.start(sid);
-      this.rrwebStop = record({
-        blockClass: this.config.blockClass,
-        ignoreClass: this.config.ignoreClass,
-        maskTextClass: this.config.maskTextClass,
-        maskAllInputs: this.config.maskAllInputs,
-        maskInputOptions: this.config.maskInputOptions,
-        inlineStylesheet: this.config.inlineStylesheet,
-        collectFonts: this.config.collectFonts,
-        recordCrossOriginIframes: this.config.recordCrossOriginIframes,
-        checkoutEveryNms: this.config.checkoutEveryNms,
-        emit: (event) => {
-          if (this.transport)
-            this.transport.push(event, sid);
-        }
-      }) ?? null;
+      this.transport = this.spawnTransport();
+      this.transport.start(sessionId);
+      this.rrwebStop = record(buildRrwebOptions(
+        this.config,
+        (event) => this.transport?.push(event, sessionId)
+      )) ?? null;
       this.state = "ACTIVE";
+    }
+    spawnTransport() {
+      return new Transport({
+        endpoint: this.config.endpoint,
+        flushIntervalMs: this.config.flushIntervalMs,
+        maxBufferSize: this.config.maxBufferSize,
+        // Keep batch_seq monotonic across reloads. Without persistence the
+        // counter would reset to 1 every time the page reloads while logged in,
+        // violating the per-session_id ordering contract documented in
+        // ARCHITECTURE.md.
+        initialBatchSeq: sessionIdStorage.readSeq(),
+        onBatchSeqAdvance: (seq) => sessionIdStorage.writeSeq(seq),
+        onUnauthorized: () => this.onUnauthorized(),
+        onAuthorized: () => this.onAuthorized()
+      });
     }
     deactivate() {
       if (this.state !== "ACTIVE")
         return;
-      if (this.rrwebStop) {
-        this.rrwebStop();
-        this.rrwebStop = null;
-      }
-      if (this.transport) {
-        this.transport.stop();
-        this.transport = null;
-      }
-      clearSessionId();
+      this.rrwebStop?.();
+      this.rrwebStop = null;
+      this.transport?.stop();
+      this.transport = null;
+      sessionIdStorage.clear();
       this.state = "IDLE";
     }
     /**
@@ -13518,16 +13566,14 @@ var PamRecorder = (() => {
         return;
       this.deactivate();
       this.unauthorizedCount += 1;
-      const atThreshold = this.unauthorizedCount >= this.config.unauthorizedThreshold;
-      let delay;
-      if (atThreshold) {
-        this.cooldownUntil = Date.now() + this.config.unauthorizedCooldownMs;
-        this.unauthorizedCount = 0;
-        delay = this.config.unauthorizedCooldownMs;
-      } else {
-        delay = this.config.markerPollMs;
-      }
+      const delay = this.unauthorizedCount >= this.config.unauthorizedThreshold ? this.enterCooldown() : this.config.markerPollMs;
       this.scheduleRetry(delay);
+    }
+    /** Sets the cooldown deadline and resets the counter. Returns the cooldown duration. */
+    enterCooldown() {
+      this.cooldownUntil = Date.now() + this.config.unauthorizedCooldownMs;
+      this.unauthorizedCount = 0;
+      return this.config.unauthorizedCooldownMs;
     }
     onAuthorized() {
       this.unauthorizedCount = 0;
@@ -13542,18 +13588,16 @@ var PamRecorder = (() => {
       }, delayMs);
     }
     clearRetryTimer() {
-      if (this.retryTimer !== null) {
-        clearTimeout(this.retryTimer);
-        this.retryTimer = null;
-      }
+      if (this.retryTimer === null)
+        return;
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
     }
     stop() {
       this.deactivate();
       this.clearRetryTimer();
-      if (this.disposeWatcher) {
-        this.disposeWatcher();
-        this.disposeWatcher = null;
-      }
+      this.disposeWatcher?.();
+      this.disposeWatcher = null;
       this.state = "STOPPED";
     }
   };
