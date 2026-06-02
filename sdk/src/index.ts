@@ -6,8 +6,9 @@
  *   init({ endpoint: '/s/' });
  *
  * The recorder stays IDLE until the marker cookie (default `session_present`)
- * is observed. Identity is derived server-side from the auth cookie — no
- * distinct_id or sessionId is accepted on the client.
+ * is observed, then reads the server-minted recording id from the `session_id`
+ * cookie to tag batches. User identity is derived server-side from the HttpOnly
+ * auth cookie — the client never generates an id nor accepts one as an argument.
  */
 
 import { DEFAULT_CONFIG, type RecorderConfig } from './config';
