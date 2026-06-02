@@ -30,7 +30,7 @@ The SDK test suite is **currently red** for a reason unrelated to this feature: 
 | `proxy/recorder-bundle/recorder.iife.js` | rebuilt artifact |
 | `e2e/tests/variant-a.spec.ts` | assert start < 4 s; shorten poll-based waits |
 
-Proxy code (`proxy-go`, `nginx.conf`) is **unchanged** — defaults already match (`session_present`, `session_id`, endpoint `/s/`).
+Proxy code (`nginx.conf`) is **unchanged** — defaults already match (`session_present`, `session_id`, endpoint `/s/`).
 
 ---
 

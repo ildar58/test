@@ -33,7 +33,7 @@
 
 | Компонент | Ответственность |
 |-----------|-----------------|
-| **Proxy** (proxy-go/nginx) | инжект скрипта перед `</head>`; роутинг `/auth/*`, `/s/`, `/sessions`; раздача бандла `/_rec/`. Auth не трогает. |
+| **Proxy** (nginx) | инжект скрипта перед `</head>`; роутинг `/auth/*`, `/s/`, `/sessions`; раздача бандла `/_rec/`. Auth не трогает. |
 | **Сервис** (ingestion → Go) | `/auth/login`/`/auth/logout` ставит/чистит cookie; `/s/` принимает батчи; хранит `session_id ↔ user`. |
 | **SDK-скрипт** (бандл) | IDLE→ACTIVE по флагу, батчи на endpoint, стоп по исчезновению флага; читает `session_id` из cookie. |
 
@@ -115,7 +115,7 @@
   из тела, сверить с `entry.sessionId` (анти-форж, т.к. ID не-HttpOnly), писать
   под этим ID, атрибутировать `entry.username`.
 
-### Proxy ([proxy-go](../proxy-go), [nginx.conf](../proxy/nginx.conf))
+### Proxy ([nginx.conf](../proxy/nginx.conf))
 
 - Инжект-сниппет передаёт конфиг в `init`, напр.
   `PamRecorder.init({ endpoint:"/s/", markerCookieName:"session_present", sessionIdCookieName:"session_id" })`
@@ -145,7 +145,7 @@
 - **Нет `cookieStore`** (Safari/FF) → опрос 1 с; потолок задержки старта ≤1 с.
 - **Сетевая ошибка батча** → текущее поведение (drop без ре-кью) сохраняем.
 - **Нет `</head>`** для инъекции → прокси пропускает ответ как есть и логирует
-  (proxy-go уже так делает).
+  (nginx `sub_filter` так и делает — пропускает без изменений).
 
 ## 9. Тестирование
 
