@@ -32,6 +32,10 @@ Thumbs.db
 *.swp
 *.swo
 
+# Agent / tooling artifacts
+.serena/
+.claude/
+
 # Env
 .env
 .env.local
