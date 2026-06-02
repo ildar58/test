@@ -41,6 +41,7 @@ services:
       - "8081:8080"  # replayer admin UI
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./proxy_defaults.conf:/etc/nginx/snippets/proxy_defaults.conf:ro
       - ./recorder-bundle:/srv/recorder-bundle:ro
     depends_on:
       - demo-app

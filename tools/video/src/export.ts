@@ -5,9 +5,16 @@ import path from 'path';
 import { chromium } from 'playwright';
 import { decodeJsonl, isValidSessionId } from './decode';
 
+/** Extra wall-clock margin on top of playbackMs before the finish-event watchdog fires. */
+const FINISH_TIMEOUT_BUFFER_MS = 10_000;
+
 function fail(msg: string): never {
   console.error(`[video] ${msg}`);
   process.exit(1);
+}
+
+function log(msg: string): void {
+  console.log(`[video] ${msg}`);
 }
 
 /**
@@ -50,7 +57,7 @@ function healPlaywrightFfmpegOnMacIfBroken(): void {
     return;
   }
 
-  console.log(`[video] healing Playwright ffmpeg: copying ${systemFfmpeg} → ${target}`);
+  log(`healing Playwright ffmpeg: copying ${systemFfmpeg} → ${target}`);
   fs.copyFileSync(systemFfmpeg, target);
   fs.chmodSync(target, 0o755);
 }
@@ -165,18 +172,22 @@ async function main(): Promise<void> {
     );
   }
 
-  console.log(`[video] decoding ${jsonlPath}…`);
-  const events = decodeJsonl(jsonlPath) as Array<{ type: number; data?: { width?: number; height?: number } }>;
-  console.log(`[video] ${events.length} events to render`);
+  log(`decoding ${jsonlPath}…`);
+  const events = decodeJsonl(jsonlPath) as Array<{
+    type: number;
+    timestamp?: number;
+    data?: { width?: number; height?: number };
+  }>;
+  log(`${events.length} events to render`);
 
   healPlaywrightFfmpegOnMacIfBroken();
 
   const chromePath = findChromeExecutable();
-  console.log(`[video] using chrome: ${chromePath}`);
+  log(`using chrome: ${chromePath}`);
 
   const { umd, css } = readRrwebPlayerAssets();
   const viewport = getMaxViewport(events);
-  console.log(`[video] viewport ${viewport.width}×${viewport.height}`);
+  log(`viewport ${viewport.width}×${viewport.height}`);
 
   const videoDir = path.join(dataDir, '.__rrvideo_tmp__');
   fs.mkdirSync(videoDir, { recursive: true });
@@ -208,24 +219,10 @@ async function main(): Promise<void> {
   });
   await page.exposeFunction('onReplayFinish', () => resolveFinished());
 
-  console.log(`[video] launching replayer…`);
+  log(`launching replayer…`);
   await page.setContent(buildHtml(events, viewport, umd, css), { waitUntil: 'domcontentloaded' });
 
-  // Bound the wait. rrweb-player calls 'finish' when playback ends, but if the
-  // event stream is malformed it might never fire — fall back after a margin.
-  const lastTs = (events[events.length - 1] as { timestamp?: number })?.timestamp ?? 0;
-  const firstTs = (events[0] as { timestamp?: number })?.timestamp ?? 0;
-  const playbackMs = Math.max(lastTs - firstTs, 0);
-  const cap = playbackMs + 10_000;
-  await Promise.race([
-    finished,
-    new Promise<void>((resolve) =>
-      setTimeout(() => {
-        console.error(`[video] timed out waiting for replay finish (after ${cap}ms) — finalising anyway`);
-        resolve();
-      }, cap)
-    ),
-  ]);
+  await waitForReplayFinish(finished, events);
 
   const tmpVideoPath = (await page.video()?.path()) ?? '';
   await context.close();
@@ -244,7 +241,30 @@ async function main(): Promise<void> {
   }
 
   const size = fs.statSync(outPath).size;
-  console.log(`[video] done → ${outPath} (${size} bytes)`);
+  log(`done → ${outPath} (${size} bytes)`);
+}
+
+/**
+ * rrweb-player calls 'finish' when playback ends, but if the event stream is
+ * malformed it might never fire — bound the wait at playbackMs + buffer.
+ */
+async function waitForReplayFinish(
+  finished: Promise<void>,
+  events: Array<{ timestamp?: number }>
+): Promise<void> {
+  const firstTs = events[0]?.timestamp ?? 0;
+  const lastTs = events[events.length - 1]?.timestamp ?? 0;
+  const playbackMs = Math.max(lastTs - firstTs, 0);
+  const cap = playbackMs + FINISH_TIMEOUT_BUFFER_MS;
+  await Promise.race([
+    finished,
+    new Promise<void>((resolve) =>
+      setTimeout(() => {
+        console.error(`[video] timed out waiting for replay finish (after ${cap}ms) — finalising anyway`);
+        resolve();
+      }, cap)
+    ),
+  ]);
 }
 
 void main().catch((err) => {

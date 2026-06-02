@@ -3,101 +3,914 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Session Replayer</title>
+  <meta name="theme-color" content="#FFDD2D" />
+  <title>Реплеер сессий</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/rrweb-player@latest/dist/style.css"
   />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FFDD2D'/%3E%3Cpath d='M38 30l28 20-28 20z' fill='%23181818'/%3E%3C/svg%3E" />
   <style>
-    body { font-family: system-ui, sans-serif; margin: 0; background: #f5f5f5; }
-    #header { background: #1a1a2e; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
-    #header h1 { margin: 0; font-size: 18px; }
-    #session-list { width: 300px; background: #fff; height: calc(100vh - 56px); overflow-y: auto; border-right: 1px solid #ddd; float: left; }
-    .session-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #eee; }
-    .session-item:hover { background: #f0f0f0; }
-    .session-item.active { background: #e8f0fe; }
-    .session-meta { font-size: 11px; color: #888; margin-top: 4px; }
-    #player-container { margin-left: 300px; padding: 24px; display: flex; flex-direction: column; align-items: center; }
-    #placeholder { color: #888; margin-top: 80px; font-size: 16px; }
-    #rrweb-player { width: 100%; max-width: 900px; }
+    :root {
+      --bg:           #F4F5F7;
+      --surface:      #FFFFFF;
+      --surface-2:    #F0F2F5;
+      --surface-3:    #E8EBEF;
+      --ink:          #181818;
+      --ink-2:        #4D5664;
+      --ink-3:        #8E96A2;
+      --ink-4:        #C5CBD3;
+      --yellow:       #FFDD2D;
+      --yellow-d:     #F3CE17;
+      --yellow-soft:  #FFF6C2;
+      --green:        #26B36E;
+      --shadow-sm:    0 1px 2px rgba(20, 22, 28, 0.04);
+      --shadow:       0 2px 8px rgba(20, 22, 28, 0.05), 0 12px 28px rgba(20, 22, 28, 0.04);
+      --radius:       20px;
+      --radius-sm:    14px;
+      --sans:         'Onest', system-ui, -apple-system, sans-serif;
+      --mono:         'JetBrains Mono', ui-monospace, monospace;
+      --ease:         cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-feature-settings: 'ss01', 'ss03', 'tnum';
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      letter-spacing: -0.005em;
+      min-height: 100vh;
+    }
+
+    ::selection { background: var(--yellow); color: var(--ink); }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ───── shell ───── */
+    .shell {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 14px 80px;
+    }
+    @media (min-width: 720px) { .shell { padding: 28px 28px 60px; } }
+
+    /* ───── topbar ───── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand__mark {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: var(--yellow);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 2px 6px rgba(243, 206, 23, 0.4);
+    }
+    .brand__mark::after {
+      content: '';
+      width: 0; height: 0;
+      border-left: 9px solid var(--ink);
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      margin-left: 2px;
+    }
+    .brand__name {
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .brand__sub {
+      font-size: 12px;
+      color: var(--ink-3);
+      margin-top: 2px;
+      line-height: 1;
+    }
+
+    /* ───── overview ───── */
+    .overview {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    @media (min-width: 720px) {
+      .overview { grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; }
+    }
+    .ov {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .ov--ink {
+      background: linear-gradient(160deg, #1B1B1F 0%, #0F1014 100%);
+      color: #FFFFFF;
+      position: relative;
+      overflow: hidden;
+    }
+    .ov--ink::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -40px;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 221, 45, 0.22) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .ov__label {
+      font-size: 12px;
+      color: var(--ink-3);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .ov--ink .ov__label { color: rgba(255,255,255,0.55); }
+    .ov__num {
+      font-size: clamp(36px, 6vw, 52px);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 1;
+      margin: 0;
+    }
+    .ov__num .unit {
+      font-size: 0.45em;
+      color: var(--ink-3);
+      font-weight: 500;
+      margin-left: 4px;
+    }
+    .ov--ink .ov__num .unit { color: rgba(255,255,255,0.5); }
+    .ov__sub {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--ink-3);
+    }
+    .ov--ink .ov__sub { color: rgba(255,255,255,0.55); }
+
+    /* ───── main grid ───── */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 880px) {
+      .main { grid-template-columns: 360px 1fr; gap: 14px; }
+    }
+
+    /* ───── card ───── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* ───── library ───── */
+    .lib { max-height: 80vh; }
+    @media (min-width: 880px) {
+      .lib { max-height: calc(100vh - 240px); position: sticky; top: 16px; }
+    }
+    .lib__head {
+      padding: 20px 20px 14px;
+      border-bottom: 1px solid var(--surface-3);
+    }
+    .lib__title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .lib__title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin: 0;
+    }
+    .lib__count {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: var(--yellow-soft);
+      color: #6E5800;
+    }
+    .lib__hint {
+      font-size: 13px;
+      color: var(--ink-3);
+      margin: 0 0 14px;
+    }
+    .lib__search {
+      position: relative;
+    }
+    .lib__search::before {
+      content: '⌕';
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-52%);
+      color: var(--ink-3);
+      font-size: 17px;
+      pointer-events: none;
+    }
+    .lib__search input {
+      width: 100%;
+      padding: 12px 14px 12px 38px;
+      background: var(--surface-2);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+      -webkit-appearance: none;
+    }
+    .lib__search input::placeholder { color: var(--ink-3); font-weight: 400; }
+    .lib__search input:focus {
+      outline: none;
+      background: var(--surface);
+      border-color: var(--ink);
+    }
+
+    .lib__list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 8px 12px 16px;
+    }
+    .lib__list::-webkit-scrollbar { width: 6px; }
+    .lib__list::-webkit-scrollbar-track { background: transparent; }
+    .lib__list::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+
+    /* ───── session item ───── */
+    .session {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.2s var(--ease), transform 0.2s var(--ease);
+      margin-top: 4px;
+    }
+    .session:hover { background: var(--surface-2); }
+    .session:active { transform: scale(0.99); }
+    .session.active {
+      background: var(--ink);
+      color: #FFFFFF;
+    }
+    .session.active .session__id,
+    .session.active .session__meta { color: rgba(255,255,255,0.55); }
+    .session.active .session__avatar { background: var(--yellow); color: var(--ink); }
+    .session.active .session__chip { background: var(--yellow); color: var(--ink); }
+
+    .session__avatar {
+      flex-shrink: 0;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--yellow) 0%, var(--yellow-d) 100%);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .session__main { flex: 1; min-width: 0; }
+    .session__row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .session__user {
+      font-weight: 600;
+      font-size: 15px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .session__chip {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 99px;
+      background: var(--surface-2);
+      color: var(--ink-2);
+    }
+    .session__id {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-3);
+      margin-bottom: 6px;
+    }
+    .session__meta {
+      font-size: 12px;
+      color: var(--ink-3);
+    }
+
+    .lib__empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--ink-3);
+    }
+    .lib__empty h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 0 0 6px;
+    }
+    .lib__empty p { font-size: 13px; margin: 0; line-height: 1.5; }
+    .lib__empty code {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--surface-2);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    /* ───── stage ───── */
+    .stage { min-height: 480px; }
+    .stage__head {
+      padding: 20px 22px 18px;
+      border-bottom: 1px solid var(--surface-3);
+    }
+    .stage__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .stage__crumb {
+      font-size: 12px;
+      color: var(--ink-3);
+      font-weight: 500;
+    }
+    .stage__title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .stage__title .sep { color: var(--ink-4); font-weight: 500; }
+    .stage__title .sub {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-3);
+    }
+    .stage__btn {
+      padding: 8px 14px;
+      background: var(--surface-2);
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      transition: background 0.2s var(--ease), transform 0.15s var(--ease);
+    }
+    .stage__btn:hover { background: var(--surface-3); }
+    .stage__btn:active { transform: scale(0.97); }
+
+    .stage__factbar {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+    @media (min-width: 720px) { .stage__factbar { grid-template-columns: repeat(4, 1fr); } }
+    .fact {
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .fact__label {
+      font-size: 11px;
+      color: var(--ink-3);
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .fact__value {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+    }
+    .fact__value.mono { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+
+    .stage__body {
+      flex: 1;
+      min-height: 380px;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255, 221, 45, 0.06) 0%, transparent 60%),
+        var(--surface);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    /* ───── empty + error states ───── */
+    .empty {
+      max-width: 460px;
+      text-align: center;
+      padding: 48px 20px;
+    }
+    .empty__mark {
+      width: 72px; height: 72px;
+      border-radius: 24px;
+      background: var(--yellow);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(243, 206, 23, 0.35);
+      animation: float 4s ease-in-out infinite;
+    }
+    .empty__mark::after {
+      content: '';
+      width: 0; height: 0;
+      border-left: 18px solid var(--ink);
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      margin-left: 4px;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+    .empty__title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin: 0 0 8px;
+    }
+    .empty__copy {
+      font-size: 15px;
+      color: var(--ink-2);
+      margin: 0 0 18px;
+      line-height: 1.5;
+    }
+    .empty__hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--surface-2);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-2);
+    }
+    .empty__hint::before { content: '←'; font-size: 16px; }
+    @media (max-width: 879px) {
+      .empty__hint::before { content: '↑'; }
+    }
+
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      background: var(--surface-2);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-2);
+      margin: 24px auto;
+    }
+    .loading::before {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--yellow);
+      animation: blink 0.9s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.3; transform: scale(0.7); }
+    }
+
+    #rrweb-player {
+      width: 100%;
+      max-width: 920px;
+      display: none;
+    }
+    #rrweb-player.active { display: block; }
+    .rr-player {
+      border-radius: 16px !important;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(20,22,28,0.1) !important;
+    }
+    .rr-controller {
+      background: var(--surface-2) !important;
+      border-top: 1px solid var(--surface-3) !important;
+    }
+    .rr-progress { background: var(--surface-3) !important; }
+    .rr-progress__step { background: var(--ink) !important; }
+    .rr-progress__handler {
+      background: var(--yellow) !important;
+      border: 2px solid var(--ink) !important;
+      box-shadow: 0 2px 6px rgba(20,22,28,0.15) !important;
+    }
+    .rr-controller__btns button { color: var(--ink) !important; }
+    .switch input:checked + label { background: var(--ink) !important; }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: reveal 0.5s var(--ease) forwards;
+    }
+    @keyframes reveal { to { opacity: 1; transform: none; } }
+    .r-1 { animation-delay: 0.02s; }
+    .r-2 { animation-delay: 0.08s; }
+    .r-3 { animation-delay: 0.14s; }
+    .r-4 { animation-delay: 0.20s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-  <div id="header">
-    <h1>Corp Session Replayer</h1>
-    <span id="status">Loading sessions...</span>
-  </div>
+  <div class="shell">
 
-  <div id="session-list"></div>
-  <div id="player-container">
-    <div id="placeholder">← Select a session to replay</div>
-    <div id="rrweb-player"></div>
+    <!-- topbar -->
+    <header class="topbar reveal r-1">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div>
+          <div class="brand__name">Реплеер сессий</div>
+          <div class="brand__sub">Просмотр записанных сессий</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- overview -->
+    <section class="overview reveal r-2" aria-label="overview">
+      <div class="ov ov--ink">
+        <div class="ov__label">Всего записей в библиотеке</div>
+        <h1 class="ov__num" id="ov-total">0<span class="unit">сессий</span></h1>
+        <p class="ov__sub" id="ov-sub">Записи появляются здесь после логина в демо-приложении.</p>
+      </div>
+      <div class="ov">
+        <div class="ov__label">Уникальных пользователей</div>
+        <h2 class="ov__num" id="ov-users">0<span class="unit">чел.</span></h2>
+        <p class="ov__sub">За весь период</p>
+      </div>
+      <div class="ov">
+        <div class="ov__label">Батчей на ленте</div>
+        <h2 class="ov__num" id="ov-batches">0<span class="unit">шт.</span></h2>
+        <p class="ov__sub">События во всех сессиях</p>
+      </div>
+    </section>
+
+    <!-- main -->
+    <main class="main">
+      <aside class="card lib reveal r-3">
+        <div class="lib__head">
+          <div class="lib__title-row">
+            <h2 class="lib__title">Сессии</h2>
+            <span class="lib__count" id="lib-count">0</span>
+          </div>
+          <p class="lib__hint" id="status">Загрузка…</p>
+          <div class="lib__search">
+            <input
+              id="search"
+              type="search"
+              placeholder="Поиск по логину или id…"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+        <div class="lib__list" id="session-list">
+          <div class="lib__empty">
+            <h4>Загружаем библиотеку</h4>
+            <p>Получаем сессии от ingestion.</p>
+          </div>
+        </div>
+      </aside>
+
+      <section class="card stage reveal r-4">
+        <header class="stage__head" id="stage-head">
+          <div class="stage__top">
+            <span class="stage__crumb">Просмотр</span>
+          </div>
+          <h1 class="stage__title">Выберите сессию слева</h1>
+        </header>
+        <div class="stage__body" id="stage-body">
+          <div class="empty" id="placeholder">
+            <div class="empty__mark" aria-hidden="true"></div>
+            <h2 class="empty__title">Ничего не воспроизводится</h2>
+            <p class="empty__copy">
+              Выберите запись в библиотеке. Консоль декодирует JSONL налету,
+              поднимает rrweb-плеер и стартует с первого батча.
+            </p>
+            <div class="empty__hint">Выберите сессию</div>
+          </div>
+          <div id="rrweb-player"></div>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script type="module">
     import rrwebPlayer from 'https://cdn.jsdelivr.net/npm/rrweb-player@latest/dist/index.mjs';
 
-    const API_BASE = window.location.origin;
-    let currentPlayer = null;
+    // Use relative URLs so the page works the same behind nginx (/replay/)
+    // and when served directly by ingestion on port 8081. Avoids the
+    // "null/sessions" error when the page is opened outside an HTTP origin.
+    const SESSIONS_URL = '/sessions';
+    const sessionUrl = (id) => `/sessions/${encodeURIComponent(id)}`;
 
-    async function loadSessions() {
-      const res = await fetch(`${API_BASE}/sessions`);
-      const json = await res.json();
-      if (!json.success) return;
+    let currentPlayer  = null;
+    let allSessions    = [];
+    let activeId       = null;
 
-      const list = document.getElementById('session-list');
-      const status = document.getElementById('status');
-      status.textContent = `${json.data.length} sessions`;
+    const $list        = document.getElementById('session-list');
+    const $status      = document.getElementById('status');
+    const $libCount    = document.getElementById('lib-count');
+    const $search      = document.getElementById('search');
+    const $placeholder = document.getElementById('placeholder');
+    const $container   = document.getElementById('rrweb-player');
+    const $stageHead   = document.getElementById('stage-head');
+    const $ovTotal     = document.getElementById('ov-total');
+    const $ovUsers     = document.getElementById('ov-users');
+    const $ovBatches   = document.getElementById('ov-batches');
+    const $ovSub       = document.getElementById('ov-sub');
 
-      list.innerHTML = '';
-      json.data.forEach(function(s) {
-        const item = document.createElement('div');
-        item.className = 'session-item';
-        item.dataset.id = s.session_id;
-        item.innerHTML = `
-          <div><strong>${s.distinct_id}</strong></div>
-          <div class="session-meta">
-            ${s.session_id.slice(0, 8)}…<br/>
-            Started: ${new Date(s.started_at).toLocaleString()}<br/>
-            Batches: ${s.batch_count}
-          </div>
-        `;
-        item.addEventListener('click', function() {
-          document.querySelectorAll('.session-item').forEach(function(el) { el.classList.remove('active'); });
-          item.classList.add('active');
-          playSession(s.session_id);
-        });
-        list.appendChild(item);
+    function fmtTime(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      const now = new Date();
+      const sameDay = d.toDateString() === now.toDateString();
+      const time = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      if (sameDay) return `Сегодня · ${time}`;
+      const day = d.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' });
+      return `${day} · ${time}`;
+    }
+
+    function shortId(id) {
+      return id.length > 14 ? id.slice(0, 8) + '…' + id.slice(-4) : id;
+    }
+
+    function initials(name) {
+      const s = String(name || '?').trim();
+      return (s[0] || '?').toUpperCase();
+    }
+
+    function pluralSessions(n) {
+      const mod10 = n % 10, mod100 = n % 100;
+      if (mod10 === 1 && mod100 !== 11) return 'сессия';
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'сессии';
+      return 'сессий';
+    }
+    function pluralBatches(n) {
+      const mod10 = n % 10, mod100 = n % 100;
+      if (mod10 === 1 && mod100 !== 11) return 'батч';
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'батча';
+      return 'батчей';
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
       });
     }
 
-    async function playSession(sessionId) {
-      const placeholder = document.getElementById('placeholder');
-      const container = document.getElementById('rrweb-player');
-
-      placeholder.textContent = 'Loading events...';
-      placeholder.style.display = 'block';
-      container.innerHTML = '';
-
-      if (currentPlayer) {
-        currentPlayer.$destroy();
-        currentPlayer = null;
-      }
-
-      const res = await fetch(`${API_BASE}/sessions/${sessionId}`);
-      const json = await res.json();
-      if (!json.success || !json.data.length) {
-        placeholder.textContent = 'No events found for this session.';
+    function renderList(sessions) {
+      if (sessions.length === 0) {
+        $list.innerHTML = `
+          <div class="lib__empty">
+            <h4>Записей пока нет</h4>
+            <p>Войдите в демо-приложение и попроизводите действия — сессии появятся здесь.</p>
+          </div>`;
         return;
       }
 
-      placeholder.style.display = 'none';
+      $list.innerHTML = '';
+      sessions.forEach(function (s) {
+        const user = s.user_id || s.distinct_id || 'unknown';
+        const item = document.createElement('div');
+        item.className = 'session' + (s.session_id === activeId ? ' active' : '');
+        item.dataset.id = s.session_id;
+        item.innerHTML = `
+          <div class="session__avatar">${escapeHtml(initials(user))}</div>
+          <div class="session__main">
+            <div class="session__row">
+              <span class="session__user">${escapeHtml(user)}</span>
+              <span class="session__chip">${s.batch_count} ${pluralBatches(s.batch_count)}</span>
+            </div>
+            <div class="session__id">${shortId(s.session_id)}</div>
+            <div class="session__meta">${fmtTime(s.started_at)}</div>
+          </div>`;
+        item.addEventListener('click', function () {
+          document.querySelectorAll('.session').forEach(function (el) {
+            el.classList.remove('active');
+          });
+          item.classList.add('active');
+          playSession(s);
+        });
+        $list.appendChild(item);
+      });
+    }
 
+    function setStageHead(session) {
+      if (!session) {
+        $stageHead.innerHTML = `
+          <div class="stage__top">
+            <span class="stage__crumb">Просмотр</span>
+          </div>
+          <h1 class="stage__title">Выберите сессию слева</h1>`;
+        return;
+      }
+      const user = session.user_id || session.distinct_id || 'unknown';
+      $stageHead.innerHTML = `
+        <div class="stage__top">
+          <span class="stage__crumb">Воспроизводится</span>
+          <button class="stage__btn" id="copy-link" type="button">Скопировать ссылку</button>
+        </div>
+        <h1 class="stage__title">
+          <span>${escapeHtml(user)}</span>
+          <span class="sep">·</span>
+          <span class="sub">${shortId(session.session_id)}</span>
+        </h1>
+        <div class="stage__factbar">
+          <div class="fact">
+            <div class="fact__label">Начало</div>
+            <div class="fact__value">${fmtTime(session.started_at)}</div>
+          </div>
+          <div class="fact">
+            <div class="fact__label">Последний батч</div>
+            <div class="fact__value">${fmtTime(session.last_batch_at)}</div>
+          </div>
+          <div class="fact">
+            <div class="fact__label">Батчей</div>
+            <div class="fact__value">${session.batch_count}</div>
+          </div>
+          <div class="fact">
+            <div class="fact__label">ID сессии</div>
+            <div class="fact__value mono">${shortId(session.session_id)}</div>
+          </div>
+        </div>`;
+      const copyBtn = document.getElementById('copy-link');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+          const url = `${window.location.origin}${window.location.pathname}?id=${session.session_id}`;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(function () {
+              const orig = copyBtn.textContent;
+              copyBtn.textContent = 'Скопировано';
+              setTimeout(function () { copyBtn.textContent = orig; }, 1500);
+            });
+          }
+        });
+      }
+    }
+
+    function updateOverview() {
+      const total = allSessions.length;
+      const users = new Set(allSessions.map(function (s) { return s.user_id || s.distinct_id; })).size;
+      const batches = allSessions.reduce(function (sum, s) { return sum + (s.batch_count || 0); }, 0);
+
+      $ovTotal.innerHTML   = `${total}<span class="unit">${pluralSessions(total)}</span>`;
+      $ovUsers.innerHTML   = `${users}<span class="unit">чел.</span>`;
+      $ovBatches.innerHTML = `${batches}<span class="unit">шт.</span>`;
+
+      if (total === 0) {
+        $ovSub.textContent = 'Записи появляются здесь после логина в демо-приложении.';
+      } else {
+        $ovSub.textContent = `Последняя — ${fmtTime(allSessions[0].started_at)}`;
+      }
+    }
+
+    function renderHttpOnlyHint() {
+      $list.innerHTML = `
+        <div class="lib__empty">
+          <h4>Откройте через сервер</h4>
+          <p>Реплеер ходит за данными по <code>/sessions</code>. Запустите стек
+            (<code>pnpm dev:proxy</code>) и откройте страницу через
+            <code>http://localhost:8081</code> или <code>/replay/</code>.</p>
+        </div>`;
+      $status.textContent = 'Нет сервера';
+    }
+
+    async function loadSessions() {
+      // file:// or sandboxed iframe — no point fetching.
+      if (window.location.protocol !== 'http:' && window.location.protocol !== 'https:') {
+        renderHttpOnlyHint();
+        return;
+      }
+
+      try {
+        const res = await fetch(SESSIONS_URL);
+        const json = await res.json();
+        if (!json.success) throw new Error('list failed');
+
+        allSessions = (json.data || []).slice().sort(function (a, b) {
+          return new Date(b.started_at) - new Date(a.started_at);
+        });
+
+        const count = allSessions.length;
+        $libCount.textContent = String(count);
+        $status.textContent = count === 0
+          ? 'Сессий пока нет'
+          : `${count} ${pluralSessions(count)} на ленте`;
+        updateOverview();
+        applyFilter();
+      } catch (err) {
+        $status.textContent = 'Не удалось загрузить';
+        $list.innerHTML = `
+          <div class="lib__empty">
+            <h4>Библиотека недоступна</h4>
+            <p>Сервер не отвечает на <code>/sessions</code>.</p>
+          </div>`;
+      }
+    }
+
+    function applyFilter() {
+      const q = ($search.value || '').trim().toLowerCase();
+      const filtered = !q ? allSessions : allSessions.filter(function (s) {
+        return (
+          ((s.user_id || s.distinct_id) || '').toLowerCase().includes(q) ||
+          s.session_id.toLowerCase().includes(q)
+        );
+      });
+      renderList(filtered);
+    }
+    $search.addEventListener('input', applyFilter);
+
+    async function playSession(session) {
+      activeId = session.session_id;
+      setStageHead(session);
+      $placeholder.style.display = 'none';
+      $container.classList.remove('active');
+      $container.innerHTML = '';
+
+      const loading = document.createElement('div');
+      loading.className = 'loading';
+      loading.textContent = 'Декодируем сессию…';
+      $container.appendChild(loading);
+      $container.classList.add('active');
+
+      if (currentPlayer) {
+        try { currentPlayer.$destroy(); } catch (_) { /* noop */ }
+        currentPlayer = null;
+      }
+
+      let events = [];
+      try {
+        const res = await fetch(sessionUrl(session.session_id));
+        const json = await res.json();
+        if (!json.success || !json.data || !json.data.length) {
+          $container.innerHTML = `
+            <div class="empty" style="margin:auto;">
+              <div class="empty__mark" aria-hidden="true"></div>
+              <h2 class="empty__title">Нет событий</h2>
+              <p class="empty__copy">Сессия существует, но в ней нет батчей.</p>
+            </div>`;
+          return;
+        }
+        events = json.data;
+      } catch (err) {
+        $container.innerHTML = `
+          <div class="empty" style="margin:auto;">
+            <div class="empty__mark" aria-hidden="true"></div>
+            <h2 class="empty__title">Не удалось декодировать</h2>
+            <p class="empty__copy">Сервер не отвечает на запрос событий.</p>
+          </div>`;
+        return;
+      }
+
+      $container.innerHTML = '';
       currentPlayer = new rrwebPlayer({
-        target: container,
+        target: $container,
         props: {
-          events: json.data,
-          width: 860,
+          events: events,
+          width: 880,
           height: 540,
           autoPlay: false,
           showController: true,
@@ -111,15 +924,21 @@
       const params = new URLSearchParams(window.location.search);
       const deepLinkId = params.get('id');
       if (deepLinkId) {
-        const item = document.querySelector(`.session-item[data-id="${deepLinkId}"]`);
-        if (item) item.classList.add('active');
-        await playSession(deepLinkId);
+        const match = allSessions.find(function (s) { return s.session_id === deepLinkId; });
+        if (match) {
+          activeId = deepLinkId;
+          playSession(match);
+          applyFilter();
+        }
       }
     }
 
-    init().catch(err => {
-      document.getElementById('placeholder').textContent = 'Init error: ' + err.message;
+    init().catch(function (err) {
       console.error(err);
+      $placeholder.innerHTML = `
+        <div class="empty__mark" aria-hidden="true"></div>
+        <h2 class="empty__title">Ошибка инициализации</h2>
+        <p class="empty__copy">Не удалось загрузить страницу.</p>`;
     });
   </script>
 </body>

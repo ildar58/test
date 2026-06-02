@@ -120,9 +120,8 @@ Fix: та же проверка UUID-формата.
 **Файл:** [`ingestion/src/server.ts:74,78`](../ingestion/src/server.ts#L74)
 **Severity:** Critical в продакшен-деплое.
 
-`GET /sessions` и `GET /sessions/:id` не проверяют auth никак. Дизайн-спека
-[§4.3](superpowers/specs/2026-05-28-auth-gated-recording-design.md#43-go-service-contract)
-требует «Admin-only role guard», но стаб его не реализовал. Nginx
+`GET /sessions` и `GET /sessions/:id` не проверяют auth никак. По дизайну
+этим хендлерам нужен admin-only role guard — стаб его не реализовал. Nginx
 выставляет `/sessions` на публичный 80 порт — анонимы могут листать
 и скачивать все записи.
 

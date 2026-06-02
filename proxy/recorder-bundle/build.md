@@ -28,5 +28,5 @@ non-HttpOnly cookie-маркер `session_present=1` на логине, и
 управляется внутри SDK через `sessionStorage` — со страницы хоста
 никакая идентичность не передаётся.
 
-См. [`docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md`](../../docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md)
-для полного контракта.
+См. [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) для полного контракта
+auth-флоу и поведения state machine.

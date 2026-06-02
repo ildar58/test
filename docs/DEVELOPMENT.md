@@ -279,8 +279,6 @@ pnpm install
 | Ищешь | Смотри |
 |-------|--------|
 | Как работает state machine | [`sdk/src/recorder.ts`](../sdk/src/recorder.ts) + [`ARCHITECTURE.md`](ARCHITECTURE.md) |
-| Контракт auth-флоу | [`docs/superpowers/specs/2026-05-28-demo-auth-design.md`](superpowers/specs/2026-05-28-demo-auth-design.md) |
-| Как сделан video-pipeline | [`tools/video/src/export.ts`](../tools/video/src/export.ts) + [`ARCHITECTURE.md`](ARCHITECTURE.md#8-video-pipeline-pnpm-video) |
-| Почему именно так | [`docs/superpowers/specs/`](superpowers/specs/) |
-| Какие именно шаги делались | [`docs/superpowers/plans/`](superpowers/plans/) |
+| Контракт auth-флоу | [`ARCHITECTURE.md §3-§6`](ARCHITECTURE.md#3-cookies) + [`ingestion/src/auth.ts`](../ingestion/src/auth.ts) |
+| Как сделан video-pipeline | [`tools/video/src/export.ts`](../tools/video/src/export.ts) + [`ARCHITECTURE.md §8`](ARCHITECTURE.md#8-video-pipeline-pnpm-video) |
 | Что нужно для прода | [`PRODUCTION.md`](PRODUCTION.md) |

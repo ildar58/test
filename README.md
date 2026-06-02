@@ -137,7 +137,7 @@ pnpm video <session_id>
 | [`replayer/`](replayer) | Однофайловый реплеер на rrweb-player. |
 | [`e2e/`](e2e) | E2E-тесты на Playwright, гоняют полный Docker-стек. |
 | [`tools/video/`](tools/video) | CLI экспорта сессии в `.webm` (Playwright + rrweb-player). |
-| [`docs/`](docs) | Эта документация; design-спеки и планы прошлых изменений. |
+| [`docs/`](docs) | Архитектура, руководство по разработке и production-чеклист. |
 
 В каждом пакете свой README с подробностями. Начинать читать — отсюда.
 
@@ -151,8 +151,7 @@ pnpm video <session_id>
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Как работают cookies, state machine и поток данных в деталях. Прочитай **до** того, как лезть в SDK. |
 | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | Локальная разработка, hot-reload, траблшутинг Docker / Playwright / версий Node. Читать, когда что-то не запускается. |
 | [`docs/PRODUCTION.md`](docs/PRODUCTION.md) | Что демо-стаб подменяет vs что должен делать настоящий Go-сервис; security-чеклист; deployment-поза. Читать, когда портируешь в прод. |
-| [`docs/superpowers/specs/`](docs/superpowers/specs) | Design-спеки прошлых архитектурных изменений (auth gating, demo auth, view recordings). Исторический контекст. Написаны на английском — это session-артефакты. |
-| [`docs/superpowers/plans/`](docs/superpowers/plans) | TDD-планы реализации, соответствующие этим спекам. Полезно, если интересно, как именно строили изменение. |
+| [`e2e/README.md`](e2e/README.md) | Как устроены end-to-end тесты, как запускать локально и в CI. |
 
 ---
 

@@ -1,109 +1,882 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Corp Demo App</title>
+  <meta name="theme-color" content="#FFDD2D" />
+  <title>Демо · рекордер сессий</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FFDD2D'/%3E%3Ccircle cx='50' cy='50' r='14' fill='%23181818'/%3E%3C/svg%3E" />
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
-    h1 { color: #1a1a2e; }
-    .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 16px 0; }
-    input, select { width: 100%; padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-    input[type=password] { /* masked by recorder: maskAllInputs=true */ }
-    button { background: #1a1a2e; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #2d2d5e; }
-    .rec-no-capture { background: #fff3cd; padding: 8px; border-radius: 4px; font-size: 12px; }
-    .rec-mask { color: #000; }
-    #log { background: #f5f5f5; padding: 12px; border-radius: 4px; font-size: 12px; font-family: monospace; height: 120px; overflow-y: auto; }
+    :root {
+      --bg:           #F4F5F7;
+      --surface:      #FFFFFF;
+      --surface-2:    #F0F2F5;
+      --surface-3:    #E8EBEF;
+      --ink:          #181818;
+      --ink-2:        #4D5664;
+      --ink-3:        #8E96A2;
+      --ink-4:        #C5CBD3;
+      --yellow:       #FFDD2D;
+      --yellow-d:     #F3CE17;
+      --yellow-soft:  #FFF6C2;
+      --green:        #26B36E;
+      --green-soft:   #DEF5E8;
+      --red:          #F52E2E;
+      --red-soft:     #FCE2E2;
+      --blue-soft:    #E1ECFE;
+      --blue:         #428BF9;
+      --shadow-sm:    0 1px 2px rgba(20, 22, 28, 0.04);
+      --shadow:       0 2px 8px rgba(20, 22, 28, 0.05), 0 12px 28px rgba(20, 22, 28, 0.04);
+      --radius:       20px;
+      --radius-sm:    14px;
+      --sans:         'Onest', system-ui, -apple-system, sans-serif;
+      --mono:         'JetBrains Mono', ui-monospace, monospace;
+      --ease:         cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-feature-settings: 'ss01', 'ss03', 'tnum';
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      letter-spacing: -0.005em;
+      min-height: 100vh;
+    }
+
+    button { font-family: inherit; cursor: pointer; }
+    a { color: inherit; }
+
+    /* ───── shell ───── */
+    .shell {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px 14px 80px;
+    }
+    @media (min-width: 720px) {
+      .shell { padding: 28px 28px 80px; max-width: 1080px; }
+    }
+
+    /* ───── topbar ───── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand__mark {
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: var(--yellow);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 2px 6px rgba(243, 206, 23, 0.4);
+    }
+    .brand__mark::after {
+      content: '';
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--ink);
+    }
+    .brand__name {
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .brand__sub {
+      font-size: 12px;
+      color: var(--ink-3);
+      margin-top: 2px;
+      line-height: 1;
+      font-weight: 400;
+    }
+
+    /* ───── intro ───── */
+    .intro {
+      margin-bottom: 20px;
+    }
+    .intro__title {
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin: 0 0 10px;
+    }
+    .intro__lede {
+      font-size: 15px;
+      color: var(--ink-2);
+      margin: 0;
+      line-height: 1.5;
+      max-width: 60ch;
+    }
+
+    /* ───── status bar ───── */
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 16px;
+      transition: background 0.3s var(--ease);
+    }
+    .status.live { background: #181818; color: #FFFFFF; }
+    .status__dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--ink-4);
+      flex-shrink: 0;
+    }
+    .status.live .status__dot {
+      background: var(--red);
+      box-shadow: 0 0 0 4px rgba(245, 46, 46, 0.22);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(245, 46, 46, 0.22); }
+      50%      { box-shadow: 0 0 0 8px rgba(245, 46, 46, 0.04); }
+    }
+    .status__label {
+      font-size: 13px;
+      color: var(--ink-3);
+      font-weight: 500;
+    }
+    .status.live .status__label { color: rgba(255,255,255,0.55); }
+    .status__value {
+      margin-left: auto;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* ───── grid ───── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 880px) {
+      .grid--2 { grid-template-columns: 1fr 1fr; }
+      .grid--3 { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* ───── card ───── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    @media (min-width: 720px) { .card { padding: 24px; } }
+    .card__head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card__title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .card__hint {
+      font-size: 13px;
+      color: var(--ink-3);
+      margin: 4px 0 0;
+      line-height: 1.4;
+    }
+    .card__badge {
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: var(--surface-2);
+      color: var(--ink-2);
+    }
+    .card__badge--yellow { background: var(--yellow-soft); color: #6E5800; }
+    .card__badge--blue   { background: var(--blue-soft);   color: #1C5BC2; }
+
+    /* ───── form fields ───── */
+    .field {
+      display: block;
+      margin-bottom: 10px;
+    }
+    .field:last-of-type { margin-bottom: 0; }
+    .field__label {
+      display: block;
+      font-size: 13px;
+      color: var(--ink-3);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .field__input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--surface-2);
+      border: 2px solid transparent;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+      transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .field__input::placeholder { color: var(--ink-3); font-weight: 400; }
+    .field__input:focus {
+      outline: none;
+      background: var(--surface);
+      border-color: var(--ink);
+    }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '';
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      width: 8px; height: 8px;
+      border-right: 2px solid var(--ink-2);
+      border-bottom: 2px solid var(--ink-2);
+      transform: translateY(-70%) rotate(45deg);
+      pointer-events: none;
+    }
+    .field__input--select { padding-right: 40px; cursor: pointer; }
+
+    /* ───── buttons ───── */
+    .btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s var(--ease), background 0.2s var(--ease), box-shadow 0.2s var(--ease);
+    }
+    .btn--primary {
+      background: var(--yellow);
+      color: var(--ink);
+      box-shadow: 0 1px 2px rgba(243, 206, 23, 0.3);
+    }
+    .btn--primary:hover { background: var(--yellow-d); box-shadow: 0 4px 12px rgba(243, 206, 23, 0.35); }
+    .btn--primary:active { transform: scale(0.97); }
+    .btn--ghost {
+      background: var(--surface-2);
+      color: var(--ink);
+    }
+    .btn--ghost:hover { background: var(--surface-3); }
+    .btn--ghost:active { transform: scale(0.97); }
+    .btn[disabled] { opacity: 0.55; cursor: progress; pointer-events: none; }
+    .btn .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: -3px;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ───── inline error ───── */
+    .form-error {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--red-soft);
+      border-radius: 10px;
+      font-size: 13px;
+      color: #B5151A;
+      font-weight: 500;
+      display: none;
+      animation: shake 0.4s var(--ease);
+    }
+    .form-error.show { display: block; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%      { transform: translateX(-4px); }
+      75%      { transform: translateX(4px); }
+    }
+
+    /* ───── hint ───── */
+    .hint {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--yellow-soft);
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #6E5800;
+      margin-top: 14px;
+    }
+    .hint__icon {
+      flex-shrink: 0;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--yellow);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .hint code {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 1px 5px;
+      background: rgba(110, 88, 0, 0.1);
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* ───── privacy zones ───── */
+    .zone {
+      padding: 18px;
+      border-radius: 16px;
+    }
+    .zone--mask  { background: var(--red-soft); }
+    .zone--block { background: var(--yellow-soft); }
+    .zone--clear { background: var(--green-soft); }
+    .zone__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .zone__icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .zone--mask  .zone__icon { background: var(--red); color: #fff; }
+    .zone--block .zone__icon { background: var(--yellow); color: var(--ink); }
+    .zone--clear .zone__icon { background: var(--green); color: #fff; }
+    .zone__chip {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.6);
+      color: var(--ink-2);
+    }
+    .zone__title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 4px;
+    }
+    .zone__copy {
+      font-size: 13px;
+      color: var(--ink-2);
+      margin: 0 0 12px;
+      line-height: 1.4;
+    }
+    .zone__sample {
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink);
+      font-weight: 500;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+    }
+    .zone--mask .zone__sample.rec-mask { color: var(--red); }
+
+    /* ───── activity log ───── */
+    .log {
+      max-height: 320px;
+      overflow-y: auto;
+      margin: 0 -4px;
+      padding: 0 4px;
+    }
+    .log__row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--surface-3);
+      animation: slide-in 0.35s var(--ease) both;
+    }
+    .log__row:last-child { border-bottom: 0; }
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .log__icon {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--surface-2);
+      color: var(--ink-2);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .log__row.evt-search .log__icon { background: var(--blue-soft); color: var(--blue); }
+    .log__row.evt-filter .log__icon { background: var(--yellow-soft); color: #6E5800; }
+    .log__row.evt-manual .log__icon { background: var(--red-soft); color: var(--red); }
+    .log__main { flex: 1; min-width: 0; }
+    .log__name {
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .log__sub {
+      font-size: 12px;
+      color: var(--ink-3);
+      margin-top: 2px;
+      font-family: var(--mono);
+      font-weight: 400;
+    }
+    .log__empty {
+      padding: 28px 0;
+      text-align: center;
+      color: var(--ink-3);
+      font-size: 14px;
+    }
+
+    /* ───── reveal ───── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: reveal 0.5s var(--ease) forwards;
+    }
+    @keyframes reveal { to { opacity: 1; transform: none; } }
+    .r-1 { animation-delay: 0.02s; }
+    .r-2 { animation-delay: 0.08s; }
+    .r-3 { animation-delay: 0.14s; }
+    .r-4 { animation-delay: 0.20s; }
+    .r-5 { animation-delay: 0.26s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-  <h1>Corp Demo Application</h1>
-  <div class="card" id="auth-panel">
-    <h2>Auth (demo)</h2>
-    <p>Status: <span id="auth-status">checking…</span></p>
-    <input id="auth-user" type="text" placeholder="username" value="alice" />
-    <input id="auth-password" type="password" placeholder="password" />
-    <button id="auth-login">Log in</button>
-    <button id="auth-logout">Log out</button>
-    <p class="rec-no-capture" style="font-size:11px;margin-top:8px">
-      Demo creds: <code>alice/alice</code> or <code>bob/bob</code>. The password input is masked by the recorder (maskInputOptions.password=true).
-    </p>
+  <div class="shell">
+
+    <!-- topbar -->
+    <header class="topbar reveal r-1">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true"></div>
+        <div>
+          <div class="brand__name">PAM</div>
+          <div class="brand__sub">Демо рекордера</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- intro -->
+    <section class="intro reveal r-2">
+      <h1 class="intro__title">Тестовая страница для проверки записи сессии.</h1>
+      <p class="intro__lede">
+        Пока вы не вошли — запись не идёт. После входа рекордер начинает
+        фиксировать действия и отправлять батчи на сервер. Ниже — формы
+        для взаимодействия, зоны приватности и лента того, что попало в запись.
+      </p>
+    </section>
+
+    <!-- status bar -->
+    <div class="status reveal r-2" id="status-bar" aria-live="polite">
+      <span class="status__dot" id="status-dot" aria-hidden="true"></span>
+      <span class="status__label">Статус сессии</span>
+      <span class="status__value" id="auth-status">checking…</span>
+    </div>
+
+    <!-- main grid -->
+    <div class="grid grid--2">
+      <!-- auth -->
+      <form class="card reveal r-3" id="auth-panel" autocomplete="off">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Вход</h2>
+            <p class="card__hint">После входа активируется запись.</p>
+          </div>
+          <span class="card__badge card__badge--yellow">Требуется вход</span>
+        </div>
+
+        <label class="field" for="auth-user">
+          <span class="field__label">Логин</span>
+          <input
+            class="field__input"
+            id="auth-user"
+            type="text"
+            placeholder="alice"
+            value="alice"
+            autocomplete="off"
+          />
+        </label>
+
+        <label class="field" for="auth-password">
+          <span class="field__label">Пароль</span>
+          <input
+            class="field__input"
+            id="auth-password"
+            type="password"
+            placeholder="••••••••"
+            autocomplete="off"
+          />
+        </label>
+
+        <div class="btns">
+          <button class="btn btn--primary" id="auth-login" type="button">Войти</button>
+          <button class="btn btn--ghost" id="auth-logout" type="button" hidden>Выйти</button>
+        </div>
+
+        <div class="form-error" id="auth-error" role="alert"></div>
+
+        <div class="hint rec-no-capture">
+          <span class="hint__icon">i</span>
+          <span>
+            Этот блок — внутри <code>rec-no-capture</code>, в запись он не попадёт.
+            Тестовые учётки: <code>alice / alice</code> или <code>bob / bob</code>.
+            Поле пароля маскируется рекордером независимо.
+          </span>
+        </div>
+      </form>
+
+      <!-- interactive form -->
+      <section class="card reveal r-4">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Интерактивные поля</h2>
+            <p class="card__hint">Каждый ввод и выбор фиксируется в ленте ниже.</p>
+          </div>
+          <span class="card__badge card__badge--blue">Live</span>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Текстовый ввод</span>
+          <input
+            class="field__input"
+            type="text"
+            placeholder="введите любое значение…"
+            oninput="logAction('ввод: ' + this.value, 'evt-search')"
+          />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Выпадающий список А</span>
+          <div class="select-wrap">
+            <select
+              class="field__input field__input--select"
+              onchange="logAction('выбор A: ' + this.value, 'evt-filter')"
+            >
+              <option>Вариант 1</option>
+              <option>Вариант 2</option>
+              <option>Вариант 3</option>
+              <option>Вариант 4</option>
+            </select>
+          </div>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Выпадающий список Б</span>
+          <div class="select-wrap">
+            <select
+              class="field__input field__input--select"
+              onchange="logAction('выбор Б: ' + this.value, 'evt-filter')"
+            >
+              <option>Первый</option>
+              <option>Второй</option>
+              <option>Третий</option>
+            </select>
+          </div>
+        </label>
+
+        <div class="btns">
+          <button class="btn btn--ghost" type="button" onclick="logAction('кастомное событие', 'evt-manual')">
+            Сгенерировать событие
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- privacy zones -->
+    <div class="grid grid--3 reveal r-5" style="margin-top: 12px;">
+      <div class="zone zone--mask">
+        <div class="zone__top">
+          <div class="zone__icon">●</div>
+          <span class="zone__chip">.rec-mask</span>
+        </div>
+        <h3 class="zone__title">Маска текста</h3>
+        <p class="zone__copy">На странице видно, в записи — звёздочки.</p>
+        <div class="zone__sample rec-mask">Чувствительные данные — 2 481 920</div>
+      </div>
+
+      <div class="zone zone--block">
+        <div class="zone__top">
+          <div class="zone__icon">⊘</div>
+          <span class="zone__chip">.rec-no-capture</span>
+        </div>
+        <h3 class="zone__title">Полный блок</h3>
+        <p class="zone__copy">Элемент и поддерево не попадают в запись.</p>
+        <div class="zone__sample rec-no-capture">internal-id: 7c3a-…-91d</div>
+      </div>
+
+      <div class="zone zone--clear">
+        <div class="zone__top">
+          <div class="zone__icon">✓</div>
+          <span class="zone__chip">default</span>
+        </div>
+        <h3 class="zone__title">Открытая запись</h3>
+        <p class="zone__copy">Обычный контент — фиксируется как есть.</p>
+        <div class="zone__sample">Нейтральный текст без ограничений.</div>
+      </div>
+    </div>
+
+    <!-- activity log -->
+    <section class="card reveal r-5" style="margin-top: 12px;">
+      <div class="card__head">
+        <div>
+          <h2 class="card__title">Лента действий</h2>
+          <p class="card__hint">Что улетает в батчи рекордера.</p>
+        </div>
+        <span class="card__badge" id="log-count"></span>
+      </div>
+      <div class="log" id="log">
+        <div class="log__empty">Начните взаимодействовать с полями выше — события появятся здесь.</div>
+      </div>
+    </section>
   </div>
+
+  <!-- behaviour -->
   <script>
-    function refreshStatus() {
-      var hasMarker = document.cookie.split('; ').some(function (c) {
-        return c.indexOf('session_present=') === 0 && c.length > 'session_present='.length;
-      });
-      document.getElementById('auth-status').textContent = hasMarker ? 'logged in' : 'logged out';
+    'use strict';
+
+    const MAX_LOG_ROWS    = 50;
+    const STATUS_POLL_MS  = 1500;
+    const MARKER_COOKIE   = 'session_present';
+
+    function russianPlural(n, [one, few, many]) {
+      const mod10 = n % 10, mod100 = n % 100;
+      if (mod10 === 1 && mod100 !== 11) return one;
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+      return many;
     }
-    document.getElementById('auth-login').addEventListener('click', async function () {
-      var u = document.getElementById('auth-user').value || 'alice';
-      var p = document.getElementById('auth-password').value || '';
-      var res = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: u, password: p }),
-        credentials: 'include',
-      });
-      if (!res.ok) {
-        alert('Login failed — try alice/alice or bob/bob.');
+
+    function hasCookie(name) {
+      const prefix = name + '=';
+      return document.cookie.split('; ').some(c => c.startsWith(prefix) && c.length > prefix.length);
+    }
+
+    function zeroPad(n) { return String(n).padStart(2, '0'); }
+    function hhmmss(d) { return zeroPad(d.getHours()) + ':' + zeroPad(d.getMinutes()) + ':' + zeroPad(d.getSeconds()); }
+
+    // ───── auth panel ─────
+    (function wireAuthPanel() {
+      const statusEl  = document.getElementById('auth-status');
+      const statusBar = document.getElementById('status-bar');
+      const errorEl   = document.getElementById('auth-error');
+      const loginBtn  = document.getElementById('auth-login');
+      const logoutBtn = document.getElementById('auth-logout');
+      const userEl    = document.getElementById('auth-user');
+      const passEl    = document.getElementById('auth-password');
+      const form      = document.getElementById('auth-panel');
+
+      function setRecording(on) {
+        statusBar.classList.toggle('live', on);
+        // Only the action that's currently available is visible.
+        loginBtn.hidden  = on;
+        logoutBtn.hidden = !on;
       }
+
+      function refreshStatus() {
+        const loggedIn = hasCookie(MARKER_COOKIE);
+        statusEl.textContent = loggedIn ? 'logged in' : 'logged out';
+        setRecording(loggedIn);
+      }
+
+      function showError(msg) {
+        errorEl.textContent = msg;
+        errorEl.classList.remove('show');
+        void errorEl.offsetWidth; // restart shake animation
+        errorEl.classList.add('show');
+      }
+      function clearError() {
+        errorEl.classList.remove('show');
+        errorEl.textContent = '';
+      }
+
+      const originalLabel = new WeakMap();
+      function setLoading(btn, on, loadingLabel) {
+        if (on) {
+          originalLabel.set(btn, btn.textContent);
+          btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>' + (loadingLabel ?? btn.textContent);
+          btn.disabled = true;
+        } else {
+          btn.textContent = originalLabel.get(btn) ?? btn.textContent;
+          btn.disabled = false;
+        }
+      }
+
+      async function doLogin() {
+        clearError();
+        const user = (userEl.value || 'alice').trim();
+        const password = passEl.value || '';
+        setLoading(loginBtn, true, 'Вход…');
+
+        try {
+          const res = await fetch('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user, password }),
+            credentials: 'include',
+          });
+          if (res.ok) {
+            passEl.value = '';
+          } else if (res.status === 401) {
+            showError('Неверный логин или пароль. Попробуйте alice/alice или bob/bob.');
+          } else {
+            showError('Сервер вернул ' + res.status + '. Попробуйте позже.');
+          }
+        } catch {
+          showError('Сервер недоступен. Запустите стек: pnpm dev:proxy.');
+        } finally {
+          setLoading(loginBtn, false);
+          refreshStatus();
+        }
+      }
+
+      async function doLogout() {
+        clearError();
+        setLoading(logoutBtn, true, 'Выход…');
+        try {
+          await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+        } catch { /* offline — refreshStatus will still flip from missing cookie */ }
+        setLoading(logoutBtn, false);
+        // Wipe DOM that contains previous user's data BEFORE refreshStatus
+        // so the next ACTIVE phase's full-page snapshot doesn't capture it.
+        wipeUserVisibleState();
+        refreshStatus();
+      }
+
+      function wipeUserVisibleState() {
+        // Clear interactive form values.
+        document.querySelectorAll('input:not(#auth-user):not(#auth-password)')
+          .forEach((el) => { el.value = ''; });
+        document.querySelectorAll('select')
+          .forEach((sel) => { sel.selectedIndex = 0; });
+        // Reset activity log so plaintext entries don't survive into next user's session.
+        window.resetActivityLog?.();
+      }
+
+      loginBtn.addEventListener('click', doLogin);
+      logoutBtn.addEventListener('click', doLogout);
+      form.addEventListener('submit', (e) => { e.preventDefault(); doLogin(); });
+
       refreshStatus();
-    });
-    document.getElementById('auth-logout').addEventListener('click', async function () {
-      await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
-      refreshStatus();
-    });
-    refreshStatus();
-  </script>
-  <p>This page is recorded by rrweb — the recorder script is injected by the nginx proxy and begins capturing only after login.</p>
+      setInterval(refreshStatus, STATUS_POLL_MS);
+    })();
 
-  <div class="card">
-    <h2>Login Form (masked by recorder)</h2>
-    <input type="text" placeholder="Username" value="" />
-    <!-- Password masked because maskAllInputs=true -->
-    <input type="password" placeholder="Password" />
-    <button onclick="logAction('login_click')">Sign In</button>
-  </div>
+    // ───── activity log ─────
+    (function wireActivityLog() {
+      const logEl     = document.getElementById('log');
+      const counterEl = document.getElementById('log-count');
+      const eventPlural = (n) => russianPlural(n, ['событие', 'события', 'событий']);
+      let count = 0;
 
-  <div class="card">
-    <h2>Data Entry</h2>
-    <input type="text" placeholder="Search query..." oninput="logAction('search: ' + this.value)" />
-    <select onchange="logAction('filter: ' + this.value)">
-      <option>All departments</option>
-      <option>Engineering</option>
-      <option>Finance</option>
-      <option>HR</option>
-    </select>
-  </div>
+      function renderCounter() {
+        // Bulletproof: never let a non-finite value reach the DOM.
+        const n = (typeof count === 'number' && isFinite(count)) ? (count | 0) : 0;
+        count = n;
+        counterEl.textContent = n + ' ' + eventPlural(n);
+      }
+      renderCounter();
 
-  <div class="card rec-no-capture">
-    <strong>rec-no-capture zone</strong> — this block is hidden from recorder (blockClass=rec-no-capture)
-  </div>
+      function iconFor(cls) {
+        switch (cls) {
+          case 'evt-search': return '⌕';
+          case 'evt-filter': return '≡';
+          case 'evt-manual': return '!';
+          default:           return '•';
+        }
+      }
 
-  <div class="card">
-    <h2>Sensitive text (masked)</h2>
-    <p>Normal visible text</p>
-    <p class="rec-mask">CONFIDENTIAL: salary data here — recorder sees *** instead</p>
-  </div>
+      // Build rows from a template to avoid manual innerHTML concatenation.
+      function buildRow(name, cls) {
+        const row = document.createElement('div');
+        row.className = 'log__row ' + (cls || '');
+        const icon = document.createElement('div');
+        icon.className = 'log__icon';
+        icon.textContent = iconFor(cls);
+        const main = document.createElement('div');
+        main.className = 'log__main';
+        const title = document.createElement('div');
+        title.className = 'log__name';
+        title.textContent = String(name);
+        const sub = document.createElement('div');
+        sub.className = 'log__sub';
+        sub.textContent = hhmmss(new Date()) + ' · ' + (cls || 'event').replace('evt-', '');
+        main.append(title, sub);
+        row.append(icon, main);
+        return row;
+      }
 
-  <div class="card">
-    <h2>Event log</h2>
-    <div id="log">Waiting for interactions...</div>
-    <button onclick="logAction('manual_event')">Fire custom event</button>
-  </div>
+      window.logAction = function logAction(name, cls) {
+        if (logEl.dataset.cleared !== '1') {
+          logEl.innerHTML = '';
+          logEl.dataset.cleared = '1';
+        }
+        count = (count | 0) + 1;
+        renderCounter();
 
-  <script>
-    var actionCount = 0;
-    function logAction(name) {
-      actionCount++;
-      var log = document.getElementById('log');
-      var line = document.createElement('div');
-      line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + name;
-      log.appendChild(line);
-      log.scrollTop = log.scrollHeight;
-    }
+        logEl.insertBefore(buildRow(name, cls), logEl.firstChild);
+        while (logEl.childElementCount > MAX_LOG_ROWS) logEl.removeChild(logEl.lastChild);
+      };
+
+      // Called by doLogout so the next user's initial DOM snapshot doesn't
+      // capture previous user's plaintext entries.
+      window.resetActivityLog = function resetActivityLog() {
+        count = 0;
+        renderCounter();
+        logEl.innerHTML = '<div class="log__empty">Начните взаимодействовать с полями выше — события появятся здесь.</div>';
+        delete logEl.dataset.cleared;
+      };
+    })();
   </script>
 </body>
 </html>

@@ -23,8 +23,8 @@ logout, когда маркер исчезает, рекордер стопае�
 выводит её из HttpOnly cookie `session`, которую браузер шлёт
 автоматически с каждым батчем.
 
-См. [`docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md`](../docs/superpowers/specs/2026-05-28-auth-gated-recording-design.md)
-для полной архитектуры.
+См. [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) для полной архитектуры
+auth-флоу, state machine рекордера и cookie-контракта.
 
 ## Дефолты конфига
 
