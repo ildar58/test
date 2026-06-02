@@ -30,7 +30,7 @@ describe('Transport', () => {
   });
 
   it('does not flush before flushIntervalMs has elapsed', () => {
-    const t = new Transport(ENDPOINT, 2_000, 1000);
+    const t = new Transport({ endpoint: ENDPOINT, flushIntervalMs: 2_000, maxBufferSize: 1000 });
     t.start(SESSION);
     t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION);
 
@@ -41,7 +41,7 @@ describe('Transport', () => {
   });
 
   it('flushes via fetch after flushIntervalMs with credentials:"include"', () => {
-    const t = new Transport(ENDPOINT, 2_000, 1000);
+    const t = new Transport({ endpoint: ENDPOINT, flushIntervalMs: 2_000, maxBufferSize: 1000 });
     t.start(SESSION);
     t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION);
 
@@ -56,7 +56,7 @@ describe('Transport', () => {
   });
 
   it('wire payload contains session_id, batch_seq, events_b64_gzip and NO distinct_id', () => {
-    const t = new Transport(ENDPOINT, 2_000, 1000);
+    const t = new Transport({ endpoint: ENDPOINT, flushIntervalMs: 2_000, maxBufferSize: 1000 });
     t.start(SESSION);
     const events = [
       { type: 0, data: { tag: 'meta' }, timestamp: 100 },
@@ -75,7 +75,7 @@ describe('Transport', () => {
   });
 
   it('triggers sendBeacon on visibilitychange→hidden', () => {
-    const t = new Transport(ENDPOINT, 2_000, 1000);
+    const t = new Transport({ endpoint: ENDPOINT, flushIntervalMs: 2_000, maxBufferSize: 1000 });
     t.start(SESSION);
     t.push({ type: 3, data: {}, timestamp: 9 } as never, SESSION);
 
@@ -90,7 +90,7 @@ describe('Transport', () => {
   it('invokes onUnauthorized callback when server returns 401', async () => {
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }));
     const onUnauthorized = vi.fn();
-    const t = new Transport(ENDPOINT, 2_000, 1000, onUnauthorized);
+    const t = new Transport({ endpoint: ENDPOINT, flushIntervalMs: 2_000, maxBufferSize: 1000, onUnauthorized });
     t.start(SESSION);
     t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION);
 
@@ -103,7 +103,7 @@ describe('Transport', () => {
 
   it('invokes onAuthorized callback when server returns 200', async () => {
     const onAuthorized = vi.fn();
-    const t = new Transport(ENDPOINT, 2_000, 1000, undefined, onAuthorized);
+    const t = new Transport({ endpoint: ENDPOINT, flushIntervalMs: 2_000, maxBufferSize: 1000, onAuthorized });
     t.start(SESSION);
     t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION);
 

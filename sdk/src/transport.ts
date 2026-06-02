@@ -7,6 +7,18 @@ export interface Batch {
   events_b64_gzip: string;
 }
 
+export interface TransportOptions {
+  endpoint: string;
+  flushIntervalMs: number;
+  maxBufferSize: number;
+  /** Starting value for batch_seq. Defaults to 0. Used to preserve monotonicity across reload. */
+  initialBatchSeq?: number;
+  /** Fired after batch_seq is advanced; lets callers persist it across reload. */
+  onBatchSeqAdvance?: (seq: number) => void;
+  onUnauthorized?: () => void;
+  onAuthorized?: () => void;
+}
+
 function encodeBatch(events: eventWithTime[]): string {
   const u8 = strToU8(JSON.stringify(events));
   const compressed = gzipSync(u8, { level: 6 });
@@ -16,97 +28,91 @@ function encodeBatch(events: eventWithTime[]): string {
 }
 
 export class Transport {
+  private readonly opts: TransportOptions;
   private buffer: eventWithTime[] = [];
-  private batchSeq = 0;
-  private timer: ReturnType<typeof setInterval> | null = null;
-  private readonly endpoint: string;
-  private readonly flushIntervalMs: number;
-  private readonly maxBufferSize: number;
-  private readonly onUnauthorized?: () => void;
-  private readonly onAuthorized?: () => void;
-  private onVisibilityChange: (() => void) | null = null;
-  private onPageHide: (() => void) | null = null;
+  private batchSeq: number;
+  private flushTimer: ReturnType<typeof setInterval> | null = null;
+  private flushOnVisibilityHide: (() => void) | null = null;
+  private flushOnPageHide: (() => void) | null = null;
 
-  constructor(
-    endpoint: string,
-    flushIntervalMs: number,
-    maxBufferSize: number,
-    onUnauthorized?: () => void,
-    onAuthorized?: () => void
-  ) {
-    this.endpoint = endpoint;
-    this.flushIntervalMs = flushIntervalMs;
-    this.maxBufferSize = maxBufferSize;
-    this.onUnauthorized = onUnauthorized;
-    this.onAuthorized = onAuthorized;
+  constructor(opts: TransportOptions) {
+    this.opts = opts;
+    this.batchSeq = opts.initialBatchSeq ?? 0;
   }
 
   start(sessionId: string): void {
-    this.timer = setInterval(() => this.flush(sessionId), this.flushIntervalMs);
+    this.flushTimer = setInterval(
+      () => this.flush(sessionId),
+      this.opts.flushIntervalMs
+    );
 
-    this.onPageHide = () => this.beaconFlush(sessionId);
-    this.onVisibilityChange = () => {
+    this.flushOnPageHide = () => this.beaconFlush(sessionId);
+    this.flushOnVisibilityHide = () => {
       if (document.visibilityState === 'hidden') this.beaconFlush(sessionId);
     };
-    document.addEventListener('visibilitychange', this.onVisibilityChange);
-    window.addEventListener('pagehide', this.onPageHide);
+    document.addEventListener('visibilitychange', this.flushOnVisibilityHide);
+    window.addEventListener('pagehide', this.flushOnPageHide);
   }
 
   push(event: eventWithTime, sessionId: string): void {
     this.buffer.push(event);
-    if (this.buffer.length >= this.maxBufferSize) this.flush(sessionId);
+    if (this.buffer.length >= this.opts.maxBufferSize) this.flush(sessionId);
   }
 
-  flush(sessionId: string): void {
-    if (this.buffer.length === 0) return;
+  /** Synchronous swap: returns the current batch and clears the buffer atomically. */
+  private takeBatch(sessionId: string): Batch | null {
+    if (this.buffer.length === 0) return null;
     const events = this.buffer;
     this.buffer = [];
-    const batch: Batch = {
+    this.batchSeq += 1;
+    this.opts.onBatchSeqAdvance?.(this.batchSeq);
+    return {
       session_id: sessionId,
-      batch_seq: ++this.batchSeq,
+      batch_seq: this.batchSeq,
       events_b64_gzip: encodeBatch(events),
     };
-    fetch(this.endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(batch),
-      credentials: 'include',
-      keepalive: true,
-    })
-      .then((res) => {
-        if (res.status === 401 && this.onUnauthorized) this.onUnauthorized();
-        else if (res.ok && this.onAuthorized) this.onAuthorized();
-      })
-      .catch(() => {
-        // silently drop on network error
+  }
+
+  async flush(sessionId: string): Promise<void> {
+    const batch = this.takeBatch(sessionId);
+    if (!batch) return;
+    try {
+      const res = await fetch(this.opts.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(batch),
+        credentials: 'include',
+        keepalive: true,
       });
+      if (res.status === 401) this.opts.onUnauthorized?.();
+      else if (res.ok) this.opts.onAuthorized?.();
+    } catch {
+      // Network error — events are already removed from the buffer; we don't
+      // re-queue because retrying stale events past their flushIntervalMs
+      // window would burst-spike the next batch. Drop is intentional.
+    }
   }
 
+  /** Pagehide/visibility-hidden path: uses sendBeacon so the request survives unload. */
   private beaconFlush(sessionId: string): void {
-    if (this.buffer.length === 0) return;
-    const events = this.buffer;
-    this.buffer = [];
-    const batch: Batch = {
-      session_id: sessionId,
-      batch_seq: ++this.batchSeq,
-      events_b64_gzip: encodeBatch(events),
-    };
+    const batch = this.takeBatch(sessionId);
+    if (!batch) return;
     const blob = new Blob([JSON.stringify(batch)], { type: 'application/json' });
-    navigator.sendBeacon(this.endpoint, blob);
+    navigator.sendBeacon(this.opts.endpoint, blob);
   }
 
   stop(): void {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer);
+      this.flushTimer = null;
     }
-    if (this.onVisibilityChange) {
-      document.removeEventListener('visibilitychange', this.onVisibilityChange);
-      this.onVisibilityChange = null;
+    if (this.flushOnVisibilityHide) {
+      document.removeEventListener('visibilitychange', this.flushOnVisibilityHide);
+      this.flushOnVisibilityHide = null;
     }
-    if (this.onPageHide) {
-      window.removeEventListener('pagehide', this.onPageHide);
-      this.onPageHide = null;
+    if (this.flushOnPageHide) {
+      window.removeEventListener('pagehide', this.flushOnPageHide);
+      this.flushOnPageHide = null;
     }
   }
 }
