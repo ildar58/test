@@ -31,10 +31,10 @@ export interface RecorderConfig {
   /** Whether to record cross-origin iframes */
   recordCrossOriginIframes: boolean;
 
-  /** Full-page checkout interval in ms */
+  /** Forces a full DOM snapshot every N ms; bounds replay buffer size */
   checkoutEveryNms: number;
 
-  /** Flush buffer to server every N milliseconds */
+  /** Flush buffer to server every N ms */
   flushIntervalMs: number;
 
   /** Max events buffered before forced flush */
@@ -43,31 +43,45 @@ export interface RecorderConfig {
   /** Name of the JS-readable marker cookie set by the backend on login */
   markerCookieName: string;
 
-  /** Marker cookie poll interval in ms (defensive; watcher also reacts to focus/visibility) */
+  /** Name of the JS-readable cookie holding the server-minted recording session id */
+  sessionIdCookieName: string;
+
+  /** Marker cookie poll interval in ms (watcher also reacts to focus/visibility) */
   markerPollMs: number;
 
-  /** Consecutive 401-induced transitions before suspending IDLE→ACTIVE */
+  /** Consecutive 401-induced transitions before entering cooldown */
   unauthorizedThreshold: number;
 
-  /** Cool-down window after the threshold is reached */
+  /** Cooldown window after the threshold is reached */
   unauthorizedCooldownMs: number;
 }
+
+const MINUTE_MS = 60_000;
 
 export const DEFAULT_CONFIG: RecorderConfig = {
   endpoint: '/s/',
   blockClass: 'rec-no-capture',
   ignoreClass: 'rec-ignore-input',
   maskTextClass: 'rec-mask',
-  maskAllInputs: true,
+  // Don't blanket-mask every input: maskAllInputs:true also masks <select>,
+  // <radio>, <checkbox> — controls whose values come from a fixed option set,
+  // not free user text. rrweb still records their change events, but the value
+  // is stored as asterisks, so on replay `select.value = "*****"` matches no
+  // <option> and the control silently reverts to its default — the selection
+  // looks lost. Mask only free-text-bearing inputs (password here; the auth
+  // block is also wrapped in blockClass `rec-no-capture`). PROD NOTE: tighten
+  // this for PII — add text/email/tel/etc. to maskInputOptions before shipping.
+  maskAllInputs: false,
   maskInputOptions: { password: true },
   inlineStylesheet: true,
   collectFonts: false,
   recordCrossOriginIframes: false,
-  checkoutEveryNms: 30 * 60 * 1000, // 30 min
+  checkoutEveryNms: 30 * MINUTE_MS,
   flushIntervalMs: 2_000,
   maxBufferSize: 500,
   markerCookieName: 'session_present',
-  markerPollMs: 5_000,
+  sessionIdCookieName: 'session_id',
+  markerPollMs: 1_000,
   unauthorizedThreshold: 3,
-  unauthorizedCooldownMs: 60_000,
+  unauthorizedCooldownMs: MINUTE_MS,
 };

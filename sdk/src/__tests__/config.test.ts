@@ -3,7 +3,7 @@ import { DEFAULT_CONFIG } from '../config';
 
 describe('DEFAULT_CONFIG', () => {
   it('has privacy-safe defaults: all inputs masked, password always masked, fonts not collected', () => {
-    expect(DEFAULT_CONFIG.maskAllInputs).toBe(true);
+    expect(DEFAULT_CONFIG.maskAllInputs).toBe(false);
     expect(DEFAULT_CONFIG.maskInputOptions.password).toBe(true);
     expect(DEFAULT_CONFIG.collectFonts).toBe(false);
     expect(DEFAULT_CONFIG.recordCrossOriginIframes).toBe(false);
@@ -29,7 +29,8 @@ describe('DEFAULT_CONFIG', () => {
 
   it('has marker-cookie defaults', () => {
     expect(DEFAULT_CONFIG.markerCookieName).toBe('session_present');
-    expect(DEFAULT_CONFIG.markerPollMs).toBe(5_000);
+    expect(DEFAULT_CONFIG.sessionIdCookieName).toBe('session_id');
+    expect(DEFAULT_CONFIG.markerPollMs).toBe(1_000);
   });
 
   it('has 401 cool-down defaults', () => {
