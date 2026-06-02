@@ -13,6 +13,7 @@
 
 import { DEFAULT_CONFIG, type RecorderConfig } from './config';
 import { Recorder } from './recorder';
+import { parseDatasetConfig } from './script-config';
 
 export type { RecorderConfig };
 
@@ -30,4 +31,20 @@ export function init(options: InitOptions = {}): void {
 export function stop(): void {
   instance?.stop();
   instance = null;
+}
+
+/**
+ * Initialize from a proxy-injected <script>'s data-* attributes. Exported so the
+ * wiring is unit-testable; null is a no-op (ESM import / tests). init() is
+ * idempotent, so a redundant call is harmless.
+ */
+export function autoInit(script: HTMLScriptElement | null): void {
+  if (script) init(parseDatasetConfig(script.dataset));
+}
+
+// When delivered as the nginx-injected <script>, document.currentScript is the
+// bundle's own tag during synchronous load — read its data-* and start. For
+// ESM imports / unit tests currentScript is null, so this is a no-op.
+if (typeof document !== 'undefined') {
+  autoInit(document.currentScript as HTMLScriptElement | null);
 }
