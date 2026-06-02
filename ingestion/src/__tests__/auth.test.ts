@@ -31,14 +31,15 @@ describe('verifyPassword', () => {
 });
 
 describe('session store', () => {
-  it('createSession returns a 64-char hex token', () => {
-    const tok = createSession('alice');
-    expect(tok).toMatch(/^[0-9a-f]{64}$/);
+  it('createSession returns a 64-char hex token and a uuid sessionId', () => {
+    const { token, sessionId } = createSession('alice');
+    expect(token).toMatch(/^[0-9a-f]{64}$/);
+    expect(sessionId).toMatch(/^[0-9a-f-]{36}$/);
   });
 
   it('getSession returns the entry for a live token, null for an unknown one', () => {
-    const tok = createSession('alice');
-    const entry = getSession(tok);
+    const { token } = createSession('alice');
+    const entry = getSession(token);
     expect(entry?.username).toBe('alice');
     expect(typeof entry?.createdAt).toBe('number');
 
@@ -47,9 +48,9 @@ describe('session store', () => {
   });
 
   it('destroySession makes a subsequent getSession return null', () => {
-    const tok = createSession('alice');
-    destroySession(tok);
-    expect(getSession(tok)).toBeNull();
+    const { token } = createSession('alice');
+    destroySession(token);
+    expect(getSession(token)).toBeNull();
   });
 
   it('destroySession is idempotent on unknown tokens', () => {

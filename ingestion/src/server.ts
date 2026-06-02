@@ -3,7 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import fs from 'fs';
 import path from 'path';
-import type { Request, Response } from 'express';
+import type { Request, Response, CookieOptions } from 'express';
 import type { EventBatch } from './types';
 import { appendBatch, listSessions, getSessionEvents } from './storage';
 import {
@@ -14,7 +14,8 @@ import {
 } from './auth';
 
 const app = express();
-const PORT = process.env.PORT ?? 3001;
+const PORT = Number(process.env.PORT) || 3001;
+const MAX_BATCH_BYTES = '10mb';
 
 // CSRF posture for this stub relies on (a) the nginx proxy serving recorder,
 // app, and ingestion same-origin in production, and (b) SameSite=Lax on the
@@ -23,19 +24,34 @@ const PORT = process.env.PORT ?? 3001;
 // Go service should pin `origin` to the known list of allowed front-ends.
 app.use(cors({ credentials: true }));
 app.use(cookieParser());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: MAX_BATCH_BYTES }));
 
-// Resolve the replayer directory across both dev (tsx → __dirname=ingestion/src,
-// real replayer at repo-root/replayer = '../../replayer') and the compiled
-// Docker image (node → __dirname=/app/dist, replayer bind-mounted at
-// /app/replayer = '../replayer'). Try the dev-correct path FIRST so an
-// accidentally-created ingestion/replayer/ dir can't silently shadow it.
-const replayerDir = [
-  path.resolve(__dirname, '../../replayer'),
-  path.resolve(__dirname, '../replayer'),
-].find((p) => fs.existsSync(p));
-if (replayerDir) {
-  app.use('/replay', express.static(replayerDir));
+// TODO(prod): set `secure: true` on both cookies once nginx terminates HTTPS.
+const SESSION_COOKIE: CookieOptions = { httpOnly: true,  sameSite: 'lax', path: '/' };
+const MARKER_COOKIE:  CookieOptions = { httpOnly: false, sameSite: 'lax', path: '/' };
+
+/**
+ * Locate the replayer directory across both layouts:
+ *   - dev: tsx → __dirname=ingestion/src, replayer at <repo>/replayer
+ *   - docker: node → __dirname=/app/dist, replayer bind-mounted at /app/replayer
+ * The dev-correct path is tried FIRST so an accidentally-created
+ * ingestion/replayer/ directory can't silently shadow the real one.
+ */
+function findReplayerDir(): string | null {
+  const candidates = [
+    path.resolve(__dirname, '../../replayer'),
+    path.resolve(__dirname, '../replayer'),
+  ];
+  return candidates.find((p) => fs.existsSync(p)) ?? null;
+}
+
+const replayerDir = findReplayerDir();
+if (replayerDir) app.use('/replay', express.static(replayerDir));
+
+/** Best-effort string extractor for untrusted JSON bodies. */
+function pickString(body: unknown, key: string): string {
+  const v = (body as Record<string, unknown> | null)?.[key];
+  return typeof v === 'string' ? v : '';
 }
 
 /**
@@ -44,29 +60,35 @@ if (replayerDir) {
  * recorder lifecycle locally and in E2E with a real-looking flow.
  */
 app.post('/auth/login', async (req: Request, res: Response) => {
-  const user = (req.body?.user as string | undefined) ?? '';
-  const password = (req.body?.password as string | undefined) ?? '';
+  const user = pickString(req.body, 'user');
+  const password = pickString(req.body, 'password');
 
-  const ok = await verifyPassword(user, password);
-  if (!ok) {
+  if (!(await verifyPassword(user, password))) {
     res.status(401).json({ success: false, error: 'invalid credentials' });
     return;
   }
 
-  const token = createSession(user);
-  // TODO(prod): set `secure: true` on both cookies once nginx terminates HTTPS.
-  res.cookie('session', token, { httpOnly: true, sameSite: 'lax', path: '/' });
-  res.cookie('session_present', '1', { httpOnly: false, sameSite: 'lax', path: '/' });
+  const { token, sessionId } = createSession(user);
+  res.cookie('session',         token,     SESSION_COOKIE);
+  res.cookie('session_present', '1',       MARKER_COOKIE);
+  res.cookie('session_id',      sessionId, MARKER_COOKIE);
   res.json({ success: true, user });
 });
 
 app.post('/auth/logout', (req: Request, res: Response) => {
   destroySession(req.cookies?.session as string | undefined);
-  // TODO(prod): set `secure: true` on both cookies once nginx terminates HTTPS.
-  res.cookie('session', '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 });
-  res.cookie('session_present', '', { httpOnly: false, sameSite: 'lax', path: '/', maxAge: 0 });
+  res.cookie('session',         '', { ...SESSION_COOKIE, maxAge: 0 });
+  res.cookie('session_present', '', { ...MARKER_COOKIE,  maxAge: 0 });
+  res.cookie('session_id',      '', { ...MARKER_COOKIE,  maxAge: 0 });
   res.json({ success: true });
 });
+
+function isValidBatch(b: unknown): b is EventBatch {
+  const o = b as EventBatch | null;
+  return !!o && typeof o.session_id === 'string'
+    && typeof o.events_b64_gzip === 'string'
+    && typeof o.batch_seq === 'number';
+}
 
 app.post('/s/', (req: Request, res: Response) => {
   const entry = getSession(req.cookies?.session as string | undefined);
@@ -75,14 +97,13 @@ app.post('/s/', (req: Request, res: Response) => {
     return;
   }
 
-  const batch = req.body as EventBatch;
-  if (!batch?.session_id || !batch.events_b64_gzip || typeof batch.batch_seq !== 'number') {
+  if (!isValidBatch(req.body)) {
     res.status(400).json({ success: false, error: 'Missing required fields' });
     return;
   }
 
   try {
-    appendBatch(batch, entry.username);
+    appendBatch(req.body, entry.username);
     res.json({ success: true });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
@@ -106,7 +127,7 @@ app.get('/sessions/:id', (req: Request, res: Response) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Ingestion service listening on http://localhost:${PORT}`);
-    console.log(`Replayer UI:  http://localhost:${PORT}/replay`);
+    console.log(`Replayer UI:                   http://localhost:${PORT}/replay`);
   });
 }
 

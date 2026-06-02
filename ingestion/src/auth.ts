@@ -10,6 +10,8 @@ export interface DemoUser {
 export interface SessionEntry {
   username: string;
   createdAt: number;
+  /** Server-minted recording session id, mirrored to the client as a cookie. */
+  sessionId: string;
 }
 
 // Demo users — passwords are intentionally trivial and committed.
@@ -19,19 +21,24 @@ export const users: ReadonlyArray<DemoUser> = [
   { username: 'bob',   passwordHash: '$2b$10$.tpof/zk3Lijpl9vLHJoj.4D54F5J981ITkqPW2IylqMzD4VvgOOO' },
 ];
 
+/**
+ * Used as a stand-in hash for unknown users so bcrypt.compare runs the same
+ * number of rounds in both paths, removing the timing oracle that would
+ * otherwise reveal whether the username exists.
+ */
+const DUMMY_HASH = users[0]!.passwordHash;
+
 // TODO(prod): the real Go service must add TTL eviction and a hard size cap.
 // In the stub this grows until process restart, which is acceptable for demo
 // runs but would be a memory leak in production.
 const sessions = new Map<string, SessionEntry>();
 
 /**
- * Runs a bcrypt compare against a real-shape dummy hash even for unknown
- * users so the dominant cost — the bcrypt round — is paid on both paths.
- * The preceding `users.find` is O(n) over the demo user list and is not
- * constant-time itself; with a two-user list this is sub-microsecond noise,
- * but for any port to a real user table swap the linear search for a
- * constant-time lookup (e.g. hashed-username index) before relying on this
- * mitigation.
+ * Runs a bcrypt compare against DUMMY_HASH even for unknown users so the
+ * dominant cost — the bcrypt round — is paid on both paths. The preceding
+ * `users.find` is O(n) and not constant-time; with a two-user list this is
+ * sub-microsecond noise, but a port to a real user table should swap the
+ * linear search for a constant-time lookup before relying on this mitigation.
  */
 export async function verifyPassword(
   user: string,
@@ -39,15 +46,15 @@ export async function verifyPassword(
 ): Promise<boolean> {
   if (!user || !password) return false;
   const found = users.find((u) => u.username === user);
-  const hashToCompare = found?.passwordHash ?? users[0]!.passwordHash;
-  const matches = await bcrypt.compare(password, hashToCompare);
+  const matches = await bcrypt.compare(password, found?.passwordHash ?? DUMMY_HASH);
   return !!found && matches;
 }
 
-export function createSession(username: string): string {
+export function createSession(username: string): { token: string; sessionId: string } {
   const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, { username, createdAt: Date.now() });
-  return token;
+  const sessionId = crypto.randomUUID();
+  sessions.set(token, { username, createdAt: Date.now(), sessionId });
+  return { token, sessionId };
 }
 
 export function getSession(token: string | undefined): SessionEntry | null {

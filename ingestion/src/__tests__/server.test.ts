@@ -130,4 +130,28 @@ describe('ingestion server', () => {
     const res = await agent.post('/s/').send({ session_id: 'sA' });
     expect(res.status).toBe(400);
   });
+
+  it('POST /auth/login sets a non-HttpOnly session_id cookie (uuid)', async () => {
+    const { default: app } = await import('../server');
+    const res = await request(app)
+      .post('/auth/login')
+      .send({ user: 'alice', password: 'alice' });
+    expect(res.status).toBe(200);
+
+    const setCookies = ([] as string[]).concat(res.headers['set-cookie'] ?? []);
+    const sid = setCookies.find((c) => c.startsWith('session_id='));
+    expect(sid).toBeDefined();
+    expect(/^session_id=[0-9a-f-]{36};/.test(sid!)).toBe(true);
+    expect(/HttpOnly/i.test(sid!)).toBe(false);
+  });
+
+  it('POST /auth/logout clears the session_id cookie', async () => {
+    const { default: app } = await import('../server');
+    const agent = request.agent(app);
+    await agent.post('/auth/login').send({ user: 'alice', password: 'alice' });
+
+    const logout = await agent.post('/auth/logout');
+    const setCookies = ([] as string[]).concat(logout.headers['set-cookie'] ?? []);
+    expect(setCookies.some((c) => /^session_id=;/.test(c) && /Max-Age=0/.test(c))).toBe(true);
+  });
 });
