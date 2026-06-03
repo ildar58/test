@@ -9,11 +9,6 @@ dist/
 ingestion/data/
 data/
 
-# E2E fixtures (regenerated via setup-fixture.sh)
-e2e/fixtures/ng-app/
-e2e/test-results/
-e2e/playwright-report/
-e2e/playwright/.cache/
 
 # Logs
 *.log

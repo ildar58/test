@@ -1,6 +1,5 @@
 packages:
   - sdk
   - ingestion
-  - e2e
 allowBuilds:
   esbuild: false

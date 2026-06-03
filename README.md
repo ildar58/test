@@ -8,8 +8,8 @@
 
 Это учебная / референс-реализация. Рекордер, nginx, демо-приложение и реплеер
 сделаны в production-форме. Ingestion-сервис — это явный Node-стаб настоящего
-Go-сервиса; что нужно изменить перед продом — см.
-[`docs/PRODUCTION.md`](docs/PRODUCTION.md).
+Go-сервиса; что нужно изменить перед продом — см. раздел «Известные
+ограничения» ниже.
 
 ---
 
@@ -63,9 +63,6 @@ HttpOnly cookie, JS до неё не дотягивается. Идентичн�
 выводится сервером из той самой HttpOnly cookie — она не появляется в
 wire-формате.
 
-См. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) для полного жизненного
-цикла, state machine и того, что делает каждая cookie.
-
 ---
 
 ## Quick start
@@ -87,9 +84,6 @@ pnpm dev:proxy
 Открой <http://localhost:8080>. Увидишь демо-страницу с панелью Auth.
 Жми **Log in** (дефолтные креды `alice` / `alice`), пощёлкай по странице,
 потом **Log out**.
-
-Пошаговый dev-walkthrough с траблшутингом — в
-[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
 ---
 
@@ -119,22 +113,6 @@ open http://localhost:8081
 | [`proxy/`](proxy) | Конфиг nginx + Docker Compose локального стека. |
 | [`demo-app/`](demo-app) | Минимальное HTML-приложение, которое сидит за nginx как «продуктовое». |
 | [`replayer/`](replayer) | Однофайловый реплеер на rrweb-player. |
-| [`e2e/`](e2e) | E2E-тесты на Playwright, гоняют полный Docker-стек. |
-| [`docs/`](docs) | Архитектура, руководство по разработке и production-чеклист. |
-
-В каждом пакете свой README с подробностями. Начинать читать — отсюда.
-
----
-
-## Карта документации
-
-| Документ | Когда читать |
-|----------|-------------|
-| [`README.md`](README.md) | Ты здесь. Обзор, quick start. |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Как работают cookies, state machine и поток данных в деталях. Прочитай **до** того, как лезть в SDK. |
-| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | Локальная разработка, hot-reload, траблшутинг Docker / Playwright / версий Node. Читать, когда что-то не запускается. |
-| [`docs/PRODUCTION.md`](docs/PRODUCTION.md) | Что демо-стаб подменяет vs что должен делать настоящий Go-сервис; security-чеклист; deployment-поза. Читать, когда портируешь в прод. |
-| [`e2e/README.md`](e2e/README.md) | Как устроены end-to-end тесты, как запускать локально и в CI. |
 
 ---
 
@@ -181,33 +159,22 @@ Sane privacy-first дефолты (зеркалят пресет PostHog):
 `data/<session_id>.jsonl`; реплеер восстанавливает, разжимая и
 конкатенируя по порядку.
 
-См. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#6-wire-формат) — полный
-контракт включая auth-эндпоинты.
-
 ---
 
 ## Тестирование
 
 ```bash
-pnpm test           # unit + интеграционные (vitest) — быстро, гоняется в CI
-pnpm test:e2e       # Playwright + полный Docker-стек — только локально
+pnpm test           # unit + интеграционные (vitest)
 pnpm typecheck      # tsc --noEmit по всем пакетам
 ```
 
-E2E требуют Docker. Playwright скачивает свой headless Chromium при первом
-запуске; если у тебя уже стоит Chrome for Testing где-то ещё — смотри
-[`e2e/README.md`](e2e/README.md#использование-уже-установленного-chrome)
-про опт-ин через `CHROME_EXECUTABLE`.
-
-Текущее покрытие: 33 SDK + 21 ingestion unit/integration тестов,
-плюс 5 сценариев Playwright, гоняющих полный Variant A lifecycle.
+Покрытие: unit/integration тесты на SDK и ingestion (vitest).
 
 ---
 
 ## Известные ограничения
 
-Это **намеренные пробелы** в учебной реализации. Подробности — в
-[`docs/PRODUCTION.md`](docs/PRODUCTION.md):
+Это **намеренные пробелы** в учебной реализации:
 
 - **Path-traversal в `ingestion/src/storage.ts`** — `session_id` из тела
   запроса попадает в путь к файлу без валидации. Аутентифицированный
