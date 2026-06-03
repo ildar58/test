@@ -25,7 +25,10 @@ export function buildControls(
   const bar = document.createElement('div');
   bar.className = 'pc';
   const speedBtns = opts.speedOptions
-    .map((s, i) => `<button type="button" data-speed="${s}"${i === 0 ? ' class="is-active"' : ''}>${s}×</button>`)
+    .map(
+      (s, i) =>
+        `<button type="button" data-speed="${s}" aria-pressed="${i === 0 ? 'true' : 'false'}"${i === 0 ? ' class="is-active"' : ''}>${s}×</button>`,
+    )
     .join('');
   bar.innerHTML = `
     <div class="pc__scrub" role="slider" tabindex="0" aria-label="Перемотка" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -70,6 +73,7 @@ export function buildControls(
   let playing = false;
   let skip = opts.skipInactive;
   let total = 0;
+  let curMs = 0;
 
   const setTotal = (): void => {
     total = engine.getDuration();
@@ -79,6 +83,13 @@ export function buildControls(
     ratio = Math.max(0, Math.min(1, ratio));
     fill.style.width = thumb.style.left = (ratio * 100).toFixed(3) + '%';
     scrub.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
+  };
+  // Track the authoritative current time so keyboard seeking reads true ms
+  // (not the rounded aria-valuenow percent) and screen readers announce it.
+  const setCur = (ms: number): void => {
+    curMs = Math.max(0, Math.min(total > 0 ? total : ms, ms));
+    cur.textContent = fmtDur(curMs);
+    scrub.setAttribute('aria-valuetext', fmtDur(curMs) + ' из ' + fmtDur(total));
   };
   const moveIndicator = (btn: HTMLElement): void => {
     ind.style.width = btn.offsetWidth + 'px';
@@ -95,7 +106,7 @@ export function buildControls(
   const seek = (ev: PointerEvent): void => {
     const ratio = Math.max(0, Math.min(1, ratioFromEvent(ev)));
     setProgress(ratio);
-    cur.textContent = fmtDur(ratio * total);
+    setCur(ratio * total);
     engine.seek(ratio * total);
   };
 
@@ -112,20 +123,24 @@ export function buildControls(
   scrub.addEventListener('pointercancel', endDrag);
   scrub.addEventListener('keydown', (ev) => {
     if (total <= 0) return;
-    const c = (parseInt(scrub.getAttribute('aria-valuenow') || '0', 10) / 100) * total;
     let next: number;
-    if (ev.key === 'ArrowRight') next = Math.min(total, c + 5000);
-    else if (ev.key === 'ArrowLeft') next = Math.max(0, c - 5000);
+    if (ev.key === 'ArrowRight') next = Math.min(total, curMs + 5000);
+    else if (ev.key === 'ArrowLeft') next = Math.max(0, curMs - 5000);
+    else if (ev.key === 'Home') next = 0;
+    else if (ev.key === 'End') next = total;
     else return;
     ev.preventDefault();
     setProgress(next / total);
-    cur.textContent = fmtDur(next);
+    setCur(next);
     engine.seek(next);
   });
   speedButtons.forEach((btn) =>
     btn.addEventListener('click', () => {
       engine.setSpeed(Number(btn.dataset.speed));
-      speedButtons.forEach((b) => b.classList.toggle('is-active', b === btn));
+      speedButtons.forEach((b) => {
+        b.classList.toggle('is-active', b === btn);
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
       moveIndicator(btn);
     }),
   );
@@ -143,7 +158,7 @@ export function buildControls(
   });
   engine.on('time', (ms) => {
     const t = typeof ms === 'number' ? ms : 0;
-    cur.textContent = fmtDur(t);
+    setCur(t);
     if (!dragging && total > 0) setProgress(t / total);
   });
   engine.on('finish', () => {
@@ -153,6 +168,7 @@ export function buildControls(
 
   setTotal();
   setProgress(0);
+  setCur(0);
   realign();
   requestAnimationFrame(realign);
 

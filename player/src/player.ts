@@ -11,6 +11,10 @@ import { CONTROL_CSS, REPLAYER_CSS } from './styles';
 import { ReplayerEngine } from './engine/replayer-engine';
 import { buildControls, type ControlsHandle } from './controls';
 
+// Fallback control-bar height (px) used to size the stage in fullscreen when
+// the bar hasn't been laid out yet and offsetHeight reads 0.
+const CONTROLS_FALLBACK_H = 112;
+
 export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions): PamPlayer {
   const opts = {
     engine: 'replayer' as const,
@@ -48,6 +52,7 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
   let controls: ControlsHandle | null = null;
   let ready = false;
   let destroyed = false;
+  let playing = false;
 
   function toggleFullscreen(): void {
     if (!document.fullscreenElement) {
@@ -62,7 +67,7 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
     // In Shadow DOM, document.fullscreenElement reports the host, not the inner block.
     const fs = document.fullscreenElement === block || document.fullscreenElement === host;
     controls?.setFullscreenState(fs);
-    if (fs) engine.resize(window.innerWidth, window.innerHeight - (controls?.el.offsetHeight || 112));
+    if (fs) engine.resize(window.innerWidth, window.innerHeight - (controls?.el.offsetHeight || CONTROLS_FALLBACK_H));
     else engine.resize(block.clientWidth);
     emit('fullscreenchange', fs ? 'on' : 'off');
   }
@@ -80,9 +85,15 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
       { speedOptions: opts.speedOptions, skipInactive: opts.skipInactive },
     );
     block.appendChild(controls.el);
-    engine.on('state', (p) => emit(p === 'playing' ? 'play' : 'pause'));
+    engine.on('state', (p) => {
+      playing = p === 'playing';
+      emit(p === 'playing' ? 'play' : 'pause');
+    });
     engine.on('time', (ms) => emit('time', ms));
-    engine.on('finish', () => emit('finish'));
+    engine.on('finish', () => {
+      playing = false;
+      emit('finish');
+    });
     engine.resize(block.clientWidth);
     ready = true;
   }
@@ -110,7 +121,7 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
   return {
     play: () => engine.play(),
     pause: () => engine.pause(),
-    toggle: () => controls?.el.querySelector<HTMLElement>('.pc__play')?.click(),
+    toggle: () => { if (ready) playing ? engine.pause() : engine.play(); },
     seek: (ms) => engine.seek(ms),
     setSpeed: (s) => engine.setSpeed(s),
     setSkipInactive: (b) => engine.setSkipInactive(b),
