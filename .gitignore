@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 *.tsbuildinfo
+replayer/vendor/
 
 # Ingestion runtime data
 ingestion/data/

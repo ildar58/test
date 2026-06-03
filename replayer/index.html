@@ -11,10 +11,6 @@
     href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet"
   />
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/rrweb-player@latest/dist/style.css"
-  />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FFDD2D'/%3E%3Cpath d='M38 30l28 20-28 20z' fill='%23181818'/%3E%3C/svg%3E" />
   <style>
     :root {
@@ -448,164 +444,6 @@
       display: none; position: relative; z-index: 1;
     }
     #rrweb-player.active { display: block; }
-    /* видео + панель управления — единый блок без внутренних швов */
-    #rrweb-player.is-player {
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      box-shadow:
-        0 26px 60px -26px rgba(0,0,0,0.72),
-        0 0 56px -30px rgba(255,221,45,0.16);
-    }
-    .rr-player {
-      border-radius: 0 !important;
-      overflow: hidden;
-      margin: 0 !important;
-      background: #fff !important;
-      height: auto !important;          /* высоту экрана задаём по аспекту записи */
-      box-shadow: none !important;
-    }
-    /* встроенный контроллер rrweb прячем, но оставляем смонтированным —
-       он остаётся движком воспроизведения и источником ui-update-событий */
-    #rrweb-player .rr-controller { display: none !important; }
-
-    /* ───── кастомный контроллер (production) ───── */
-    .pc {
-      width: 100%;
-      background: linear-gradient(180deg, var(--panel-2), var(--panel));
-      border: none;
-      border-radius: 0;
-      padding: 14px 16px 15px;
-      box-shadow: none;
-      display: flex; flex-direction: column; gap: 13px;
-      animation: reveal 0.45s var(--ease) both;
-    }
-    .pc__scrub { padding: 7px 0 3px; cursor: pointer; touch-action: none; }
-    .pc__scrub:focus-visible { outline: none; }
-    .pc__scrub:focus-visible .pc__rail { box-shadow: 0 0 0 3px rgba(255,221,45,0.25); }
-    .pc__rail {
-      position: relative; height: 6px; border-radius: 99px;
-      background: rgba(255,255,255,0.09);
-      transition: box-shadow 0.18s var(--ease);
-    }
-    .pc__fill {
-      position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
-      border-radius: 99px;
-      background: linear-gradient(90deg, var(--yellow-deep), var(--yellow));
-      box-shadow: 0 0 12px rgba(255,221,45,0.45);
-    }
-    .pc__thumb {
-      position: absolute; top: 50%; left: 0;
-      width: 14px; height: 14px; border-radius: 50%;
-      background: var(--yellow);
-      transform: translate(-50%, -50%) scale(0.6);
-      box-shadow: 0 0 0 4px rgba(255,221,45,0.16), 0 2px 6px rgba(0,0,0,0.5);
-      transition: transform 0.16s var(--ease);
-      pointer-events: none;
-    }
-    .pc__scrub:hover .pc__thumb,
-    .pc.is-scrubbing .pc__thumb { transform: translate(-50%, -50%) scale(1); }
-
-    .pc__row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-    .pc__left { display: flex; align-items: center; gap: 14px; }
-    .pc__right { display: flex; align-items: center; gap: 11px; }
-
-    .pc__play {
-      flex-shrink: 0;
-      width: 52px; height: 52px; border-radius: 50%; border: none;
-      background: radial-gradient(120% 120% at 30% 22%, var(--yellow-2), var(--yellow) 55%, var(--yellow-deep));
-      display: grid; place-items: center;
-      box-shadow: 0 8px 22px -6px rgba(255,221,45,0.5), inset 0 1px 0 rgba(255,255,255,0.5);
-      transition: transform 0.14s var(--ease), box-shadow 0.2s var(--ease);
-    }
-    .pc__play:hover { box-shadow: 0 12px 28px -6px rgba(255,221,45,0.66), inset 0 1px 0 rgba(255,255,255,0.5); }
-    .pc__play:active { transform: scale(0.9); }
-    .pc__play svg { width: 22px; height: 22px; fill: #15130a; display: none; }
-    .pc__play[data-state="paused"] .ic-play { display: block; margin-left: 2px; }
-    .pc__play[data-state="playing"] .ic-pause { display: block; }
-
-    .pc__time { font-family: var(--mono); font-size: 14px; font-weight: 500; white-space: nowrap; }
-    .pc__cur { color: var(--ink); font-weight: 600; }
-    .pc__sep { color: var(--ink-4); margin: 0 5px; }
-    .pc__dur { color: var(--ink-3); }
-
-    .pc__speeds {
-      position: relative; display: flex; align-items: center;
-      background: var(--inset); border: 1px solid var(--line);
-      border-radius: 11px; padding: 3px;
-    }
-    .pc__ind {
-      position: absolute; top: 3px; bottom: 3px; left: 3px; width: 0;
-      border-radius: 8px; background: var(--yellow);
-      box-shadow: 0 2px 8px -2px rgba(255,221,45,0.55);
-      transition: transform 0.22s var(--ease), width 0.22s var(--ease);
-    }
-    .pc__speeds button {
-      position: relative; z-index: 1; border: none; background: transparent;
-      font-family: var(--mono); font-size: 12.5px; font-weight: 600;
-      color: var(--ink-3); padding: 6px 11px; border-radius: 8px;
-      transition: color 0.18s var(--ease);
-    }
-    .pc__speeds button.is-active { color: #15130a; }
-    .pc__speeds button:not(.is-active):hover { color: var(--ink); }
-
-    .pc__toggle {
-      display: inline-flex; align-items: center; gap: 9px;
-      border: none; background: transparent; padding: 6px 2px;
-      color: var(--ink-2); font-size: 13px; font-weight: 500;
-      transition: color 0.18s var(--ease);
-    }
-    .pc__track {
-      position: relative; flex-shrink: 0;
-      width: 38px; height: 22px; border-radius: 99px;
-      background: rgba(255,255,255,0.13);
-      transition: background 0.2s var(--ease);
-    }
-    .pc__knob {
-      position: absolute; top: 3px; left: 3px;
-      width: 16px; height: 16px; border-radius: 50%;
-      background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-      transition: transform 0.2s var(--ease), background 0.2s var(--ease);
-    }
-    .pc__toggle[aria-checked="true"] { color: var(--ink); }
-    .pc__toggle[aria-checked="true"] .pc__track { background: var(--yellow); }
-    .pc__toggle[aria-checked="true"] .pc__knob { transform: translateX(16px); background: #15130a; }
-
-    .pc__icon {
-      flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px;
-      border: 1px solid var(--line); background: var(--inset);
-      display: grid; place-items: center; color: var(--ink-2);
-      transition: color 0.16s var(--ease), border-color 0.16s var(--ease), background 0.16s var(--ease), transform 0.14s var(--ease);
-    }
-    .pc__icon svg { width: 17px; height: 17px; fill: currentColor; }
-    .pc__icon:hover { color: var(--yellow); border-color: var(--line-2); background: var(--panel-2); }
-    .pc__icon:active { transform: scale(0.92); }
-    .pc__icon .ic-compress { display: none; }
-    .pc__icon[data-fs="on"] .ic-expand { display: none; }
-    .pc__icon[data-fs="on"] .ic-compress { display: block; }
-
-    /* полноэкранный режим — разворачиваем весь блок (экран + панель управления) */
-    #rrweb-player:fullscreen {
-      width: 100vw !important; height: 100vh !important; max-width: none !important;
-      border-radius: 0 !important; border: none !important;
-      background: var(--bg) !important;
-      display: flex; flex-direction: column;
-    }
-    #rrweb-player:fullscreen .rr-player {
-      flex: 1 1 auto; min-height: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--bg) !important;
-    }
-    #rrweb-player:fullscreen .pc {
-      flex: 0 0 auto;
-      border-top: 1px solid var(--line);
-    }
-
-    @media (max-width: 560px) {
-      .pc__left { flex: 1 1 auto; }
-      .pc__right { flex: 1 1 100%; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-    }
 
     /* ───── появление ───── */
     .reveal { opacity: 0; transform: translateY(10px); animation: reveal 0.55s var(--ease) forwards; }
@@ -703,8 +541,9 @@
     </main>
   </div>
 
+  <script src="/vendor/pam-player.iife.js"></script>
   <script type="module">
-    import rrwebPlayer from 'https://cdn.jsdelivr.net/npm/rrweb-player@latest/dist/index.mjs';
+    const { createPamPlayer } = window.PamPlayer;
 
     // относительные URL работают и за nginx, и напрямую через ingestion
     const SESSIONS_URL = '/sessions';
@@ -927,202 +766,6 @@
     }
     $search.addEventListener('input', applyFilter);
 
-    function fmtDur(ms) {
-      if (!isFinite(ms) || ms < 0) ms = 0;
-      const sec = Math.floor(ms / 1000);
-      const m = Math.floor(sec / 60);
-      const s = sec % 60;
-      return m + ':' + String(s).padStart(2, '0');
-    }
-
-    let removeResizeHandler = null;
-    let removeFsHandler = null;
-
-    // Кастомный контроллер. Встроенный контроллер rrweb остаётся смонтированным
-    // (движок воспроизведения), но скрыт через CSS — мы управляем им по
-    // публичному API и слушаем его ui-update-события.
-    function mountControls(player, sizing) {
-      sizing = sizing || {};
-      const totalMs = (player.getMetaData() || {}).totalTime || 0;
-
-      const bar = document.createElement('div');
-      bar.className = 'pc';
-      bar.innerHTML = `
-        <div class="pc__scrub" role="slider" tabindex="0"
-             aria-label="Перемотка" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <div class="pc__rail">
-            <div class="pc__fill"></div>
-            <div class="pc__thumb"></div>
-          </div>
-        </div>
-        <div class="pc__row">
-          <div class="pc__left">
-            <button class="pc__play" type="button" data-state="paused" aria-label="Воспроизвести">
-              <svg class="ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-              <svg class="ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.4v14H7zm6.6 0H17v14h-3.4z"/></svg>
-            </button>
-            <div class="pc__time">
-              <span class="pc__cur">0:00</span>
-              <span class="pc__sep">/</span>
-              <span class="pc__dur">${fmtDur(totalMs)}</span>
-            </div>
-          </div>
-          <div class="pc__right">
-            <div class="pc__speeds">
-              <span class="pc__ind"></span>
-              <button type="button" data-speed="1" class="is-active">1×</button>
-              <button type="button" data-speed="2">2×</button>
-              <button type="button" data-speed="4">4×</button>
-              <button type="button" data-speed="8">8×</button>
-            </div>
-            <button class="pc__toggle" type="button" role="switch" aria-checked="true">
-              <span class="pc__track"><span class="pc__knob"></span></span>
-              <span class="pc__toggle-label">Пропуск пауз</span>
-            </button>
-            <button class="pc__icon" type="button" data-fs="off" aria-label="На весь экран" title="На весь экран">
-              <svg class="ic-expand" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM6 15v3h3v2H4v-5h2zm14 0h-2v3h-3v2h5v-5z"/></svg>
-              <svg class="ic-compress" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
-            </button>
-          </div>
-        </div>`;
-      $container.appendChild(bar);
-
-      const $fill   = bar.querySelector('.pc__fill');
-      const $thumb  = bar.querySelector('.pc__thumb');
-      const $cur    = bar.querySelector('.pc__cur');
-      const $play   = bar.querySelector('.pc__play');
-      const $scrub  = bar.querySelector('.pc__scrub');
-      const $rail   = bar.querySelector('.pc__rail');
-      const $speeds = bar.querySelector('.pc__speeds');
-      const $ind    = bar.querySelector('.pc__ind');
-      const $skip   = bar.querySelector('.pc__toggle');
-      const $fs     = bar.querySelector('.pc__icon');
-      const speedBtns = Array.from($speeds.querySelectorAll('button'));
-
-      let dragging = false;
-      let playing  = false;
-      let skip     = true;
-
-      function setProgress(ratio) {
-        ratio = Math.max(0, Math.min(1, ratio));
-        const pct = (ratio * 100).toFixed(3);
-        $fill.style.width = pct + '%';
-        $thumb.style.left = pct + '%';
-        $scrub.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
-      }
-      function moveIndicator(btn) {
-        $ind.style.width = btn.offsetWidth + 'px';
-        $ind.style.transform = 'translateX(' + (btn.offsetLeft - 3) + 'px)';
-      }
-      function ratioFromEvent(ev) {
-        const rect = $rail.getBoundingClientRect();
-        return rect.width ? (ev.clientX - rect.left) / rect.width : 0;
-      }
-      function seek(ev) {
-        const r = Math.max(0, Math.min(1, ratioFromEvent(ev)));
-        setProgress(r);
-        $cur.textContent = fmtDur(r * totalMs);
-        player.goto(r * totalMs, playing);
-      }
-
-      $play.addEventListener('click', function () { player.toggle(); });
-
-      player.addEventListener('ui-update-player-state', function (e) {
-        playing = e.payload === 'playing';
-        $play.dataset.state = playing ? 'playing' : 'paused';
-        $play.setAttribute('aria-label', playing ? 'Пауза' : 'Воспроизвести');
-      });
-      player.addEventListener('ui-update-current-time', function (e) {
-        const cur = e.payload || 0;
-        $cur.textContent = fmtDur(cur);
-        if (!dragging && totalMs > 0) setProgress(cur / totalMs);
-      });
-      player.addEventListener('finish', function () {
-        playing = false;
-        $play.dataset.state = 'paused';
-      });
-
-      $scrub.addEventListener('pointerdown', function (ev) {
-        dragging = true; bar.classList.add('is-scrubbing');
-        if ($scrub.setPointerCapture) { try { $scrub.setPointerCapture(ev.pointerId); } catch (_) {} }
-        seek(ev);
-      });
-      $scrub.addEventListener('pointermove', function (ev) { if (dragging) seek(ev); });
-      function endDrag() { if (dragging) { dragging = false; bar.classList.remove('is-scrubbing'); } }
-      $scrub.addEventListener('pointerup', endDrag);
-      $scrub.addEventListener('pointercancel', endDrag);
-      $scrub.addEventListener('keydown', function (ev) {
-        if (totalMs <= 0) return;
-        const cur = (parseInt($scrub.getAttribute('aria-valuenow'), 10) || 0) / 100 * totalMs;
-        let next;
-        if (ev.key === 'ArrowRight') next = Math.min(totalMs, cur + 5000);
-        else if (ev.key === 'ArrowLeft') next = Math.max(0, cur - 5000);
-        else return;
-        ev.preventDefault();
-        setProgress(next / totalMs);
-        $cur.textContent = fmtDur(next);
-        player.goto(next, playing);
-      });
-
-      speedBtns.forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          player.setSpeed(Number(btn.dataset.speed));
-          speedBtns.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
-          moveIndicator(btn);
-        });
-      });
-
-      $skip.addEventListener('click', function () {
-        skip = !skip;
-        player.toggleSkipInactive();
-        $skip.setAttribute('aria-checked', String(skip));
-      });
-
-      $fs.addEventListener('click', function () {
-        if (!document.fullscreenElement) {
-          if ($container.requestFullscreen) {
-            const p = $container.requestFullscreen();
-            if (p && p.catch) p.catch(function () {});
-          }
-        } else if (document.exitFullscreen) {
-          document.exitFullscreen();
-        }
-      });
-      function onFsChange() {
-        const fs = document.fullscreenElement === $container;
-        $fs.dataset.fs = fs ? 'on' : 'off';
-        $fs.setAttribute('aria-label', fs ? 'Свернуть' : 'На весь экран');
-        $fs.setAttribute('title', fs ? 'Свернуть' : 'На весь экран');
-        if (fs && sizing.recW && sizing.recH) {
-          const pcH = bar.offsetHeight || 112;
-          const availW = window.innerWidth;
-          const availH = Math.max(140, window.innerHeight - pcH);
-          let fw = availW, fh = Math.round(fw * sizing.recH / sizing.recW);
-          if (fh > availH) { fh = availH; fw = Math.round(fh * sizing.recW / sizing.recH); }
-          try { player.$set({ width: fw, height: fh }); player.triggerResize(); } catch (_) {}
-        } else {
-          try { player.$set({ width: sizing.baseW, height: sizing.baseH }); player.triggerResize(); } catch (_) {}
-        }
-        requestAnimationFrame(realign);
-      }
-      if (removeFsHandler) removeFsHandler();
-      document.addEventListener('fullscreenchange', onFsChange);
-      removeFsHandler = function () { document.removeEventListener('fullscreenchange', onFsChange); };
-
-      function realign() {
-        if (!document.body.contains($ind)) return;
-        const a = $speeds.querySelector('button.is-active') || speedBtns[0];
-        if (a) moveIndicator(a);
-      }
-      setProgress(0);
-      realign();
-      requestAnimationFrame(realign);
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(realign);
-      if (removeResizeHandler) removeResizeHandler();
-      window.addEventListener('resize', realign);
-      removeResizeHandler = function () { window.removeEventListener('resize', realign); };
-    }
-
     async function playSession(session) {
       activeId = session.session_id;
       setStageHead(session);
@@ -1135,10 +778,9 @@
       loading.textContent = 'Декодируем сессию…';
       $container.appendChild(loading);
       $container.classList.add('active');
-      $container.classList.remove('is-player');
 
       if (currentPlayer) {
-        try { currentPlayer.$destroy(); } catch (_) { /* игнорируем */ }
+        try { currentPlayer.destroy(); } catch (_) { /* игнорируем */ }
         currentPlayer = null;
       }
 
@@ -1166,34 +808,8 @@
         return;
       }
 
-      $container.style.width = '';
-      const avail = $container.clientWidth || 880;
-      let W = Math.max(300, Math.min(900, Math.floor(avail)));
-
-      // высоту подгоняем под аспект записи — иначе сверху/снизу остаются белые поля
-      const metaEv = events.find(function (e) { return e.type === 4; });
-      const recW = (metaEv && metaEv.data && metaEv.data.width) || 1280;
-      const recH = (metaEv && metaEv.data && metaEv.data.height) || 720;
-      let H = Math.round(W * recH / recW);
-      const maxH = Math.round((window.innerHeight || 800) * 0.72);
-      if (H > maxH) { H = maxH; W = Math.round(H * recW / recH); }
-
       $container.innerHTML = '';
-      currentPlayer = new rrwebPlayer({
-        target: $container,
-        props: {
-          events: events,
-          width: W,
-          height: H,
-          autoPlay: false,
-          showController: true,   // движок воспроизведения; визуально скрыт через CSS
-          skipInactive: true,
-          speedOption: [1, 2, 4, 8],
-        },
-      });
-      $container.style.width = W + 'px';
-      $container.classList.add('is-player');
-      mountControls(currentPlayer, { recW: recW, recH: recH, baseW: W, baseH: H });
+      currentPlayer = createPamPlayer($container, { events: events, theme: 'dark' });
     }
 
     async function init() {

@@ -14,7 +14,7 @@
     "pnpm": ">=9"
   },
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "pnpm -r build && mkdir -p replayer/vendor && cp player/dist/pam-player.iife.js replayer/vendor/pam-player.iife.js",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "dev:ingestion": "pnpm --filter @pam/ingestion dev",
     "dev:proxy": "docker compose -f proxy/docker-compose.yml up"
