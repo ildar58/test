@@ -1,5 +1,6 @@
 packages:
   - sdk
   - ingestion
+  - player
 allowBuilds:
   esbuild: false

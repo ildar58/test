@@ -1,0 +1,30 @@
+{
+  "name": "@pam/player",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Embeddable, themeable rrweb session player",
+  "license": "MIT",
+  "author": "Ildar Dautov",
+  "type": "module",
+  "main": "dist/index.mjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.mjs" },
+    "./iife": "./dist/pam-player.iife.js"
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs && tsc -p tsconfig.json --emitDeclarationOnly",
+    "dev": "node esbuild.config.mjs --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rrweb/types": "^2.0.0-alpha.13",
+    "rrweb": "^2.0.0-alpha.13",
+    "rrweb-player": "2.0.0-alpha.20"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "typescript": "^5.4.0"
+  }
+}
