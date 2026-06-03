@@ -23,8 +23,9 @@ export const users: ReadonlyArray<DemoUser> = [
 // заглушка, чтобы bcrypt.compare отрабатывал одинаковое время для неизвестных пользователей
 const DUMMY_HASH = users[0]!.passwordHash;
 
-// хранится до рестарта процесса
+// хранится в памяти до рестарта процесса; протухает по TTL (лениво, при доступе)
 const sessions = new Map<string, SessionEntry>();
+const SESSION_TTL_MS = Number(process.env.PAM_SESSION_TTL_MS) || 12 * 60 * 60 * 1000;
 
 export async function verifyPassword(
   user: string,
@@ -45,15 +46,16 @@ export function createSession(username: string): { token: string; sessionId: str
 
 export function getSession(token: string | undefined): SessionEntry | null {
   if (!token) return null;
-  return sessions.get(token) ?? null;
+  const entry = sessions.get(token);
+  if (!entry) return null;
+  if (Date.now() - entry.createdAt > SESSION_TTL_MS) {
+    sessions.delete(token);
+    return null;
+  }
+  return entry;
 }
 
 export function destroySession(token: string | undefined): void {
   if (!token) return;
   sessions.delete(token);
-}
-
-// только для тестов: сбрасывает сессии между кейсами
-export function _clearSessionsForTests(): void {
-  sessions.clear();
 }
