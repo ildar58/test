@@ -16,9 +16,9 @@
     "dev": "esbuild src/index.ts --bundle --format=iife --global-name=PamRecorder --outfile=dist/recorder.iife.js --watch"
   },
   "dependencies": {
-    "@rrweb/types": "^2.0.0-alpha.13",
+    "@rrweb/types": "2.0.1",
     "fflate": "^0.8.2",
-    "rrweb": "^2.0.0-alpha.13"
+    "rrweb": "2.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

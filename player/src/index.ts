@@ -7,6 +7,5 @@ export type {
   ThemeInput,
   ThemeTokens,
   ThemeName,
-  EngineName,
   PamEvent,
 } from './types';

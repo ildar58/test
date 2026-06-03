@@ -19,9 +19,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@rrweb/types": "^2.0.0-alpha.13",
-    "rrweb": "^2.0.0-alpha.13",
-    "rrweb-player": "2.0.0-alpha.20"
+    "@rrweb/types": "2.0.1",
+    "rrweb": "2.0.1"
   },
   "devDependencies": {
     "esbuild": "^0.20.0",

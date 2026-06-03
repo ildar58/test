@@ -4,3 +4,9 @@ packages:
   - player
 allowBuilds:
   esbuild: false
+minimumReleaseAgeExclude:
+  - '@rrweb/types@2.0.1'
+  - '@rrweb/utils@2.0.1'
+  - rrdom@2.0.1
+  - rrweb-snapshot@2.0.1
+  - rrweb@2.0.1

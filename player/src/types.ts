@@ -23,11 +23,8 @@ export interface ThemeTokens {
 
 export type ThemeInput = ThemeName | (ThemeTokens & { preset?: ThemeName });
 
-export type EngineName = 'replayer' | 'rrweb-player';
-
 export interface PamPlayerOptions {
   events: eventWithTime[];
-  engine?: EngineName;
   theme?: ThemeInput;
   autoPlay?: boolean;
   skipInactive?: boolean;

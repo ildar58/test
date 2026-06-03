@@ -48,14 +48,11 @@ importers:
   player:
     dependencies:
       '@rrweb/types':
-        specifier: ^2.0.0-alpha.13
-        version: 2.0.0-alpha.20
+        specifier: 2.0.1
+        version: 2.0.1
       rrweb:
-        specifier: ^2.0.0-alpha.13
-        version: 2.0.0-alpha.20
-      rrweb-player:
-        specifier: 2.0.0-alpha.20
-        version: 2.0.0-alpha.20
+        specifier: 2.0.1
+        version: 2.0.1
     devDependencies:
       esbuild:
         specifier: ^0.20.0
@@ -67,14 +64,14 @@ importers:
   sdk:
     dependencies:
       '@rrweb/types':
-        specifier: ^2.0.0-alpha.13
-        version: 2.0.0-alpha.20
+        specifier: 2.0.1
+        version: 2.0.1
       fflate:
         specifier: ^0.8.2
         version: 0.8.2
       rrweb:
-        specifier: ^2.0.0-alpha.13
-        version: 2.0.0-alpha.20
+        specifier: 2.0.1
+        version: 2.0.1
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -382,26 +379,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rrweb/packer@2.0.0':
-    resolution: {integrity: sha512-DSvWNLdlvdypDAumGU2MN4pvr6dNJPL3pNtUA8IWMIdfpIZnHXiu+7q0QINE1ApVJsDMe2MN0J7LnqwlDHwqAA==}
+  '@rrweb/types@2.0.1':
+    resolution: {integrity: sha512-x8cNaKFxdvS0/5IfKOj1xG8Htnw1fUwqoPqgP61bOaWqZL6t9UtRPpO9ZlMB2z+FiTxg9zlFFL+Da4ZpFuhoiA==}
 
-  '@rrweb/replay@2.0.0':
-    resolution: {integrity: sha512-7sc2y/jz5psKDxdHuLPJjmMm1vvv8P9KaAhSBaWIgT8zn6xkKgPP7KkkB22PzAAyC0RqXmztxj/us6+XHLoHjg==}
-
-  '@rrweb/types@2.0.0':
-    resolution: {integrity: sha512-p76i3Bdm/cjb/6NGqmFj0LkGXqC2dXs70AwirgVAsE1ndIa00TJo48La5yobHLsBOk5bfRHy6Yd+9O9VFKhAwQ==}
-
-  '@rrweb/types@2.0.0-alpha.20':
-    resolution: {integrity: sha512-RbnDgKxA/odwB1R4gF7eUUj+rdSrq6ROQJsnMw7MIsGzlbSYvJeZN8YY4XqU0G6sKJvXI6bSzk7w/G94jNwzhw==}
-
-  '@rrweb/utils@2.0.0':
-    resolution: {integrity: sha512-0Q9djyxlwG1fs1TxT7VnKtt33tHku6PENlUAKSXZg8QSSI6aUXdCNZkkBt3JAgbBYVrGhQsYrz+DkCdAXqxs1w==}
-
-  '@rrweb/utils@2.0.0-alpha.20':
-    resolution: {integrity: sha512-MTQOmhPRe39C0fYaCnnVYOufQsyGzwNXpUStKiyFSfGLUJrzuwhbRoUAKR5w6W2j5XuA0bIz3ZDIBztkquOhLw==}
-
-  '@tsconfig/svelte@1.0.13':
-    resolution: {integrity: sha512-5lYJP45Xllo4yE/RUBccBT32eBlRDbqN8r1/MIvQbKxW3aFqaYPCNgm8D5V20X4ShHcwvYWNlKg3liDh1MlBoA==}
+  '@rrweb/utils@2.0.1':
+    resolution: {integrity: sha512-t+b+4rB23/e4EpoGMdPUr6cKtDsFuOb3LxA9IHE8e3A/Xo0nMUfH0bkwqdpUNa/VGDOdiGeG3bhHjuO9zWX54g==}
 
   '@types/bcryptjs@3.0.0':
     resolution: {integrity: sha512-WRZOuCuaz8UcZZE4R5HXTco2goQSI2XxjGY3hbM/xDvwmqFWd4ivooImsMx65OKM6CtNKbnZ5YL+YwAwK7c1dg==}
@@ -574,9 +556,6 @@ packages:
     resolution: {integrity: sha512-F2X8g9P1X7uCPZMA3MVf9wcTqlyNp7IhH5qPCI0izhaOIYXaW9L535tGA3qmjRzpH+bZczqq7hVKxTR4NWnu+g==}
     engines: {node: '>= 0.10.0'}
 
-  fflate@0.4.8:
-    resolution: {integrity: sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==}
-
   fflate@0.8.2:
     resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
 
@@ -733,26 +712,14 @@ packages:
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
 
-  rrdom@2.0.0:
-    resolution: {integrity: sha512-Yv+T/IBngNEjhbRv6yJzKdbhgMOiRCV+UA3R0HOpx4yySc8vl4I11Xr5BxCYrnt00l7CGjHbFB9VULEvcg1u6w==}
+  rrdom@2.0.1:
+    resolution: {integrity: sha512-z8GdQWFmVfa8GpcGkAqfBXseb89z0ciTPSBkID0qr0i6KHCye1MdQ4VoXFf0Ejp3ELe/c7AObu4zsbSbMT+hiw==}
 
-  rrdom@2.0.0-alpha.20:
-    resolution: {integrity: sha512-hoqjS4662LtBp82qEz9GrqU36UpEmCvTA2Hns3qdF7cklLFFy3G+0Th8hLytJENleHHWxsB5nWJ3eXz5mSRxdQ==}
+  rrweb-snapshot@2.0.1:
+    resolution: {integrity: sha512-H8TA29ct2tpYtr5oaB0N+ksRY9bhEErfAYcKbce4+w8lqEUQChpKZd41HpBJLkp04b5QUfWUg4v6r9Okf8r7vA==}
 
-  rrweb-player@2.0.0-alpha.20:
-    resolution: {integrity: sha512-3ZCv1ksUxuIOn3Vn/eWrwWs9Xy+4KVjISD+q26ZLfisZ3hZ0CPgYG3iC22pmmycIeMS2svOfvf7gPh7jExwpUA==}
-
-  rrweb-snapshot@2.0.0:
-    resolution: {integrity: sha512-mDYvvHVXYUD6wZj2AGz5UuupnYnhrWUmF+Hm+haZtVPx8bK3hpAMpu7YjPAoHVluv6KZJNJvVb/6HeBKwXTAvA==}
-
-  rrweb-snapshot@2.0.0-alpha.20:
-    resolution: {integrity: sha512-YTNf9YVeaGRo/jxY3FKBge2c/Ojd/KTHmuWloUSB+oyPXuY73ZeeG873qMMmhIpqEn7hn7aBF1eWEQmP7wjf8A==}
-
-  rrweb@2.0.0:
-    resolution: {integrity: sha512-ID7NE8OdfAbxZKlTPc/EdL/8sLhTOVB1aZKoQ/M0peKGYB7dIDj0hsdJo+OVXfpiYMTtGzXnKfnMVUj4LnsrhQ==}
-
-  rrweb@2.0.0-alpha.20:
-    resolution: {integrity: sha512-CZKDlm+j1VA50Ko3gnMbpvguCAleljsTNXPnVk9aeNP8o6T6kolRbISHyDZpqZ4G+bdDLlQOignPP3jEsXs8Gg==}
+  rrweb@2.0.1:
+    resolution: {integrity: sha512-MQYzOtI7aZft9ffDMT6rmRSAj6hO4W6T7iA4eB9Mtcuiv3M7DbnnxDMrcPW0sQXepgYN46YhfSKe75d/mlUHrQ==}
 
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
@@ -977,25 +944,9 @@ snapshots:
   '@esbuild/win32-x64@0.27.7':
     optional: true
 
-  '@rrweb/packer@2.0.0':
-    dependencies:
-      '@rrweb/types': 2.0.0
-      fflate: 0.4.8
+  '@rrweb/types@2.0.1': {}
 
-  '@rrweb/replay@2.0.0':
-    dependencies:
-      '@rrweb/types': 2.0.0
-      rrweb: 2.0.0
-
-  '@rrweb/types@2.0.0': {}
-
-  '@rrweb/types@2.0.0-alpha.20': {}
-
-  '@rrweb/utils@2.0.0': {}
-
-  '@rrweb/utils@2.0.0-alpha.20': {}
-
-  '@tsconfig/svelte@1.0.13': {}
+  '@rrweb/utils@2.0.1': {}
 
   '@types/bcryptjs@3.0.0':
     dependencies:
@@ -1246,8 +1197,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  fflate@0.4.8: {}
-
   fflate@0.8.2: {}
 
   finalhandler@1.3.2:
@@ -1387,49 +1336,24 @@ snapshots:
 
   resolve-pkg-maps@1.0.0: {}
 
-  rrdom@2.0.0:
+  rrdom@2.0.1:
     dependencies:
-      rrweb-snapshot: 2.0.0
+      rrweb-snapshot: 2.0.1
 
-  rrdom@2.0.0-alpha.20:
-    dependencies:
-      rrweb-snapshot: 2.0.0-alpha.20
-
-  rrweb-player@2.0.0-alpha.20:
-    dependencies:
-      '@rrweb/packer': 2.0.0
-      '@rrweb/replay': 2.0.0
-      '@tsconfig/svelte': 1.0.13
-
-  rrweb-snapshot@2.0.0:
+  rrweb-snapshot@2.0.1:
     dependencies:
       postcss: 8.5.14
 
-  rrweb-snapshot@2.0.0-alpha.20:
+  rrweb@2.0.1:
     dependencies:
-      postcss: 8.5.14
-
-  rrweb@2.0.0:
-    dependencies:
-      '@rrweb/types': 2.0.0
-      '@rrweb/utils': 2.0.0
+      '@rrweb/types': 2.0.1
+      '@rrweb/utils': 2.0.1
       '@types/css-font-loading-module': 0.0.7
       '@xstate/fsm': 1.6.5
       base64-arraybuffer: 1.0.2
       mitt: 3.0.1
-      rrdom: 2.0.0
-      rrweb-snapshot: 2.0.0
-
-  rrweb@2.0.0-alpha.20:
-    dependencies:
-      '@rrweb/types': 2.0.0-alpha.20
-      '@rrweb/utils': 2.0.0-alpha.20
-      '@types/css-font-loading-module': 0.0.7
-      '@xstate/fsm': 1.6.5
-      base64-arraybuffer: 1.0.2
-      mitt: 3.0.1
-      rrdom: 2.0.0-alpha.20
-      rrweb-snapshot: 2.0.0-alpha.20
+      rrdom: 2.0.1
+      rrweb-snapshot: 2.0.1
 
   safe-buffer@5.2.1: {}
 

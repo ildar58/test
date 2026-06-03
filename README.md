@@ -108,10 +108,11 @@ open http://localhost:8081
 | Путь | Что это |
 |------|---------|
 | [`sdk/`](sdk) | Исходники IIFE-бандла рекордера на TypeScript. Внутренний пакет; в npm не публикуется. |
-| [`ingestion/`](ingestion) | Express-сервис auth/ingestion (в проде заменяется на Go-сервис). |
+| [`ingestion/`](ingestion) | Express-сервис auth/ingestion. |
 | [`proxy/`](proxy) | Конфиг nginx + Docker Compose локального стека. |
 | [`demo-app/`](demo-app) | Минимальное HTML-приложение, которое сидит за nginx как «продуктовое». |
-| [`replayer/`](replayer) | Однофайловый реплеер на rrweb-player. |
+| [`replayer/`](replayer) | Однофайловый реплеер на `@pam/player` (движок — rrweb `Replayer`). |
+| [`player/`](player) | Встраиваемый темизируемый плеер сессий поверх rrweb `Replayer`. |
 
 ---
 
@@ -170,9 +171,3 @@ Sane privacy-first дефолты (зеркалят пресет PostHog):
 ```bash
 pnpm typecheck      # tsc --noEmit по всем пакетам
 ```
-
----
-
-## Лицензия
-
-MIT — см. [LICENSE](LICENSE).

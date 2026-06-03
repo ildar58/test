@@ -17,7 +17,6 @@ const CONTROLS_FALLBACK_H = 112;
 
 export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions): PamPlayer {
   const opts = {
-    engine: 'replayer' as const,
     theme: 'dark' as ThemeInput,
     autoPlay: false,
     skipInactive: true,
@@ -48,10 +47,9 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
   const emit = (ev: PamEvent, payload?: number | string): void =>
     (listeners[ev] || []).forEach((h) => h(payload));
 
-  let engine: PlayerEngine = new ReplayerEngine();
+  const engine: PlayerEngine = new ReplayerEngine();
   let controls: ControlsHandle | null = null;
   let ready = false;
-  let destroyed = false;
   let playing = false;
 
   function toggleFullscreen(): void {
@@ -98,25 +96,12 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
     ready = true;
   }
 
-  const mountOpts = { speed: opts.speed, skipInactive: opts.skipInactive, autoPlay: opts.autoPlay };
-
-  if (opts.engine === 'rrweb-player') {
-    screen.innerHTML = '<div class="pam-loading">Загрузка движка…</div>';
-    void import('./engine/rrweb-player-engine').then(async ({ RrwebPlayerEngine }) => {
-      if (destroyed) return;
-      engine = new RrwebPlayerEngine();
-      screen.innerHTML = '';
-      await engine.mount(screen, opts.events, mountOpts);
-      if (destroyed) {
-        engine.destroy();
-        return;
-      }
-      wireEngine();
-    });
-  } else {
-    engine.mount(screen, opts.events, mountOpts);
-    wireEngine();
-  }
+  engine.mount(screen, opts.events, {
+    speed: opts.speed,
+    skipInactive: opts.skipInactive,
+    autoPlay: opts.autoPlay,
+  });
+  wireEngine();
 
   return {
     play: () => engine.play(),
@@ -134,7 +119,6 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
       return () => { listeners[ev] = (listeners[ev] || []).filter((x) => x !== h); };
     },
     destroy() {
-      destroyed = true;
       ro.disconnect();
       document.removeEventListener('fullscreenchange', onFsChange);
       controls?.destroy();
