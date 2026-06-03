@@ -134,6 +134,7 @@ export class ReplayerEngine implements PlayerEngine {
     this.stopRaf();
     this.replayer?.pause();
     this.replayer?.destroy();
-    this.screenEl.innerHTML = '';
+    if (this.screenEl) this.screenEl.innerHTML = '';
+    this.emitter.clear();
   }
 }

@@ -47,6 +47,7 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
   let engine: PlayerEngine = new ReplayerEngine();
   let controls: ControlsHandle | null = null;
   let ready = false;
+  let destroyed = false;
 
   function toggleFullscreen(): void {
     if (!document.fullscreenElement) {
@@ -57,6 +58,7 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
     }
   }
   function onFsChange(): void {
+    if (!ready) return;
     // In Shadow DOM, document.fullscreenElement reports the host, not the inner block.
     const fs = document.fullscreenElement === block || document.fullscreenElement === host;
     controls?.setFullscreenState(fs);
@@ -90,9 +92,14 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
   if (opts.engine === 'rrweb-player') {
     screen.innerHTML = '<div class="pam-loading">Загрузка движка…</div>';
     void import('./engine/rrweb-player-engine').then(async ({ RrwebPlayerEngine }) => {
+      if (destroyed) return;
       engine = new RrwebPlayerEngine();
       screen.innerHTML = '';
       await engine.mount(screen, opts.events, mountOpts);
+      if (destroyed) {
+        engine.destroy();
+        return;
+      }
       wireEngine();
     });
   } else {
@@ -116,10 +123,12 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
       return () => { listeners[ev] = (listeners[ev] || []).filter((x) => x !== h); };
     },
     destroy() {
+      destroyed = true;
       ro.disconnect();
       document.removeEventListener('fullscreenchange', onFsChange);
       controls?.destroy();
       engine.destroy();
+      for (const k in listeners) delete listeners[k as PamEvent];
       host.remove();
     },
   };

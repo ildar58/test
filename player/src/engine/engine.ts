@@ -18,4 +18,8 @@ export class EngineEmitter {
   emit(event: EngineEvent, payload?: number | string): void {
     (this.handlers[event] || []).forEach((h) => h(payload));
   }
+
+  clear(): void {
+    this.handlers = {};
+  }
 }

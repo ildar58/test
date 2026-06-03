@@ -67,8 +67,20 @@ export class RrwebPlayerEngine implements PlayerEngine {
   }
 
   play(timeMs?: number): void {
-    if (timeMs != null) this.p?.goto(timeMs, true);
-    else this.p?.play();
+    if (!this.p) return;
+    if (timeMs != null) {
+      this.p.goto(timeMs, true);
+      this.currentMs = timeMs;
+      return;
+    }
+    const total = this.getDuration();
+    // restart from the beginning if play is pressed at the end (parity with engine B)
+    if (total > 0 && this.currentMs >= total - 50) {
+      this.p.goto(0, true);
+      this.currentMs = 0;
+    } else {
+      this.p.play();
+    }
   }
 
   pause(): void {
@@ -96,7 +108,8 @@ export class RrwebPlayerEngine implements PlayerEngine {
   }
 
   getCurrentTime(): number {
-    return this.currentMs;
+    const total = this.getDuration();
+    return total > 0 ? Math.max(0, Math.min(this.currentMs, total)) : Math.max(0, this.currentMs);
   }
 
   resize(width: number, maxHeight?: number): void {
@@ -117,6 +130,7 @@ export class RrwebPlayerEngine implements PlayerEngine {
     } catch {
       /* noop */
     }
-    this.screenEl.innerHTML = '';
+    if (this.screenEl) this.screenEl.innerHTML = '';
+    this.emitter.clear();
   }
 }
