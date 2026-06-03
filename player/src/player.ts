@@ -57,7 +57,8 @@ export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions):
     }
   }
   function onFsChange(): void {
-    const fs = document.fullscreenElement === block;
+    // In Shadow DOM, document.fullscreenElement reports the host, not the inner block.
+    const fs = document.fullscreenElement === block || document.fullscreenElement === host;
     controls?.setFullscreenState(fs);
     if (fs) engine.resize(window.innerWidth, window.innerHeight - (controls?.el.offsetHeight || 112));
     else engine.resize(block.clientWidth);

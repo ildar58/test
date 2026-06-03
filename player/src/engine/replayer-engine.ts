@@ -54,7 +54,16 @@ export class ReplayerEngine implements PlayerEngine {
     cancelAnimationFrame(this.raf);
     const tick = (): void => {
       if (!this.replayer) return;
-      this.emitter.emit('time', this.replayer.getCurrentTime());
+      const total = this.getDuration();
+      const t = this.replayer.getCurrentTime();
+      // rrweb's getCurrentTime keeps growing with wall-clock past the end; clamp + auto-finish.
+      if (total > 0 && t >= total) {
+        this.emitter.emit('time', total);
+        this.setPlaying(false);
+        this.emitter.emit('finish');
+        return;
+      }
+      this.emitter.emit('time', t);
       this.raf = requestAnimationFrame(tick);
     };
     this.raf = requestAnimationFrame(tick);
@@ -65,7 +74,12 @@ export class ReplayerEngine implements PlayerEngine {
   }
 
   play(timeMs?: number): void {
-    this.replayer?.play(timeMs ?? this.getCurrentTime());
+    if (!this.replayer) return;
+    let t = timeMs ?? this.getCurrentTime();
+    const total = this.getDuration();
+    // if play is pressed at (or past) the end, restart from the beginning
+    if (timeMs == null && total > 0 && t >= total - 50) t = 0;
+    this.replayer.play(t);
   }
 
   pause(): void {
@@ -94,7 +108,9 @@ export class ReplayerEngine implements PlayerEngine {
   }
 
   getCurrentTime(): number {
-    return this.replayer?.getCurrentTime() ?? 0;
+    const t = this.replayer?.getCurrentTime() ?? 0;
+    const total = this.getDuration();
+    return total > 0 ? Math.max(0, Math.min(t, total)) : Math.max(0, t);
   }
 
   resize(width: number, maxHeight?: number): void {
