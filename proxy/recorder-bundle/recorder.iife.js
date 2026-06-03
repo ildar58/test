@@ -13289,7 +13289,10 @@ var PamRecorder = (() => {
     const u82 = strToU8(JSON.stringify(events));
     const compressed = gzipSync(u82, { level: 6 });
     let binary = "";
-    compressed.forEach((b) => binary += String.fromCharCode(b));
+    const CHUNK = 32768;
+    for (let i = 0; i < compressed.length; i += CHUNK) {
+      binary += String.fromCharCode(...compressed.subarray(i, i + CHUNK));
+    }
     return btoa(binary);
   }
   var Transport = class {
@@ -13302,10 +13305,7 @@ var PamRecorder = (() => {
       this.batchSeq = opts.initialBatchSeq ?? 0;
     }
     start(sessionId) {
-      this.flushTimer = setInterval(
-        () => this.flush(sessionId),
-        this.opts.flushIntervalMs
-      );
+      this.flushTimer = setInterval(() => void this.flush(sessionId), this.opts.flushIntervalMs);
       this.flushOnPageHide = () => this.beaconFlush(sessionId);
       this.flushOnVisibilityHide = () => {
         if (document.visibilityState === "hidden")
@@ -13317,14 +13317,9 @@ var PamRecorder = (() => {
     push(event, sessionId) {
       this.buffer.push(event);
       if (this.buffer.length >= this.opts.maxBufferSize)
-        this.flush(sessionId);
+        void this.flush(sessionId);
     }
-    /** Атомарно забирает и очищает буфер, формируя батч. */
-    takeBatch(sessionId) {
-      if (this.buffer.length === 0)
-        return null;
-      const events = this.buffer;
-      this.buffer = [];
+    buildBatch(sessionId, events) {
       this.batchSeq += 1;
       this.opts.onBatchSeqAdvance?.(this.batchSeq);
       return {
@@ -13333,30 +13328,44 @@ var PamRecorder = (() => {
         events_b64_gzip: encodeBatch(events)
       };
     }
+    // Возвращает события в буфер на повтор при временной ошибке; держит жёсткий потолок.
+    requeue(events) {
+      this.buffer = events.concat(this.buffer);
+      const cap = this.opts.maxBufferSize * 4;
+      if (this.buffer.length > cap)
+        this.buffer.splice(0, this.buffer.length - cap);
+    }
     async flush(sessionId) {
-      const batch = this.takeBatch(sessionId);
-      if (!batch)
+      if (this.buffer.length === 0)
         return;
+      const events = this.buffer;
+      this.buffer = [];
+      const batch = this.buildBatch(sessionId, events);
       try {
         const res = await fetch(this.opts.endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(batch),
-          credentials: "include",
-          keepalive: true
+          credentials: "include"
         });
-        if (res.status === 401)
+        if (res.status === 401) {
           this.opts.onUnauthorized?.();
-        else if (res.ok)
+        } else if (res.ok) {
           this.opts.onAuthorized?.();
+        } else if (res.status >= 500) {
+          this.requeue(events);
+        }
       } catch {
+        this.requeue(events);
       }
     }
     /** sendBeacon гарантирует доставку при выгрузке страницы. */
     beaconFlush(sessionId) {
-      const batch = this.takeBatch(sessionId);
-      if (!batch)
+      if (this.buffer.length === 0)
         return;
+      const events = this.buffer;
+      this.buffer = [];
+      const batch = this.buildBatch(sessionId, events);
       const blob2 = new Blob([JSON.stringify(batch)], { type: "application/json" });
       navigator.sendBeacon(this.opts.endpoint, blob2);
     }
@@ -13493,6 +13502,9 @@ var PamRecorder = (() => {
       this.retryTimer = null;
       this.unauthorizedCount = 0;
       this.cooldownUntil = 0;
+      this.activeSessionId = null;
+      // session_id, по которому пришёл 401 — не реактивируем его, ждём новый (анти-loop)
+      this.failedSessionId = null;
     }
     /** Идемпотентен. После stop() экземпляр не перезапускается, нужен новый. */
     start() {
@@ -13500,7 +13512,7 @@ var PamRecorder = (() => {
         return;
       this.disposeWatcher = watchMarker(
         this.config.markerCookieName,
-        (present) => present ? this.tryActivate() : this.deactivate(),
+        (present) => present ? this.tryActivate() : this.deactivate(true),
         this.config.markerPollMs
       );
       if (readMarker(this.config.markerCookieName))
@@ -13514,6 +13526,13 @@ var PamRecorder = (() => {
       const sessionId = readCookieValue(this.config.sessionIdCookieName);
       if (!sessionId)
         return;
+      if (sessionId === this.failedSessionId)
+        return;
+      if (sessionIdStorage.readId() !== sessionId) {
+        sessionIdStorage.clear();
+        sessionIdStorage.writeId(sessionId);
+      }
+      this.activeSessionId = sessionId;
       this.clearRetryTimer();
       this.transport = this.spawnTransport();
       this.transport.start(sessionId);
@@ -13535,21 +13554,26 @@ var PamRecorder = (() => {
         onAuthorized: () => this.onAuthorized()
       });
     }
-    deactivate() {
+    // clearStorage=true только при настоящем выходе (маркер исчез): сбрасываем seq/sid.
+    // При 401 храним их, чтобы перезагрузка той же сессии продолжила нумерацию seq.
+    deactivate(clearStorage) {
       if (this.state !== "ACTIVE")
         return;
       this.rrwebStop?.();
       this.rrwebStop = null;
       this.transport?.stop();
       this.transport = null;
-      sessionIdStorage.clear();
+      this.activeSessionId = null;
+      if (clearStorage)
+        sessionIdStorage.clear();
       this.state = "IDLE";
     }
     // Несколько in-flight батчей могут вернуть 401 одновременно; guard сверху гарантирует однократное срабатывание.
     onUnauthorized() {
       if (this.state !== "ACTIVE")
         return;
-      this.deactivate();
+      this.failedSessionId = this.activeSessionId;
+      this.deactivate(false);
       this.unauthorizedCount += 1;
       const delay = this.unauthorizedCount >= this.config.unauthorizedThreshold ? this.enterCooldown() : this.config.markerPollMs;
       this.scheduleRetry(delay);
@@ -13562,6 +13586,7 @@ var PamRecorder = (() => {
     }
     onAuthorized() {
       this.unauthorizedCount = 0;
+      this.failedSessionId = null;
     }
     scheduleRetry(delayMs) {
       this.clearRetryTimer();
@@ -13579,7 +13604,7 @@ var PamRecorder = (() => {
       this.retryTimer = null;
     }
     stop() {
-      this.deactivate();
+      this.deactivate(true);
       this.clearRetryTimer();
       this.disposeWatcher?.();
       this.disposeWatcher = null;
@@ -13617,7 +13642,7 @@ var PamRecorder = (() => {
           out[spec.configKey] = raw;
       } else if (spec.type === "number") {
         const n2 = Number(raw);
-        if (raw.trim() !== "" && Number.isFinite(n2))
+        if (raw.trim() !== "" && Number.isFinite(n2) && n2 > 0)
           out[spec.configKey] = n2;
       } else {
         if (raw === "true")

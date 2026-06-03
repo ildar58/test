@@ -43,8 +43,10 @@ export function parseDatasetConfig(
     if (spec.type === 'string') {
       if (raw.length > 0) out[spec.configKey] = raw;
     } else if (spec.type === 'number') {
+      // все числовые опции — положительные величины (интервалы, размеры, счётчики);
+      // 0/отрицательное игнорируем, чтобы не получить busy-loop flush или flush-на-каждое-событие.
       const n = Number(raw);
-      if (raw.trim() !== '' && Number.isFinite(n)) out[spec.configKey] = n;
+      if (raw.trim() !== '' && Number.isFinite(n) && n > 0) out[spec.configKey] = n;
     } else {
       if (raw === 'true') out[spec.configKey] = true;
       else if (raw === 'false') out[spec.configKey] = false;

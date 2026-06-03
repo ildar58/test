@@ -22,8 +22,12 @@ export interface TransportOptions {
 function encodeBatch(events: eventWithTime[]): string {
   const u8 = strToU8(JSON.stringify(events));
   const compressed = gzipSync(u8, { level: 6 });
+  // base64 от уже сжатых байт; чанками, чтобы не упереться в лимит аргументов apply.
   let binary = '';
-  compressed.forEach((b) => (binary += String.fromCharCode(b)));
+  const CHUNK = 0x8000;
+  for (let i = 0; i < compressed.length; i += CHUNK) {
+    binary += String.fromCharCode(...compressed.subarray(i, i + CHUNK));
+  }
   return btoa(binary);
 }
 
@@ -41,10 +45,7 @@ export class Transport {
   }
 
   start(sessionId: string): void {
-    this.flushTimer = setInterval(
-      () => this.flush(sessionId),
-      this.opts.flushIntervalMs
-    );
+    this.flushTimer = setInterval(() => void this.flush(sessionId), this.opts.flushIntervalMs);
 
     this.flushOnPageHide = () => this.beaconFlush(sessionId);
     this.flushOnVisibilityHide = () => {
@@ -56,14 +57,10 @@ export class Transport {
 
   push(event: eventWithTime, sessionId: string): void {
     this.buffer.push(event);
-    if (this.buffer.length >= this.opts.maxBufferSize) this.flush(sessionId);
+    if (this.buffer.length >= this.opts.maxBufferSize) void this.flush(sessionId);
   }
 
-  /** Атомарно забирает и очищает буфер, формируя батч. */
-  private takeBatch(sessionId: string): Batch | null {
-    if (this.buffer.length === 0) return null;
-    const events = this.buffer;
-    this.buffer = [];
+  private buildBatch(sessionId: string, events: eventWithTime[]): Batch {
     this.batchSeq += 1;
     this.opts.onBatchSeqAdvance?.(this.batchSeq);
     return {
@@ -73,29 +70,46 @@ export class Transport {
     };
   }
 
+  // Возвращает события в буфер на повтор при временной ошибке; держит жёсткий потолок.
+  private requeue(events: eventWithTime[]): void {
+    this.buffer = events.concat(this.buffer);
+    const cap = this.opts.maxBufferSize * 4;
+    if (this.buffer.length > cap) this.buffer.splice(0, this.buffer.length - cap);
+  }
+
   async flush(sessionId: string): Promise<void> {
-    const batch = this.takeBatch(sessionId);
-    if (!batch) return;
+    if (this.buffer.length === 0) return;
+    const events = this.buffer;
+    this.buffer = [];
+    const batch = this.buildBatch(sessionId, events);
     try {
       const res = await fetch(this.opts.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(batch),
         credentials: 'include',
-        keepalive: true,
       });
-      if (res.status === 401) this.opts.onUnauthorized?.();
-      else if (res.ok) this.opts.onAuthorized?.();
+      if (res.status === 401) {
+        this.opts.onUnauthorized?.();
+      } else if (res.ok) {
+        this.opts.onAuthorized?.();
+      } else if (res.status >= 500) {
+        // временная серверная ошибка — повторим следующим тиком
+        this.requeue(events);
+      }
+      // 4xx (включая 400/403/413) — постоянная ошибка, повтор не поможет: дропаем
     } catch {
-      // Сетевая ошибка: события уже извлечены из буфера и не возвращаются обратно.
-      // Повторная постановка устаревших событий породила бы всплеск в следующем батче.
+      // сеть недоступна — вернём события и повторим (с потолком против разрастания)
+      this.requeue(events);
     }
   }
 
   /** sendBeacon гарантирует доставку при выгрузке страницы. */
   private beaconFlush(sessionId: string): void {
-    const batch = this.takeBatch(sessionId);
-    if (!batch) return;
+    if (this.buffer.length === 0) return;
+    const events = this.buffer;
+    this.buffer = [];
+    const batch = this.buildBatch(sessionId, events);
     const blob = new Blob([JSON.stringify(batch)], { type: 'application/json' });
     navigator.sendBeacon(this.opts.endpoint, blob);
   }

@@ -69,6 +69,9 @@ export class Recorder {
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private unauthorizedCount = 0;
   private cooldownUntil = 0;
+  private activeSessionId: string | null = null;
+  // session_id, по которому пришёл 401 — не реактивируем его, ждём новый (анти-loop)
+  private failedSessionId: string | null = null;
 
   constructor(private readonly config: RecorderConfig) {}
 
@@ -78,7 +81,7 @@ export class Recorder {
 
     this.disposeWatcher = watchMarker(
       this.config.markerCookieName,
-      (present) => (present ? this.tryActivate() : this.deactivate()),
+      (present) => (present ? this.tryActivate() : this.deactivate(true)),
       this.config.markerPollMs
     );
 
@@ -93,6 +96,16 @@ export class Recorder {
     // session_id выставляется бэкендом вместе с session_present; если куки ещё нет, ждём следующего фронта.
     const sessionId = readCookieValue(this.config.sessionIdCookieName);
     if (!sessionId) return;
+    // не зацикливаемся на session_id, который сервер уже отверг (401): ждём новый.
+    if (sessionId === this.failedSessionId) return;
+
+    // Привязываем сохранённый batch_seq к session_id: для новой сессии сбрасываем,
+    // для перезагрузки той же сессии — продолжаем нумерацию.
+    if (sessionIdStorage.readId() !== sessionId) {
+      sessionIdStorage.clear();
+      sessionIdStorage.writeId(sessionId);
+    }
+    this.activeSessionId = sessionId;
 
     this.clearRetryTimer();
     this.transport = this.spawnTransport();
@@ -118,20 +131,25 @@ export class Recorder {
     });
   }
 
-  private deactivate(): void {
+  // clearStorage=true только при настоящем выходе (маркер исчез): сбрасываем seq/sid.
+  // При 401 храним их, чтобы перезагрузка той же сессии продолжила нумерацию seq.
+  private deactivate(clearStorage: boolean): void {
     if (this.state !== 'ACTIVE') return;
     this.rrwebStop?.();
     this.rrwebStop = null;
     this.transport?.stop();
     this.transport = null;
-    sessionIdStorage.clear();
+    this.activeSessionId = null;
+    if (clearStorage) sessionIdStorage.clear();
     this.state = 'IDLE';
   }
 
   // Несколько in-flight батчей могут вернуть 401 одновременно; guard сверху гарантирует однократное срабатывание.
   private onUnauthorized(): void {
     if (this.state !== 'ACTIVE') return;
-    this.deactivate();
+    // запоминаем отвергнутый session_id (анти-loop) и НЕ сбрасываем хранилище.
+    this.failedSessionId = this.activeSessionId;
+    this.deactivate(false);
     this.unauthorizedCount += 1;
 
     // Watcher не даст фронт пока маркер не изменится, поэтому планируем retry явно.
@@ -149,8 +167,9 @@ export class Recorder {
   }
 
   private onAuthorized(): void {
-    // Успешный батч подтверждает валидность куки, сбрасываем счётчик 401.
+    // Успешный батч подтверждает валидность куки: сбрасываем счётчик 401 и анти-loop.
     this.unauthorizedCount = 0;
+    this.failedSessionId = null;
   }
 
   private scheduleRetry(delayMs: number): void {
@@ -170,7 +189,7 @@ export class Recorder {
   }
 
   stop(): void {
-    this.deactivate();
+    this.deactivate(true);
     this.clearRetryTimer();
     this.disposeWatcher?.();
     this.disposeWatcher = null;
