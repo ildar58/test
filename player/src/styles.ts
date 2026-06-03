@@ -1,6 +1,8 @@
 // Control-bar + screen CSS, tokenized to var(--pam-*). Injected into the (shadow) root.
 export const CONTROL_CSS = `
 :host { display: block; }
+/* shadow DOM has its own box-sizing default — the host page's reset doesn't pierce it */
+.pam-block, .pam-block *, .pam-block *::before, .pam-block *::after { box-sizing: border-box; }
 
 .pam-block {
   position: relative;

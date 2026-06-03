@@ -80,6 +80,9 @@ export class ReplayerEngine implements PlayerEngine {
     // if play is pressed at (or past) the end, restart from the beginning
     if (timeMs == null && total > 0 && t >= total - 50) t = 0;
     this.replayer.play(t);
+    // drive UI synchronously — don't depend on rrweb's Start event or a throttled rAF
+    this.emitter.emit('time', t);
+    this.setPlaying(true);
   }
 
   pause(): void {

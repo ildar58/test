@@ -78,6 +78,7 @@ export class RrwebPlayerEngine implements PlayerEngine {
     if (total > 0 && this.currentMs >= total - 50) {
       this.p.goto(0, true);
       this.currentMs = 0;
+      this.emitter.emit('time', 0);
     } else {
       this.p.play();
     }
