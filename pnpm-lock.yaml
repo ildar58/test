@@ -100,28 +100,6 @@ importers:
         specifier: ^1.6.0
         version: 1.6.1(@types/node@20.19.39)(jsdom@24.1.3)
 
-  tools/video:
-    dependencies:
-      playwright:
-        specifier: ^1.59.1
-        version: 1.59.1
-      rrweb-player:
-        specifier: ^2.0.0-alpha.20
-        version: 2.0.0-alpha.20
-    devDependencies:
-      '@types/node':
-        specifier: ^20.0.0
-        version: 20.19.39
-      tsx:
-        specifier: ^4.7.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.4.0
-        version: 5.9.3
-      vitest:
-        specifier: ^1.6.0
-        version: 1.6.1(@types/node@20.19.39)(jsdom@24.1.3)
-
 packages:
 
   '@asamuzakjp/css-color@3.2.0':
@@ -744,12 +722,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rrweb/packer@2.0.0-alpha.20':
-    resolution: {integrity: sha512-GsByg2olGZ2n3To6keFG604QAboipuXZvjYxO2wITSwARBf/sZdy6cbUEjF0RS+QnuTM5GaVXeQapNMLmpKbrA==}
-
-  '@rrweb/replay@2.0.0-alpha.20':
-    resolution: {integrity: sha512-VodsLb+C2bYNNVbb0U14tKLa9ctzUxYIlt9VnxPATWvfyXHLTku8BhRWptuW/iIjVjmG49LBoR1ilxw/HMiJ1w==}
-
   '@rrweb/types@2.0.0-alpha.20':
     resolution: {integrity: sha512-RbnDgKxA/odwB1R4gF7eUUj+rdSrq6ROQJsnMw7MIsGzlbSYvJeZN8YY4XqU0G6sKJvXI6bSzk7w/G94jNwzhw==}
 
@@ -765,9 +737,6 @@ packages:
   '@sindresorhus/merge-streams@4.0.0':
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
-
-  '@tsconfig/svelte@1.0.13':
-    resolution: {integrity: sha512-5lYJP45Xllo4yE/RUBccBT32eBlRDbqN8r1/MIvQbKxW3aFqaYPCNgm8D5V20X4ShHcwvYWNlKg3liDh1MlBoA==}
 
   '@types/bcryptjs@3.0.0':
     resolution: {integrity: sha512-WRZOuCuaz8UcZZE4R5HXTco2goQSI2XxjGY3hbM/xDvwmqFWd4ivooImsMx65OKM6CtNKbnZ5YL+YwAwK7c1dg==}
@@ -1092,9 +1061,6 @@ packages:
 
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
-
-  fflate@0.4.8:
-    resolution: {integrity: sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==}
 
   fflate@0.8.2:
     resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
@@ -1470,9 +1436,6 @@ packages:
 
   rrweb-cssom@0.8.0:
     resolution: {integrity: sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw==}
-
-  rrweb-player@2.0.0-alpha.20:
-    resolution: {integrity: sha512-3ZCv1ksUxuIOn3Vn/eWrwWs9Xy+4KVjISD+q26ZLfisZ3hZ0CPgYG3iC22pmmycIeMS2svOfvf7gPh7jExwpUA==}
 
   rrweb-snapshot@2.0.0-alpha.20:
     resolution: {integrity: sha512-YTNf9YVeaGRo/jxY3FKBge2c/Ojd/KTHmuWloUSB+oyPXuY73ZeeG873qMMmhIpqEn7hn7aBF1eWEQmP7wjf8A==}
@@ -2097,16 +2060,6 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.3':
     optional: true
 
-  '@rrweb/packer@2.0.0-alpha.20':
-    dependencies:
-      '@rrweb/types': 2.0.0-alpha.20
-      fflate: 0.4.8
-
-  '@rrweb/replay@2.0.0-alpha.20':
-    dependencies:
-      '@rrweb/types': 2.0.0-alpha.20
-      rrweb: 2.0.0-alpha.20
-
   '@rrweb/types@2.0.0-alpha.20': {}
 
   '@rrweb/utils@2.0.0-alpha.20': {}
@@ -2116,8 +2069,6 @@ snapshots:
   '@sinclair/typebox@0.27.10': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
-
-  '@tsconfig/svelte@1.0.13': {}
 
   '@types/bcryptjs@3.0.0':
     dependencies:
@@ -2564,8 +2515,6 @@ snapshots:
 
   fast-safe-stringify@2.1.1: {}
 
-  fflate@0.4.8: {}
-
   fflate@0.8.2: {}
 
   figures@6.1.0:
@@ -2950,12 +2899,6 @@ snapshots:
   rrweb-cssom@0.7.1: {}
 
   rrweb-cssom@0.8.0: {}
-
-  rrweb-player@2.0.0-alpha.20:
-    dependencies:
-      '@rrweb/packer': 2.0.0-alpha.20
-      '@rrweb/replay': 2.0.0-alpha.20
-      '@tsconfig/svelte': 1.0.13
 
   rrweb-snapshot@2.0.0-alpha.20:
     dependencies:

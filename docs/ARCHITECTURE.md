@@ -35,7 +35,6 @@
 | **Ingestion-сервис** | Cookie-gated приёмник батчей + auth-стаб. В проде — Go-сервис; в репо — Express-стаб с bcryptjs и in-memory store сессий. | [`ingestion/src`](../ingestion/src) |
 | **Демо-приложение** | Простая HTML-страница за nginx для локального демо и e2e. Имеет панель Auth, которая зовёт стаб. | [`demo-app/index.html`](../demo-app/index.html) |
 | **Реплеер** | Однофайловая HTML-страница, грузит `rrweb-player` из CDN и воспроизводит сессию по id. | [`replayer/index.html`](../replayer/index.html) |
-| **Video CLI** | TypeScript-инструмент: декодирует JSONL, рендерит в реплеере через Playwright + `recordVideo`, выдаёт `.webm`. | [`tools/video`](../tools/video) |
 
 ---
 
@@ -265,8 +264,7 @@ Ingestion-стаб хранит всё под `data/` (bind-mount в compose-с�
 ```
 ingestion/data/
 ├── 8d551208-2474-4bf7-8b36-f375e09b2fd2.jsonl       # одна строка на батч
-├── 8d551208-2474-4bf7-8b36-f375e09b2fd2.meta.json   # метаданные сессии
-└── 8d551208-2474-4bf7-8b36-f375e09b2fd2.webm        # (опц.) экспорт через pnpm video
+└── 8d551208-2474-4bf7-8b36-f375e09b2fd2.meta.json   # метаданные сессии
 ```
 
 Каждая строка `.jsonl` — это сырой батч, как его прислал SDK: `session_id`,
@@ -292,47 +290,7 @@ ingestion/data/
 
 ---
 
-## 8. Video pipeline (pnpm video)
-
-`tools/video/` — отдельный CLI экспорта сессии в `.webm`:
-
-```
-.jsonl → decodeJsonl() → events[]
-                            │
-                            ▼
-                  HTML с rrweb-player
-                            │
-                            ▼
-       Playwright (Chrome for Testing)
-       + newContext({ recordVideo })
-                            │
-                            ▼
-                  <sid>.webm в ingestion/data/
-```
-
-CLI не зовёт `rrvideo` (тот хардкодит `chromium.launch()` без
-`executablePath`, что несовместимо с современной headless-моделью
-Playwright). Вместо этого CLI:
-
-1. Декодирует JSONL через тестированную утилиту `decode.ts`.
-2. Читает `rrweb-player` UMD и CSS прямо из `node_modules`.
-3. Собирает HTML с inline-events и `Player({ events, ... })`.
-4. Запускает `chromium.launch({ executablePath, headless: true })`,
-   где `executablePath` — это Chrome for Testing из `~/chrome/` или
-   из env-переменной `CHROME_EXECUTABLE`.
-5. Создаёт context с `recordVideo` → играет события → ждёт callback
-   `onReplayFinish` (или timeout-фоллбэк) → закрывает context →
-   получает `.webm`.
-
-**macOS-специфический auto-heal:** Playwright ставит `ffmpeg-mac` без
-подписи, Gatekeeper его убивает. CLI пробует запустить его при старте;
-если не работает — копирует системный ffmpeg (`brew install ffmpeg`)
-поверх него один раз. Подробности — в
-[`docs/PRODUCTION.md`](PRODUCTION.md#video-pipeline).
-
----
-
-## 9. Почему нет nightly cleanup, БД, sampling'а?
+## 8. Почему нет nightly cleanup, БД, sampling'а?
 
 Это всё production-concerns; здесь учебная реализация. Gap-анализ — в
 [`docs/PRODUCTION.md`](PRODUCTION.md).

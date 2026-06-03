@@ -14,7 +14,6 @@
 | Node | 20 | **24 LTS** | `engines.node` проекта `>=20`, но `pnpm` v11 требует Node ≥ 22. Если только Node 20 — даунгрейди pnpm или апгрейди Node. |
 | pnpm | 9 | **11.x** | Workspace и lockfile рассчитаны на современный pnpm. |
 | Docker Desktop | запущен | свежий | Для прокси-стека и E2E. |
-| ffmpeg | — | `brew install ffmpeg` | Нужен для `pnpm video` (см. ниже). |
 | macOS / Linux | — | macOS arm64 / Linux x64 | Тестировалось на macOS arm64; на Linux x64 должно работать. Windows не тестировался. |
 
 Если у тебя `nvm`, переключи перед всем остальным:
@@ -111,7 +110,7 @@ ls ingestion/data/
 # 8d551208-…meta.json
 ```
 
-Три способа посмотреть:
+Два способа посмотреть:
 
 ```bash
 # 1. JSON-список через HTTP API
@@ -119,76 +118,25 @@ curl http://localhost:8080/sessions | jq
 
 # 2. Реплеер в браузере
 open http://localhost:8081   # или http://localhost:8080/replay/
-
-# 3. Экспорт в .webm
-pnpm video <session_id>
 ```
-
-Экспорт видео требует Chrome for Testing и ffmpeg в `$PATH` — см.
-[Видео-экспорт](#видео-экспорт-pnpm-video) ниже.
 
 ---
 
 ## 6. Тесты
 
 ```bash
-pnpm test           # unit + интеграционные (vitest), без Docker — 63 теста, ~2с
-pnpm typecheck      # tsc --noEmit по всем 5 пакетам
+pnpm test           # unit + интеграционные (vitest), без Docker, ~2с
+pnpm typecheck      # tsc --noEmit по всем пакетам
 pnpm test:e2e       # Playwright + полный Docker-стек, ~40с
 ```
 
-Unit-тесты покрывают SDK state machine, auth-модуль, transport,
-ingestion-сервер и JSONL-декодер video CLI. E2E гоняют настоящий Chromium
+Unit-тесты покрывают SDK state machine, auth-модуль, transport
+и ingestion-сервер. E2E гоняют настоящий Chromium
 против живого Docker-стека — см. [`e2e/README.md`](../e2e/README.md).
 
 ---
 
-## 7. Видео-экспорт (pnpm video)
-
-`tools/video/` экспортирует сессию в `.webm` через Playwright +
-rrweb-player. CLI лежит здесь, потому что зависимости (Playwright +
-Chrome + ffmpeg) тяжёлые — не хочется тащить их в основной ingestion-образ.
-
-### Что нужно один раз
-
-```bash
-# Chrome for Testing — стандартное место, CLI авто-найдёт
-npx @puppeteer/browsers install chrome@stable
-
-# ffmpeg в $PATH (см. ниже зачем)
-brew install ffmpeg
-```
-
-### Использование
-
-```bash
-pnpm video <session_id>
-# → ingestion/data/<session_id>.webm
-```
-
-CLI декодирует JSONL, инлайнит rrweb-player + события в HTML, запускает
-Chrome через Playwright и записывает через `recordVideo`. Первый запуск
-длиннее (Playwright докачивает свой кэш), последующие — секунды.
-
-### Почему ffmpeg именно из brew
-
-Playwright поставляет свой `ffmpeg-mac` бинарник, но на macOS arm64 он
-не подписан — Gatekeeper его убивает с exit 137, и `recordVideo` падает
-с криптической ошибкой `spawn Unknown system error -88`. Наш CLI
-авто-чинит это: при старте пробует запустить `ffmpeg-mac -version`,
-если падает — копирует `$(which ffmpeg)` поверх. Без системного ffmpeg
-авто-фикс ничего сделать не сможет, CLI выведет понятную ошибку.
-
-### Если Chrome лежит в другом месте
-
-```bash
-export CHROME_EXECUTABLE='/полный/путь/к/Google Chrome for Testing'
-pnpm video <session_id>
-```
-
----
-
-## 8. Типичные проблемы
+## 7. Типичные проблемы
 
 ### «Docker is not running»
 
@@ -210,11 +158,6 @@ chrome@stable`) и переменную `CHROME_EXECUTABLE` — в
 rm -rf ~/Library/Caches/ms-playwright   # macOS
 pnpm --filter @pam/e2e exec playwright install chromium
 ```
-
-### `pnpm video` падает на ffmpeg
-
-`brew install ffmpeg`. CLI один раз скопирует системный ffmpeg в
-кэш Playwright и забудет.
 
 ### `pnpm install` падает на Node 20
 
@@ -261,7 +204,7 @@ pnpm install
 
 ---
 
-## 9. Workflow при редактировании
+## 8. Workflow при редактировании
 
 | Что меняешь | Команда | После |
 |-------------|---------|-------|
@@ -269,16 +212,14 @@ pnpm install
 | `ingestion/src/**` | `pnpm --filter @pam/ingestion dev` (tsx watch) | Hot-reload |
 | `demo-app/index.html` | ничего | Refresh страницы |
 | `proxy/nginx.conf` | `docker compose -f proxy/docker-compose.yml restart nginx` | — |
-| `tools/video/src/**` | `pnpm --filter @pam/video typecheck` | — (CLI зовётся как одноразовая команда) |
 | Тесты | `pnpm --filter @pam/web-session-recorder test:watch` и т.д. | — |
 
 ---
 
-## 10. Где что искать
+## 9. Где что искать
 
 | Ищешь | Смотри |
 |-------|--------|
 | Как работает state machine | [`sdk/src/recorder.ts`](../sdk/src/recorder.ts) + [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | Контракт auth-флоу | [`ARCHITECTURE.md §3-§6`](ARCHITECTURE.md#3-cookies) + [`ingestion/src/auth.ts`](../ingestion/src/auth.ts) |
-| Как сделан video-pipeline | [`tools/video/src/export.ts`](../tools/video/src/export.ts) + [`ARCHITECTURE.md §8`](ARCHITECTURE.md#8-video-pipeline-pnpm-video) |
 | Что нужно для прода | [`PRODUCTION.md`](PRODUCTION.md) |

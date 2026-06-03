@@ -198,50 +198,7 @@ chunk'и или пагинированное чтение.
 
 ---
 
-## 6. Video pipeline
-
-`tools/video/` — CLI для экспорта сессии в `.webm`. Сейчас он лежит
-рядом с проектом и работает локально; чтобы вынести в прод-инструмент
-(батч-конвертер, GET endpoint), нужно:
-
-### Браузер и ffmpeg в окружении
-
-Сейчас CLI авто-находит Chrome for Testing под `~/chrome/` (от
-`npx @puppeteer/browsers install chrome@stable`) или берёт путь из
-`CHROME_EXECUTABLE`. В контейнерном окружении: либо ставить Chrome в
-Docker-образ, либо использовать готовый образ `mcr.microsoft.com/playwright`.
-
-На macOS arm64 встроенный Playwright'ом `ffmpeg-mac` приходит без
-подписи и убивается Gatekeeper'ом — CLI содержит «auto-heal»: при
-старте пробует запустить `ffmpeg-mac -version`, если падает — копирует
-системный ffmpeg (`brew install ffmpeg`) в кэш Playwright. В Linux-контейнере
-эта проблема не возникает, авто-fix просто ничего не делает.
-
-### Превратить в server-side endpoint
-
-Сейчас CLI зовётся вручную из локального cwd. Чтобы сделать `GET
-/sessions/:id/video`:
-
-1. Положи `transformToVideo` логику в общий модуль (вынести из export.ts).
-2. Поставь worker (BullMQ / Inngest / Temporal) — конвертация занимает
-   2-3 секунды на минуту сессии и блокирует CPU.
-3. Сохраняй `.webm` в тот же storage, что и `.jsonl`.
-4. Не забудь добавить admin-guard, тот же, что для `/sessions[/:id]`.
-
-### Альтернативный пайплайн
-
-Если хочешь MP4 вместо .webm:
-
-```bash
-ffmpeg -i <sid>.webm -c:v libx264 -preset fast <sid>.mp4
-```
-
-Можно встроить пост-шаг в `tools/video/src/export.ts`, если стейкхолдеры
-требуют MP4. В демо это YAGNI.
-
----
-
-## 7. Операционные вопросы
+## 6. Операционные вопросы
 
 ### Multi-tenancy
 
@@ -276,7 +233,7 @@ ffmpeg -i <sid>.webm -c:v libx264 -preset fast <sid>.mp4
 
 ---
 
-## 8. Migration checklist
+## 7. Migration checklist
 
 Если портируешь сегодняшний стаб в настоящий Go-сервис, разумный
 порядок такой:

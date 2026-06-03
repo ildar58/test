@@ -97,7 +97,7 @@ pnpm dev:proxy
 
 Записи лежат в `ingestion/data/` на хосте — один файл `<session_id>.jsonl`
 (события) и один `<session_id>.meta.json` (юзер, таймстампы, счётчик батчей)
-на каждую сессию. Три способа их посмотреть:
+на каждую сессию. Два способа их посмотреть:
 
 ```bash
 # 1. Список сессий через HTTP API
@@ -106,23 +106,7 @@ curl http://localhost:8080/sessions | jq
 # 2. Воспроизвести сессию в браузерном реплеере
 open http://localhost:8081
 # (возьми session_id из списка выше, вставь в поле ввода)
-
-# 3. Экспортировать сессию в .webm видеофайл
-pnpm video <session_id>
-# → ingestion/data/<session_id>.webm
 ```
-
-Видеоэкспорт сделан через Playwright + `rrweb-player` напрямую (без бинарника
-`rrvideo` — у него хардкод `chromium.launch()`, который не совместим с
-современной headless-моделью Playwright). Требования:
-
-- **Chrome for Testing** установлен через `npx @puppeteer/browsers install chrome@stable`
-  (CLI авто-находит его в `~/chrome/`). Если у тебя бинарь лежит в другом
-  месте — задай его путь в env-переменной `CHROME_EXECUTABLE`.
-- **ffmpeg** в `$PATH` (например `brew install ffmpeg`) — на macOS arm64
-  Playwright ставит unsigned бинарник `ffmpeg-mac`, и Gatekeeper его убивает.
-  CLI авто-чинит это, копируя системный ffmpeg в кэш Playwright один раз на
-  машину; без системного ffmpeg `recordVideo` не работает.
 
 ---
 
@@ -136,7 +120,6 @@ pnpm video <session_id>
 | [`demo-app/`](demo-app) | Минимальное HTML-приложение, которое сидит за nginx как «продуктовое». |
 | [`replayer/`](replayer) | Однофайловый реплеер на rrweb-player. |
 | [`e2e/`](e2e) | E2E-тесты на Playwright, гоняют полный Docker-стек. |
-| [`tools/video/`](tools/video) | CLI экспорта сессии в `.webm` (Playwright + rrweb-player). |
 | [`docs/`](docs) | Архитектура, руководство по разработке и production-чеклист. |
 
 В каждом пакете свой README с подробностями. Начинать читать — отсюда.
@@ -216,7 +199,7 @@ E2E требуют Docker. Playwright скачивает свой headless Chrom
 [`e2e/README.md`](e2e/README.md#использование-уже-установленного-chrome)
 про опт-ин через `CHROME_EXECUTABLE`.
 
-Текущее покрытие: 33 SDK + 21 ingestion + 9 video unit/integration тестов,
+Текущее покрытие: 33 SDK + 21 ingestion unit/integration тестов,
 плюс 5 сценариев Playwright, гоняющих полный Variant A lifecycle.
 
 ---
