@@ -1,6 +1,6 @@
 services:
   # ---------------------------------------------------------------------------
-  # Demo upstream app (simple static SPA)
+  # Демо-приложение (простая статическая SPA)
   # ---------------------------------------------------------------------------
   demo-app:
     image: nginx:alpine
@@ -10,14 +10,14 @@ services:
       - "80"
 
   # ---------------------------------------------------------------------------
-  # Session ingestion + replayer backend (Node/Express)
+  # Ingestion сессий + бэкенд реплеера (Node/Express)
   #
-  # ./data is a host bind-mount so recorded sessions land in the repo's
-  # ingestion/data/ directory — `ls`/`cat` from outside the container.
-  # NOTE: the container runs as root, so files appear root-owned on the host;
-  # use `sudo` to inspect or rm them, or `chown` after a `docker compose down`.
-  # ./replayer is mounted read-only so the static replayer UI served at
-  # /replay is reachable from the Docker stack without rebuilding the image.
+  # ./data — bind-mount на хост, чтобы записанные сессии ложились в
+  # ingestion/data/ репозитория и читались `ls`/`cat` снаружи контейнера.
+  # Контейнер работает под root, поэтому файлы на хосте root-owned:
+  # смотри/удаляй через sudo либо chown после `docker compose down`.
+  # ./replayer монтируется read-only, чтобы статический UI реплеера на
+  # /replay был доступен из стека без пересборки образа.
   # ---------------------------------------------------------------------------
   ingestion:
     build:
@@ -32,13 +32,13 @@ services:
       PORT: "3001"
 
   # ---------------------------------------------------------------------------
-  # nginx proxy: injects recorder into every HTML response from demo-app
+  # nginx-прокси: инжектит рекордер в каждый HTML-ответ demo-app
   # ---------------------------------------------------------------------------
   nginx:
     image: nginx:1.25-alpine
     ports:
-      - "8080:80"    # corp app (with recorder injected)
-      - "8081:8080"  # replayer admin UI
+      - "8080:80"    # корп-приложение (с инжектом рекордера)
+      - "8081:8080"  # админ-UI реплеера
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./proxy_defaults.conf:/etc/nginx/snippets/proxy_defaults.conf:ro

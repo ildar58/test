@@ -6,10 +6,8 @@
 пока бэкенд не выставит маркер-cookie на логине, потом захватывает DOM-мутации
 и пользовательские действия и шлёт батчи в ingestion-сервис.
 
-Это учебная / референс-реализация. Рекордер, nginx, демо-приложение и реплеер
-сделаны в production-форме. Ingestion-сервис — это явный Node-стаб настоящего
-Go-сервиса; что нужно изменить перед продом — см. раздел «Известные
-ограничения» ниже.
+Рекордер, nginx, демо-приложение и реплеер для тестирования.
+Ingestion-сервис — Node-реализация auth и приёма батчей.
 
 ---
 
@@ -45,7 +43,7 @@ Go-сервиса; что нужно изменить перед продом �
                                    │
                                    ▼
                     ┌─────────────────────────────┐
-                    │  Node ingestion (стаб)       │
+                    │  Node ingestion (Express)    │
                     │  POST /auth/login           │
                     │  POST /auth/logout          │
                     │  POST /s/    (cookie-gated) │
@@ -109,7 +107,7 @@ open http://localhost:8081
 | Путь | Что это |
 |------|---------|
 | [`sdk/`](sdk) | Исходники IIFE-бандла рекордера на TypeScript. Внутренний пакет; в npm не публикуется. |
-| [`ingestion/`](ingestion) | Express-сервис — Node-стаб настоящего Go auth/ingestion сервиса. |
+| [`ingestion/`](ingestion) | Express-сервис auth/ingestion (в проде заменяется на Go-сервис). |
 | [`proxy/`](proxy) | Конфиг nginx + Docker Compose локального стека. |
 | [`demo-app/`](demo-app) | Минимальное HTML-приложение, которое сидит за nginx как «продуктовое». |
 | [`replayer/`](replayer) | Однофайловый реплеер на rrweb-player. |
@@ -122,7 +120,7 @@ Sane privacy-first дефолты (зеркалят пресет PostHog):
 
 | Опция | Default | Заметки |
 |-------|---------|---------|
-| `maskAllInputs` | `true` | Все значения `<input>` маскируются в каждом событии. |
+| `maskAllInputs` | `false` | Значения `<input>` по умолчанию не маскируются — иначе `<select>` и чекбоксы при воспроизведении теряют выбор. Пароли маскируются всегда (см. строку ниже); чувствительные блоки оборачивай в `rec-no-capture`. |
 | `maskInputOptions` | `{ password: true }` | Пароли маскируются всегда, даже если `maskAllInputs: false`. |
 | `blockClass` | `'rec-no-capture'` | Добавь этот класс к элементу — он и его поддерево полностью игнорируются. |
 | `maskTextClass` | `'rec-mask'` | Добавь этот класс — текст содержимого заменится на `***`. |
@@ -131,13 +129,18 @@ Sane privacy-first дефолты (зеркалят пресет PostHog):
 | `collectFonts` | `false` | Не собирать веб-шрифты (приватность + размер). |
 | `recordCrossOriginIframes` | `false` | Cross-origin iframe'ы не пишутся. |
 | `markerCookieName` | `'session_present'` | Имя non-HttpOnly cookie-маркера, который бэкенд ставит на логине. |
-| `markerPollMs` | `5_000` | Период опроса маркера (плюс реакция на `focus` и `visibilitychange`). |
+| `sessionIdCookieName` | `'session_id'` | Имя non-HttpOnly cookie с id записи, который бэкенд минтит на логине. Рекордер читает её и шлёт как `session_id` в батчах. |
+| `markerPollMs` | `1_000` | Фолбэк-период опроса маркера. Основная активация — мгновенная, по `cookieStore.onchange`; опрос (плюс реакция на `focus`/`visibilitychange`) страхует, если `cookieStore` недоступен. |
 | `unauthorizedThreshold` | `3` | Сколько 401-induced деактиваций подряд до cool-down. |
 | `unauthorizedCooldownMs` | `60_000` | Окно cool-down после достижения порога. |
 
-Передаются в `init({ ... })`. В nginx-варианте дефолтный сниппет зовёт
-`init({ endpoint: '/s/' })` без оверрайдов — для оверрайда правь сниппет
-в [`proxy/nginx.conf`](proxy/nginx.conf).
+Оверрайдятся через `data-*` атрибуты на инжектируемом теге `<script>` —
+рекордер сам поднимается из `document.currentScript.dataset` при загрузке,
+вызывать `init()` руками не нужно. Дефолтный nginx-сниппет ставит только
+`data-endpoint="/s/"`; чтобы переопределить опцию, допиши соответствующий
+`data-*` в `sub_filter` в [`proxy/nginx.conf`](proxy/nginx.conf) — например
+`data-marker-poll-ms="2000"`, `data-session-id-cookie="rec_sid"` или
+`data-mask-all-inputs="true"`.
 
 ---
 
@@ -147,7 +150,7 @@ Sane privacy-first дефолты (зеркалят пресет PostHog):
 
 ```ts
 {
-  session_id: string;        // UUID, генерируется на клиенте на каждую ACTIVE-фазу
+  session_id: string;        // минтится бэкендом на логине (cookie session_id), рекордер читает из неё
   batch_seq: number;         // монотонно растёт внутри сессии, начинается с 1
   events_b64_gzip: string;   // base64(gzip(JSON.stringify(eventWithTime[])))
 }
@@ -161,31 +164,11 @@ Sane privacy-first дефолты (зеркалят пресет PostHog):
 
 ---
 
-## Тестирование
+## Проверка типов
 
 ```bash
-pnpm test           # unit + интеграционные (vitest)
 pnpm typecheck      # tsc --noEmit по всем пакетам
 ```
-
-Покрытие: unit/integration тесты на SDK и ingestion (vitest).
-
----
-
-## Известные ограничения
-
-Это **намеренные пробелы** в учебной реализации:
-
-- **Path-traversal в `ingestion/src/storage.ts`** — `session_id` из тела
-  запроса попадает в путь к файлу без валидации. Аутентифицированный
-  атакующий может писать вне data-директории. Зафиксировано как
-  follow-up.
-- **`GET /sessions` и `GET /sessions/:id` не требуют auth** — design-спека
-  требует admin-role guard. В Node-стабе не реализовано. Зафиксировано.
-- **In-memory session store без TTL и cap** — рестарт сервера разлогинивает
-  всех. ОК для стаба; в проде нужно eviction.
-- **Демо-пароли закоммичены в виде plaintext-хэшей** — `alice/alice`,
-  `bob/bob`. Весь массив `users` в `ingestion/src/auth.ts` — фикстура.
 
 ---
 
