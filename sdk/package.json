@@ -13,9 +13,7 @@
   "keywords": ["rrweb", "session-replay", "session-recording", "monitoring"],
   "scripts": {
     "build": "esbuild src/index.ts --bundle --format=iife --global-name=PamRecorder --outfile=dist/recorder.iife.js",
-    "dev": "esbuild src/index.ts --bundle --format=iife --global-name=PamRecorder --outfile=dist/recorder.iife.js --watch",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "dev": "esbuild src/index.ts --bundle --format=iife --global-name=PamRecorder --outfile=dist/recorder.iife.js --watch"
   },
   "dependencies": {
     "@rrweb/types": "^2.0.0-alpha.13",
@@ -25,8 +23,6 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "esbuild": "^0.20.0",
-    "jsdom": "^24.0.0",
-    "typescript": "^5.4.0",
-    "vitest": "^1.6.0"
+    "typescript": "^5.4.0"
   }
 }
