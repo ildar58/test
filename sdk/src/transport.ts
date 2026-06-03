@@ -104,14 +104,18 @@ export class Transport {
     }
   }
 
-  /** sendBeacon гарантирует доставку при выгрузке страницы. */
+  /** sendBeacon доставляет последний батч при выгрузке страницы. */
   private beaconFlush(sessionId: string): void {
     if (this.buffer.length === 0) return;
     const events = this.buffer;
     this.buffer = [];
     const batch = this.buildBatch(sessionId, events);
     const blob = new Blob([JSON.stringify(batch)], { type: 'application/json' });
-    navigator.sendBeacon(this.opts.endpoint, blob);
+    // sendBeacon вернёт false, если payload отклонён (например, слишком большой) —
+    // тогда не теряем события: возвращаем в буфер. На visibilitychange-hidden вкладка
+    // может ещё ожить и отправить их обычным flush. batch_seq при этом «сгорает», но
+    // сервер не требует непрерывности, а replay упорядочивает события по таймстампам.
+    if (!navigator.sendBeacon(this.opts.endpoint, blob)) this.requeue(events);
   }
 
   stop(): void {

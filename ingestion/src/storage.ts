@@ -90,13 +90,22 @@ export function getSessionEvents(sessionId: string): unknown[] {
   const file = sessionFile(sessionId);
   if (!fs.existsSync(file)) return [];
 
+  // Потолок на распакованный размер одного батча: сильно сжимаемый payload (напр.
+  // нули) при ~11 МБ на входе раздулся бы в гигабайты, заморозив event loop и уронив
+  // процесс по OOM. gunzipSync кидает RangeError при превышении — ловим построчно,
+  // чтобы один битый/аномальный батч не ронял воспроизведение всей записи.
+  const MAX_DECOMPRESSED = 64 * 1024 * 1024; // 64 MiB на батч
   const lines = fs.readFileSync(file, 'utf-8').split('\n').filter(Boolean);
   const events: unknown[] = [];
   for (const line of lines) {
-    const batch = JSON.parse(line) as EventBatch;
-    const gzipped = Buffer.from(batch.events_b64_gzip, 'base64');
-    const json = zlib.gunzipSync(gzipped).toString('utf-8');
-    events.push(...(JSON.parse(json) as unknown[]));
+    try {
+      const batch = JSON.parse(line) as EventBatch;
+      const gzipped = Buffer.from(batch.events_b64_gzip, 'base64');
+      const json = zlib.gunzipSync(gzipped, { maxOutputLength: MAX_DECOMPRESSED }).toString('utf-8');
+      events.push(...(JSON.parse(json) as unknown[]));
+    } catch (err: unknown) {
+      console.error('[ingestion] skipping unreadable batch line in', sessionId, err);
+    }
   }
   return events;
 }

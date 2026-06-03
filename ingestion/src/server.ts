@@ -27,7 +27,10 @@ app.use(cors(corsOrigins.length ? { origin: corsOrigins, credentials: true } : {
 app.use(cookieParser());
 app.use(express.json({ limit: MAX_BATCH_BYTES }));
 
-// secure включается в проде (за TLS-терминацией nginx).
+// secure-cookies требуют HTTPS, поэтому включаются только при NODE_ENV=production
+// (прод за TLS-терминацией nginx — его и нужно выставить в деплое). Локальный стек
+// ходит по http://localhost и NODE_ENV намеренно не выставляет: иначе браузер не
+// слал бы cookie по HTTP и логин бы не работал.
 const cookieOpts = (httpOnly: boolean): CookieOptions => ({
   httpOnly,
   sameSite: 'lax',

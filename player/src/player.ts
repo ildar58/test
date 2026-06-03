@@ -11,8 +11,8 @@ import { CONTROL_CSS, REPLAYER_CSS } from './styles';
 import { ReplayerEngine } from './engine/replayer-engine';
 import { buildControls, type ControlsHandle } from './controls';
 
-// Fallback control-bar height (px) used to size the stage in fullscreen when
-// the bar hasn't been laid out yet and offsetHeight reads 0.
+// Fallback control-bar height (px) used to size the stage in fullscreen when the
+// bar hasn't been laid out yet and offsetHeight reads 0. ≈ scrubber row + button row.
 const CONTROLS_FALLBACK_H = 112;
 
 export function createPamPlayer(target: HTMLElement, options: PamPlayerOptions): PamPlayer {

@@ -92,8 +92,9 @@ pnpm dev:proxy
 на каждую сессию. Два способа их посмотреть:
 
 ```bash
-# 1. Список сессий через HTTP API
-curl http://localhost:8080/sessions | jq
+# 1. Список сессий через HTTP API (только порт реплеера 8081;
+#    на корп-порту 8080 /sessions намеренно не публикуется)
+curl http://localhost:8081/sessions | jq
 
 # 2. Воспроизвести сессию в браузерном реплеере
 open http://localhost:8081

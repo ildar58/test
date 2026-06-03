@@ -87,7 +87,8 @@ export function buildControls(
   // Track the authoritative current time so keyboard seeking reads true ms
   // (not the rounded aria-valuenow percent) and screen readers announce it.
   const setCur = (ms: number): void => {
-    curMs = Math.max(0, Math.min(total > 0 ? total : ms, ms));
+    const hi = total > 0 ? total : Infinity; // до известной длительности не зажимаем сверху
+    curMs = Math.min(Math.max(ms, 0), hi);
     cur.textContent = fmtDur(curMs);
     scrub.setAttribute('aria-valuetext', fmtDur(curMs) + ' из ' + fmtDur(total));
   };
