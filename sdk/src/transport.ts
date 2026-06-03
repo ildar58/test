@@ -11,9 +11,9 @@ export interface TransportOptions {
   endpoint: string;
   flushIntervalMs: number;
   maxBufferSize: number;
-  /** Starting value for batch_seq. Defaults to 0. Used to preserve monotonicity across reload. */
+  /** Начальное значение batch_seq (для сохранения монотонности между перезагрузками). */
   initialBatchSeq?: number;
-  /** Fired after batch_seq is advanced; lets callers persist it across reload. */
+  /** Вызывается при инкременте batch_seq, чтобы вызывающий мог сохранить значение. */
   onBatchSeqAdvance?: (seq: number) => void;
   onUnauthorized?: () => void;
   onAuthorized?: () => void;
@@ -59,7 +59,7 @@ export class Transport {
     if (this.buffer.length >= this.opts.maxBufferSize) this.flush(sessionId);
   }
 
-  /** Synchronous swap: returns the current batch and clears the buffer atomically. */
+  /** Атомарно забирает и очищает буфер, формируя батч. */
   private takeBatch(sessionId: string): Batch | null {
     if (this.buffer.length === 0) return null;
     const events = this.buffer;
@@ -87,13 +87,12 @@ export class Transport {
       if (res.status === 401) this.opts.onUnauthorized?.();
       else if (res.ok) this.opts.onAuthorized?.();
     } catch {
-      // Network error — events are already removed from the buffer; we don't
-      // re-queue because retrying stale events past their flushIntervalMs
-      // window would burst-spike the next batch. Drop is intentional.
+      // Сетевая ошибка: события уже извлечены из буфера и не возвращаются обратно.
+      // Повторная постановка устаревших событий породила бы всплеск в следующем батче.
     }
   }
 
-  /** Pagehide/visibility-hidden path: uses sendBeacon so the request survives unload. */
+  /** sendBeacon гарантирует доставку при выгрузке страницы. */
   private beaconFlush(sessionId: string): void {
     const batch = this.takeBatch(sessionId);
     if (!batch) return;

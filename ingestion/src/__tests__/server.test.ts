@@ -125,9 +125,7 @@ describe('ingestion server', () => {
     expect(setCookies.some((c) => /^session=;/.test(c) && /Max-Age=0/.test(c))).toBe(true);
     expect(setCookies.some((c) => /^session_present=;/.test(c) && /Max-Age=0/.test(c))).toBe(true);
 
-    // The (now invalidated) token must no longer accept ingestion. Re-use the agent
-    // so the same cookies are sent — server should still reject because the entry
-    // was destroyed in memory.
+    // токен инвалидирован, запрос должен вернуть 401
     const ingest = await agent
       .post('/s/')
       .send({ session_id: 'sB', batch_seq: 1, events_b64_gzip: gzipB64([{ x: 1 }]) });

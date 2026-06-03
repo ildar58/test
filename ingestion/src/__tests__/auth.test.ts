@@ -56,6 +56,5 @@ describe('session store', () => {
   it('destroySession is idempotent on unknown tokens', () => {
     destroySession('unknown');
     destroySession(undefined);
-    // no throw
   });
 });

@@ -17,26 +17,16 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 const MAX_BATCH_BYTES = '10mb';
 
-// CSRF posture for this stub relies on (a) the nginx proxy serving recorder,
-// app, and ingestion same-origin in production, and (b) SameSite=Lax on the
-// session cookies. CORS is enabled with credentials only to support local
-// dev where the demo HTML may be opened from a non-proxied origin; the real
-// Go service should pin `origin` to the known list of allowed front-ends.
+// CORS с credentials только для локального dev; в проде nginx даёт same-origin.
 app.use(cors({ credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: MAX_BATCH_BYTES }));
 
-// TODO(prod): set `secure: true` on both cookies once nginx terminates HTTPS.
+// secure: true добавить когда nginx будет терминировать HTTPS.
 const SESSION_COOKIE: CookieOptions = { httpOnly: true,  sameSite: 'lax', path: '/' };
 const MARKER_COOKIE:  CookieOptions = { httpOnly: false, sameSite: 'lax', path: '/' };
 
-/**
- * Locate the replayer directory across both layouts:
- *   - dev: tsx → __dirname=ingestion/src, replayer at <repo>/replayer
- *   - docker: node → __dirname=/app/dist, replayer bind-mounted at /app/replayer
- * The dev-correct path is tried FIRST so an accidentally-created
- * ingestion/replayer/ directory can't silently shadow the real one.
- */
+// dev: __dirname=ingestion/src; docker: /app/dist. Первый найденный побеждает.
 function findReplayerDir(): string | null {
   const candidates = [
     path.resolve(__dirname, '../../replayer'),
@@ -48,17 +38,12 @@ function findReplayerDir(): string | null {
 const replayerDir = findReplayerDir();
 if (replayerDir) app.use('/replay', express.static(replayerDir));
 
-/** Best-effort string extractor for untrusted JSON bodies. */
+// безопасное чтение строкового поля из тела запроса
 function pickString(body: unknown, key: string): string {
   const v = (body as Record<string, unknown> | null)?.[key];
   return typeof v === 'string' ? v : '';
 }
 
-/**
- * Demo auth backend.
- * Real auth lives in the Go service; this is just enough to drive the
- * recorder lifecycle locally and in E2E with a real-looking flow.
- */
 app.post('/auth/login', async (req: Request, res: Response) => {
   const user = pickString(req.body, 'user');
   const password = pickString(req.body, 'password');
@@ -102,9 +87,7 @@ app.post('/s/', (req: Request, res: Response) => {
     return;
   }
 
-  // The session_id is JS-readable (non-HttpOnly), so it could be forged. It is
-  // NOT the auth key — the HttpOnly session token above is. Here we only assert
-  // the client is writing under the id we actually minted for this session.
+  // session_id не является ключом авторизации (HttpOnly токен выше); просто проверяем соответствие выданному id.
   if (req.body.session_id !== entry.sessionId) {
     res.status(403).json({ success: false, error: 'session_id mismatch' });
     return;

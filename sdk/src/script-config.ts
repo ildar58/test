@@ -3,19 +3,15 @@ import type { RecorderConfig } from './config';
 type Coerce = 'string' | 'number' | 'boolean';
 
 interface AttrSpec {
-  /** Key as exposed on HTMLElement.dataset (camelCase of the data-* name). */
+  /** Ключ в dataset (camelCase от data-* имени). */
   datasetKey: string;
-  /** Target RecorderConfig field. */
+  /** Поле в RecorderConfig. */
   configKey: keyof RecorderConfig;
   type: Coerce;
 }
 
-/**
- * Allowlist mapping a script tag's data-* attribute (via `dataset`) to a
- * RecorderConfig field. `data-marker-cookie` is exposed by the DOM as
- * `dataset.markerCookie`, etc. Only scalar fields are configurable; complex
- * fields (e.g. maskInputOptions) stay at DEFAULT_CONFIG.
- */
+// Разрешённые data-* атрибуты тега script и соответствующие поля конфига.
+// Сложные поля (maskInputOptions и др.) не переопределяются.
 export const ATTR_MAP: ReadonlyArray<AttrSpec> = [
   { datasetKey: 'endpoint', configKey: 'endpoint', type: 'string' },
   { datasetKey: 'markerCookie', configKey: 'markerCookieName', type: 'string' },
@@ -35,12 +31,7 @@ export const ATTR_MAP: ReadonlyArray<AttrSpec> = [
   { datasetKey: 'recordCrossOriginIframes', configKey: 'recordCrossOriginIframes', type: 'boolean' },
 ];
 
-/**
- * Parses recorder-config overrides from a <script> tag's data-* attributes.
- * Unknown attributes are ignored; empty strings, non-finite numbers, and
- * booleans other than exactly "true"/"false" are dropped — so the result only
- * contains valid overrides to merge over DEFAULT_CONFIG.
- */
+// Парсит data-* атрибуты в Partial<RecorderConfig>. Некорректные значения пропускаются.
 export function parseDatasetConfig(
   dataset: Record<string, string | undefined>
 ): Partial<RecorderConfig> {

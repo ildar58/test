@@ -18,10 +18,10 @@ function setCookie(value: string): void {
   Object.defineProperty(document, 'cookie', { configurable: true, value, writable: true });
 }
 
-// Backend sets session_present AND session_id together on login.
+// бэкенд выставляет оба кукиса при логине
 const LOGGED_IN = 'session_present=1; session_id=sid-1';
 
-/** Parsed bodies of every batch POST the transport has flushed so far. */
+// тела всех батчей, которые флашнул транспорт
 function flushedBodies(fetchMock: ReturnType<typeof vi.fn>): Array<{ session_id: string }> {
   return fetchMock.mock.calls.map(
     (c) => JSON.parse((c[1] as RequestInit).body as string) as { session_id: string }

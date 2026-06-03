@@ -9,7 +9,7 @@ export function readMarker(name: string): boolean {
   return false;
 }
 
-/** Returns the value of cookie `name`, or null when absent/empty. */
+/** Возвращает значение куки или null если кука отсутствует/пуста. */
 export function readCookieValue(name: string): string | null {
   const raw = typeof document !== 'undefined' ? document.cookie : '';
   if (!raw) return null;
@@ -44,9 +44,8 @@ export function watchMarker(
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('focus', onFocus);
 
-  // Instant edge in Chromium: react the moment the browser applies a Set-Cookie
-  // (login/logout), instead of waiting up to pollMs. Safari/Firefox lack
-  // cookieStore and fall back to the poll above.
+  // Chromium: cookieStore даёт мгновенную реакцию на Set-Cookie без ожидания pollMs.
+  // Safari/Firefox не поддерживают, там работает поллинг выше.
   const cookieStore = (globalThis as typeof globalThis & {
     cookieStore?: {
       addEventListener(t: 'change', l: () => void): void;

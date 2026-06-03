@@ -3,11 +3,7 @@ import path from 'path';
 import zlib from 'zlib';
 import type { EventBatch, SessionMeta } from './types';
 
-/**
- * Resolved on every call so tests can swap PAM_DATA_DIR per-case via
- * beforeEach. The default falls back to `<ingestion>/data` (dev) or
- * `/app/data` (compiled Docker image — bind-mounted to the host).
- */
+// вызывается каждый раз, чтобы тесты могли подменять PAM_DATA_DIR через beforeEach
 function dataDir(): string {
   return process.env.PAM_DATA_DIR ?? path.resolve(__dirname, '../data');
 }

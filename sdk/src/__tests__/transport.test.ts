@@ -95,7 +95,7 @@ describe('Transport', () => {
     t.push({ type: 0, data: {}, timestamp: 1 } as never, SESSION);
 
     vi.advanceTimersByTime(2_000);
-    // Allow the fetch microtask to settle
+    // ждём завершения промиса fetch
     await vi.waitFor(() => expect(onUnauthorized).toHaveBeenCalledOnce());
 
     t.stop();

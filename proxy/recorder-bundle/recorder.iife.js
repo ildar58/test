@@ -33,14 +33,9 @@ var PamRecorder = (() => {
     blockClass: "rec-no-capture",
     ignoreClass: "rec-ignore-input",
     maskTextClass: "rec-mask",
-    // Don't blanket-mask every input: maskAllInputs:true also masks <select>,
-    // <radio>, <checkbox> — controls whose values come from a fixed option set,
-    // not free user text. rrweb still records their change events, but the value
-    // is stored as asterisks, so on replay `select.value = "*****"` matches no
-    // <option> and the control silently reverts to its default — the selection
-    // looks lost. Mask only free-text-bearing inputs (password here; the auth
-    // block is also wrapped in blockClass `rec-no-capture`). PROD NOTE: tighten
-    // this for PII — add text/email/tel/etc. to maskInputOptions before shipping.
+    // maskAllInputs:true маскирует и <select>/<checkbox>, при воспроизведении
+    // значение "*****" не совпадает ни с одним <option> и выбор теряется.
+    // Маскируем только поля с паролем; блок логина обёрнут в rec-no-capture.
     maskAllInputs: false,
     maskInputOptions: { password: true },
     inlineStylesheet: true,
@@ -13324,7 +13319,7 @@ var PamRecorder = (() => {
       if (this.buffer.length >= this.opts.maxBufferSize)
         this.flush(sessionId);
     }
-    /** Synchronous swap: returns the current batch and clears the buffer atomically. */
+    /** Атомарно забирает и очищает буфер, формируя батч. */
     takeBatch(sessionId) {
       if (this.buffer.length === 0)
         return null;
@@ -13357,7 +13352,7 @@ var PamRecorder = (() => {
       } catch {
       }
     }
-    /** Pagehide/visibility-hidden path: uses sendBeacon so the request survives unload. */
+    /** sendBeacon гарантирует доставку при выгрузке страницы. */
     beaconFlush(sessionId) {
       const batch = this.takeBatch(sessionId);
       if (!batch)
@@ -13484,7 +13479,7 @@ var PamRecorder = (() => {
       collectFonts: config.collectFonts,
       recordCrossOriginIframes: config.recordCrossOriginIframes,
       checkoutEveryNms: config.checkoutEveryNms,
-      // rrweb types emit as `unknown` for forward-compat; widen here once.
+      // rrweb типизирует emit как unknown для совместимости; расширяем здесь.
       emit: (event) => emit(event)
     };
   }
@@ -13499,11 +13494,7 @@ var PamRecorder = (() => {
       this.unauthorizedCount = 0;
       this.cooldownUntil = 0;
     }
-    /**
-     * Idempotent. No-op if the recorder is already ACTIVE or has been stop()ped
-     * — a single Recorder instance is single-use; create a new one if you need
-     * to restart after stop().
-     */
+    /** Идемпотентен. После stop() экземпляр не перезапускается, нужен новый. */
     start() {
       if (this.state !== "IDLE")
         return;
@@ -13537,10 +13528,7 @@ var PamRecorder = (() => {
         endpoint: this.config.endpoint,
         flushIntervalMs: this.config.flushIntervalMs,
         maxBufferSize: this.config.maxBufferSize,
-        // Keep batch_seq monotonic across reloads. Without persistence the
-        // counter would reset to 1 every time the page reloads while logged in,
-        // violating the per-session_id ordering contract documented in
-        // ARCHITECTURE.md.
+        // Сохраняем batch_seq между перезагрузками, чтобы не сбрасывать порядковый номер.
         initialBatchSeq: sessionIdStorage.readSeq(),
         onBatchSeqAdvance: (seq) => sessionIdStorage.writeSeq(seq),
         onUnauthorized: () => this.onUnauthorized(),
@@ -13557,11 +13545,7 @@ var PamRecorder = (() => {
       sessionIdStorage.clear();
       this.state = "IDLE";
     }
-    /**
-     * Called by Transport when a batch returns 401. Multiple in-flight batches
-     * can race here, so the state guard at the top ensures the counter advances
-     * at most once per ACTIVE phase.
-     */
+    // Несколько in-flight батчей могут вернуть 401 одновременно; guard сверху гарантирует однократное срабатывание.
     onUnauthorized() {
       if (this.state !== "ACTIVE")
         return;
@@ -13570,7 +13554,7 @@ var PamRecorder = (() => {
       const delay = this.unauthorizedCount >= this.config.unauthorizedThreshold ? this.enterCooldown() : this.config.markerPollMs;
       this.scheduleRetry(delay);
     }
-    /** Sets the cooldown deadline and resets the counter. Returns the cooldown duration. */
+    /** Устанавливает срок cooldown и сбрасывает счётчик. Возвращает длительность. */
     enterCooldown() {
       this.cooldownUntil = Date.now() + this.config.unauthorizedCooldownMs;
       this.unauthorizedCount = 0;

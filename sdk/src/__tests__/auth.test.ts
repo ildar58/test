@@ -130,8 +130,7 @@ describe('watchMarker', () => {
     listeners.forEach((l) => l()); // simulate the browser firing 'change'
 
     expect(cb).toHaveBeenCalledWith(true);
-    // Timers are NOT advanced and the poll is 60 s away — this proves the
-    // cookieStore path, not the poll, delivered the edge.
+    // таймер не тикал, сработал cookieStore
     dispose();
     vi.unstubAllGlobals();
   });

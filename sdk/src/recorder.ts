@@ -11,13 +11,9 @@ const SEQ_KEY = '_pam_seq';
 
 type State = 'IDLE' | 'ACTIVE' | 'STOPPED';
 
-/**
- * sessionStorage wrapper for reload-continuity. Survives reload (so we keep
- * the same session_id AND the monotonic batch_seq), but is cleared on logout
- * so the next ACTIVE phase starts a fresh session. Every access is guarded —
- * sessionStorage can throw in private-browsing modes and inside cross-origin
- * iframes.
- */
+// Хранилище для сохранения session_id и batch_seq между перезагрузками.
+// Очищается при выходе, чтобы следующая сессия начиналась чистой.
+// Все обращения обёрнуты в try/catch: в приватном режиме и кросс-орижин iframe sessionStorage бросает.
 const sessionIdStorage = {
   readId(): string | null {
     try { return sessionStorage.getItem(SID_KEY); }
@@ -60,7 +56,7 @@ function buildRrwebOptions(
     collectFonts: config.collectFonts,
     recordCrossOriginIframes: config.recordCrossOriginIframes,
     checkoutEveryNms: config.checkoutEveryNms,
-    // rrweb types emit as `unknown` for forward-compat; widen here once.
+    // rrweb типизирует emit как unknown для совместимости; расширяем здесь.
     emit: (event: unknown) => emit(event as eventWithTime),
   };
 }
@@ -76,11 +72,7 @@ export class Recorder {
 
   constructor(private readonly config: RecorderConfig) {}
 
-  /**
-   * Idempotent. No-op if the recorder is already ACTIVE or has been stop()ped
-   * — a single Recorder instance is single-use; create a new one if you need
-   * to restart after stop().
-   */
+  /** Идемпотентен. После stop() экземпляр не перезапускается, нужен новый. */
   start(): void {
     if (this.state !== 'IDLE') return;
 
@@ -90,8 +82,7 @@ export class Recorder {
       this.config.markerPollMs
     );
 
-    // watchMarker only fires on edges. If the marker is already present at
-    // start() (e.g. page reload while logged in), kick off ACTIVE explicitly.
+    // watchMarker реагирует только на изменения, поэтому при перезагрузке (маркер уже есть) запускаем вручную.
     if (readMarker(this.config.markerCookieName)) this.tryActivate();
   }
 
@@ -99,9 +90,7 @@ export class Recorder {
     if (this.state !== 'IDLE') return;
     if (Date.now() < this.cooldownUntil) return;
 
-    // V1: the recording session id is minted by the backend and delivered as a
-    // cookie alongside session_present. If it isn't readable yet, stay IDLE —
-    // the backend sets both atomically, so the next auth edge will carry it.
+    // session_id выставляется бэкендом вместе с session_present; если куки ещё нет, ждём следующего фронта.
     const sessionId = readCookieValue(this.config.sessionIdCookieName);
     if (!sessionId) return;
 
@@ -121,10 +110,7 @@ export class Recorder {
       endpoint: this.config.endpoint,
       flushIntervalMs: this.config.flushIntervalMs,
       maxBufferSize: this.config.maxBufferSize,
-      // Keep batch_seq monotonic across reloads. Without persistence the
-      // counter would reset to 1 every time the page reloads while logged in,
-      // violating the per-session_id ordering contract documented in
-      // ARCHITECTURE.md.
+      // Сохраняем batch_seq между перезагрузками, чтобы не сбрасывать порядковый номер.
       initialBatchSeq: sessionIdStorage.readSeq(),
       onBatchSeqAdvance: (seq) => sessionIdStorage.writeSeq(seq),
       onUnauthorized: () => this.onUnauthorized(),
@@ -142,26 +128,20 @@ export class Recorder {
     this.state = 'IDLE';
   }
 
-  /**
-   * Called by Transport when a batch returns 401. Multiple in-flight batches
-   * can race here, so the state guard at the top ensures the counter advances
-   * at most once per ACTIVE phase.
-   */
+  // Несколько in-flight батчей могут вернуть 401 одновременно; guard сверху гарантирует однократное срабатывание.
   private onUnauthorized(): void {
     if (this.state !== 'ACTIVE') return;
     this.deactivate();
     this.unauthorizedCount += 1;
 
-    // The watcher will not fire an edge while the marker stays present, so
-    // schedule an explicit retry here. If logout happens in the meantime,
-    // tryActivate's state guard or the watcher's edge callback handles it.
+    // Watcher не даст фронт пока маркер не изменится, поэтому планируем retry явно.
     const delay = this.unauthorizedCount >= this.config.unauthorizedThreshold
       ? this.enterCooldown()
       : this.config.markerPollMs;
     this.scheduleRetry(delay);
   }
 
-  /** Sets the cooldown deadline and resets the counter. Returns the cooldown duration. */
+  /** Устанавливает срок cooldown и сбрасывает счётчик. Возвращает длительность. */
   private enterCooldown(): number {
     this.cooldownUntil = Date.now() + this.config.unauthorizedCooldownMs;
     this.unauthorizedCount = 0;
@@ -169,9 +149,7 @@ export class Recorder {
   }
 
   private onAuthorized(): void {
-    // A successful batch confirms the auth cookie is valid — reset the
-    // consecutive-401 counter so future transient failures get the full
-    // threshold of retries again.
+    // Успешный батч подтверждает валидность куки, сбрасываем счётчик 401.
     this.unauthorizedCount = 0;
   }
 

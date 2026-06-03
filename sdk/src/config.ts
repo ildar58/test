@@ -1,58 +1,53 @@
-/**
- * Default recorder config — mirrors PostHog's production preset.
- * Class names are corp-specific (rec-* prefix instead of ph-* prefix).
- */
-
 export interface RecorderConfig {
-  /** Endpoint to POST batches to. Must be absolute or root-relative. */
+  /** Куда слать батчи (абсолютный или корневой путь) */
   endpoint: string;
 
-  /** CSS class that blocks capture of an element and its children */
+  /** CSS-класс: блокирует захват элемента и потомков */
   blockClass: string;
 
-  /** CSS class that makes the recorder ignore input events */
+  /** CSS-класс: игнорировать input-события */
   ignoreClass: string;
 
-  /** CSS class for masking text content */
+  /** CSS-класс: маскировать текст */
   maskTextClass: string;
 
-  /** Replace all input values with * */
+  /** Маскировать все input-значения звёздочками */
   maskAllInputs: boolean;
 
-  /** Per-input-type mask options */
+  /** Маски по типу поля */
   maskInputOptions: { password: boolean; [key: string]: boolean };
 
-  /** Inline stylesheets into the snapshot */
+  /** Инлайнить стили в снапшот */
   inlineStylesheet: boolean;
 
-  /** Whether to download and inline fonts */
+  /** Скачивать и инлайнить шрифты */
   collectFonts: boolean;
 
-  /** Whether to record cross-origin iframes */
+  /** Записывать кросс-орижин iframe-ы */
   recordCrossOriginIframes: boolean;
 
-  /** Forces a full DOM snapshot every N ms; bounds replay buffer size */
+  /** Полный снапшот DOM каждые N мс */
   checkoutEveryNms: number;
 
-  /** Flush buffer to server every N ms */
+  /** Интервал сброса буфера на сервер (мс) */
   flushIntervalMs: number;
 
-  /** Max events buffered before forced flush */
+  /** Максимум событий в буфере до принудительного сброса */
   maxBufferSize: number;
 
-  /** Name of the JS-readable marker cookie set by the backend on login */
+  /** JS-доступная кука-маркер, выставляемая бэкендом при логине */
   markerCookieName: string;
 
-  /** Name of the JS-readable cookie holding the server-minted recording session id */
+  /** JS-доступная кука с id записывающей сессии */
   sessionIdCookieName: string;
 
-  /** Marker cookie poll interval in ms (watcher also reacts to focus/visibility) */
+  /** Интервал поллинга маркер-куки (мс) */
   markerPollMs: number;
 
-  /** Consecutive 401-induced transitions before entering cooldown */
+  /** Число 401-ответов подряд до входа в cooldown */
   unauthorizedThreshold: number;
 
-  /** Cooldown window after the threshold is reached */
+  /** Длительность cooldown (мс) */
   unauthorizedCooldownMs: number;
 }
 
@@ -63,14 +58,9 @@ export const DEFAULT_CONFIG: RecorderConfig = {
   blockClass: 'rec-no-capture',
   ignoreClass: 'rec-ignore-input',
   maskTextClass: 'rec-mask',
-  // Don't blanket-mask every input: maskAllInputs:true also masks <select>,
-  // <radio>, <checkbox> — controls whose values come from a fixed option set,
-  // not free user text. rrweb still records their change events, but the value
-  // is stored as asterisks, so on replay `select.value = "*****"` matches no
-  // <option> and the control silently reverts to its default — the selection
-  // looks lost. Mask only free-text-bearing inputs (password here; the auth
-  // block is also wrapped in blockClass `rec-no-capture`). PROD NOTE: tighten
-  // this for PII — add text/email/tel/etc. to maskInputOptions before shipping.
+  // maskAllInputs:true маскирует и <select>/<checkbox>, при воспроизведении
+  // значение "*****" не совпадает ни с одним <option> и выбор теряется.
+  // Маскируем только поля с паролем; блок логина обёрнут в rec-no-capture.
   maskAllInputs: false,
   maskInputOptions: { password: true },
   inlineStylesheet: true,

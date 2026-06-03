@@ -640,9 +640,7 @@
   <script type="module">
     import rrwebPlayer from 'https://cdn.jsdelivr.net/npm/rrweb-player@latest/dist/index.mjs';
 
-    // Use relative URLs so the page works the same behind nginx (/replay/)
-    // and when served directly by ingestion on port 8081. Avoids the
-    // "null/sessions" error when the page is opened outside an HTTP origin.
+    // относительные URL работают и за nginx, и напрямую через ingestion
     const SESSIONS_URL = '/sessions';
     const sessionUrl = (id) => `/sessions/${encodeURIComponent(id)}`;
 
@@ -819,7 +817,7 @@
     }
 
     async function loadSessions() {
-      // file:// or sandboxed iframe — no point fetching.
+      // file:// и sandbox не поддерживаются
       if (window.location.protocol !== 'http:' && window.location.protocol !== 'https:') {
         renderHttpOnlyHint();
         return;
@@ -877,7 +875,7 @@
       $container.classList.add('active');
 
       if (currentPlayer) {
-        try { currentPlayer.$destroy(); } catch (_) { /* noop */ }
+        try { currentPlayer.$destroy(); } catch (_) { /* игнорируем */ }
         currentPlayer = null;
       }
 
