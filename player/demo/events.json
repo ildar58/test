@@ -1,0 +1,4282 @@
+[
+  {
+    "type": 4,
+    "data": {
+      "href": "http://localhost:8080/",
+      "width": 1512,
+      "height": 827
+    },
+    "timestamp": 1780445231291
+  },
+  {
+    "type": 2,
+    "data": {
+      "node": {
+        "type": 0,
+        "childNodes": [
+          {
+            "type": 1,
+            "name": "html",
+            "publicId": "",
+            "systemId": "",
+            "id": 2
+          },
+          {
+            "type": 2,
+            "tagName": "html",
+            "attributes": {
+              "lang": "ru"
+            },
+            "childNodes": [
+              {
+                "type": 2,
+                "tagName": "head",
+                "attributes": {},
+                "childNodes": [
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 5
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "meta",
+                    "attributes": {
+                      "charset": "UTF-8"
+                    },
+                    "childNodes": [],
+                    "id": 6
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 7
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "meta",
+                    "attributes": {
+                      "name": "viewport",
+                      "content": "width=device-width, initial-scale=1.0"
+                    },
+                    "childNodes": [],
+                    "id": 8
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 9
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "meta",
+                    "attributes": {
+                      "name": "theme-color",
+                      "content": "#FFDD2D"
+                    },
+                    "childNodes": [],
+                    "id": 10
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 11
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "title",
+                    "attributes": {},
+                    "childNodes": [
+                      {
+                        "type": 3,
+                        "textContent": "Демо · рекордер сессий",
+                        "id": 13
+                      }
+                    ],
+                    "id": 12
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 14
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "link",
+                    "attributes": {
+                      "rel": "preconnect",
+                      "href": "https://fonts.googleapis.com/"
+                    },
+                    "childNodes": [],
+                    "id": 15
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 16
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "link",
+                    "attributes": {
+                      "rel": "preconnect",
+                      "href": "https://fonts.gstatic.com/",
+                      "crossorigin": ""
+                    },
+                    "childNodes": [],
+                    "id": 17
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 18
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "link",
+                    "attributes": {
+                      "href": "https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap",
+                      "rel": "stylesheet"
+                    },
+                    "childNodes": [],
+                    "id": 19
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 20
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "link",
+                    "attributes": {
+                      "rel": "icon",
+                      "href": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FFDD2D'/%3E%3Ccircle cx='50' cy='50' r='14' fill='%23181818'/%3E%3C/svg%3E"
+                    },
+                    "childNodes": [],
+                    "id": 21
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 22
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "style",
+                    "attributes": {
+                      "_cssText": ":root { --bg: #F4F5F7; --surface: #FFFFFF; --surface-2: #F0F2F5; --surface-3: #E8EBEF; --ink: #181818; --ink-2: #4D5664; --ink-3: #8E96A2; --ink-4: #C5CBD3; --yellow: #FFDD2D; --yellow-d: #F3CE17; --yellow-soft: #FFF6C2; --green: #26B36E; --green-soft: #DEF5E8; --red: #F52E2E; --red-soft: #FCE2E2; --blue-soft: #E1ECFE; --blue: #428BF9; --shadow-sm: 0 1px 2px rgba(20, 22, 28, 0.04); --shadow: 0 2px 8px rgba(20, 22, 28, 0.05), 0 12px 28px rgba(20, 22, 28, 0.04); --radius: 20px; --radius-sm: 14px; --sans: 'Onest', system-ui, -apple-system, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace; --ease: cubic-bezier(0.2, 0.7, 0.2, 1); }*, ::before, ::after { box-sizing: border-box; }html, body { margin: 0px; padding: 0px; background: var(--bg); color: var(--ink); font-family: var(--sans); font-feature-settings: \"ss01\", \"ss03\", \"tnum\"; -webkit-font-smoothing: antialiased; text-rendering: optimizelegibility; letter-spacing: -0.005em; min-height: 100vh; }button { font-family: inherit; cursor: pointer; }a { color: inherit; }.shell { max-width: 760px; margin: 0px auto; padding: 16px 14px 80px; }@media (min-width: 720px) {\n  .shell { padding: 28px 28px 80px; max-width: 1080px; }\n}.topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }.brand { display: flex; align-items: center; gap: 10px; }.brand__mark { width: 36px; height: 36px; border-radius: 12px; background: var(--yellow); display: grid; place-items: center; box-shadow: rgba(243, 206, 23, 0.4) 0px 2px 6px; }.brand__mark::after { content: \"\"; width: 12px; height: 12px; border-radius: 50%; background: var(--ink); }.brand__name { font-weight: 700; font-size: 17px; letter-spacing: -0.02em; line-height: 1; }.brand__sub { font-size: 12px; color: var(--ink-3); margin-top: 2px; line-height: 1; font-weight: 400; }.intro { margin-bottom: 20px; }.intro__title { font-size: clamp(28px, 5vw, 40px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; margin: 0px 0px 10px; }.intro__lede { font-size: 15px; color: var(--ink-2); margin: 0px; line-height: 1.5; max-width: 60ch; }.status { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--surface); border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); margin-bottom: 16px; transition: background 0.3s var(--ease); }.status.live { background: rgb(24, 24, 24); color: rgb(255, 255, 255); }.status__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ink-4); flex-shrink: 0; }.status.live .status__dot { background: var(--red); box-shadow: rgba(245, 46, 46, 0.22) 0px 0px 0px 4px; animation: 1.5s ease-in-out 0s infinite normal none running pulse; }@keyframes pulse { \n  0%, 100% { box-shadow: rgba(245, 46, 46, 0.22) 0px 0px 0px 4px; }\n  50% { box-shadow: rgba(245, 46, 46, 0.04) 0px 0px 0px 8px; }\n}.status__label { font-size: 13px; color: var(--ink-3); font-weight: 500; }.status.live .status__label { color: rgba(255, 255, 255, 0.55); }.status__value { margin-left: auto; font-weight: 600; font-size: 14px; }.grid { display: grid; grid-template-columns: 1fr; gap: 12px; }@media (min-width: 880px) {\n  .grid--2 { grid-template-columns: 1fr 1fr; }\n  .grid--3 { grid-template-columns: repeat(3, 1fr); }\n}.card { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); }@media (min-width: 720px) {\n  .card { padding: 24px; }\n}.card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }.card__title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; margin: 0px; line-height: 1.2; }.card__hint { font-size: 13px; color: var(--ink-3); margin: 4px 0px 0px; line-height: 1.4; }.card__badge { flex-shrink: 0; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: var(--surface-2); color: var(--ink-2); }.card__badge--yellow { background: var(--yellow-soft); color: rgb(110, 88, 0); }.card__badge--blue { background: var(--blue-soft); color: rgb(28, 91, 194); }.field { display: block; margin-bottom: 10px; }.field:last-of-type { margin-bottom: 0px; }.field__label { display: block; font-size: 13px; color: var(--ink-3); margin-bottom: 6px; font-weight: 500; }.field__input { width: 100%; padding: 14px 16px; background: var(--surface-2); border: 2px solid transparent; border-radius: 14px; font-family: inherit; font-size: 15px; font-weight: 500; color: var(--ink); transition: background 0.2s var(--ease), border-color 0.2s var(--ease); appearance: none; }.field__input::placeholder { color: var(--ink-3); font-weight: 400; }.field__input:focus { outline: none; background: var(--surface); border-color: var(--ink); }.select-wrap { position: relative; }.select-wrap::after { content: \"\"; position: absolute; right: 18px; top: 50%; width: 8px; height: 8px; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: translateY(-70%) rotate(45deg); pointer-events: none; }.field__input--select { padding-right: 40px; cursor: pointer; }.btns { display: flex; gap: 8px; margin-top: 14px; }.btn { flex: 1 1 0%; padding: 14px 20px; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; border-radius: 14px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 0.15s var(--ease), background 0.2s var(--ease), box-shadow 0.2s var(--ease); }.btn--primary { background: var(--yellow); color: var(--ink); box-shadow: rgba(243, 206, 23, 0.3) 0px 1px 2px; }.btn--primary:hover { background: var(--yellow-d); box-shadow: rgba(243, 206, 23, 0.35) 0px 4px 12px; }.btn--primary:active { transform: scale(0.97); }.btn--ghost { background: var(--surface-2); color: var(--ink); }.btn--ghost:hover { background: var(--surface-3); }.btn--ghost:active { transform: scale(0.97); }.btn[disabled] { opacity: 0.55; cursor: progress; pointer-events: none; }.btn .spinner { display: inline-block; width: 14px; height: 14px; border-width: 2px; border-style: solid; border-color: currentcolor transparent currentcolor currentcolor; border-image: initial; border-radius: 50%; margin-right: 8px; vertical-align: -3px; animation: 0.7s linear 0s infinite normal none running spin; }@keyframes spin { \n  100% { transform: rotate(360deg); }\n}.form-error { margin-top: 10px; padding: 10px 12px; background: var(--red-soft); border-radius: 10px; font-size: 13px; color: rgb(181, 21, 26); font-weight: 500; display: none; animation: shake 0.4s var(--ease); }.form-error.show { display: block; }@keyframes shake { \n  0%, 100% { transform: translateX(0px); }\n  25% { transform: translateX(-4px); }\n  75% { transform: translateX(4px); }\n}.hint { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--yellow-soft); border-radius: 12px; font-size: 13px; line-height: 1.5; color: rgb(110, 88, 0); margin-top: 14px; }.hint__icon { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--yellow); color: var(--ink); display: grid; place-items: center; font-weight: 700; font-size: 12px; }.hint code { font-family: var(--mono); font-size: 12px; padding: 1px 5px; background: rgba(110, 88, 0, 0.1); border-radius: 4px; font-weight: 500; }.zone { padding: 18px; border-radius: 16px; }.zone--mask { background: var(--red-soft); }.zone--block { background: var(--yellow-soft); }.zone--clear { background: var(--green-soft); }.zone__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }.zone__icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; font-weight: 700; }.zone--mask .zone__icon { background: var(--red); color: rgb(255, 255, 255); }.zone--block .zone__icon { background: var(--yellow); color: var(--ink); }.zone--clear .zone__icon { background: var(--green); color: rgb(255, 255, 255); }.zone__chip { font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 4px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.6); color: var(--ink-2); }.zone__title { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; margin: 0px 0px 4px; }.zone__copy { font-size: 13px; color: var(--ink-2); margin: 0px 0px 12px; line-height: 1.4; }.zone__sample { padding: 10px 12px; background: rgba(255, 255, 255, 0.6); border-radius: 10px; font-family: var(--mono); font-size: 12px; color: var(--ink); font-weight: 500; min-height: 38px; display: flex; align-items: center; }.zone--mask .zone__sample.rec-mask { color: var(--red); }.log { max-height: 320px; overflow-y: auto; margin: 0px -4px; padding: 0px 4px; }.log__row { display: flex; align-items: center; gap: 12px; padding: 12px 0px; border-bottom: 1px solid var(--surface-3); animation: slide-in 0.35s var(--ease) both; }.log__row:last-child { border-bottom: 0px; }@keyframes slide-in { \n  0% { opacity: 0; transform: translateX(-6px); }\n  100% { opacity: 1; transform: none; }\n}.log__icon { flex-shrink: 0; width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); font-weight: 700; font-size: 14px; }.log__row.evt-search .log__icon { background: var(--blue-soft); color: var(--blue); }.log__row.evt-filter .log__icon { background: var(--yellow-soft); color: rgb(110, 88, 0); }.log__row.evt-manual .log__icon { background: var(--red-soft); color: var(--red); }.log__main { flex: 1 1 0%; min-width: 0px; }.log__name { font-weight: 500; font-size: 14px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.log__sub { font-size: 12px; color: var(--ink-3); margin-top: 2px; font-family: var(--mono); font-weight: 400; }.log__empty { padding: 28px 0px; text-align: center; color: var(--ink-3); font-size: 14px; }.reveal { opacity: 0; transform: translateY(8px); animation: reveal 0.5s var(--ease) forwards; }@keyframes reveal { \n  100% { opacity: 1; transform: none; }\n}.r-1 { animation-delay: 0.02s; }.r-2 { animation-delay: 0.08s; }.r-3 { animation-delay: 0.14s; }.r-4 { animation-delay: 0.2s; }.r-5 { animation-delay: 0.26s; }@media (prefers-reduced-motion: reduce) {\n  *, ::before, ::after { animation: auto ease 0s 1 normal none running none !important; transition: none !important; }\n}"
+                    },
+                    "childNodes": [
+                      {
+                        "type": 3,
+                        "textContent": "",
+                        "id": 24
+                      }
+                    ],
+                    "id": 23
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n",
+                    "id": 25
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "script",
+                    "attributes": {
+                      "src": "http://localhost:8080/_rec/recorder.iife.js",
+                      "data-endpoint": "/s/"
+                    },
+                    "childNodes": [],
+                    "id": 26
+                  }
+                ],
+                "id": 4
+              },
+              {
+                "type": 3,
+                "textContent": "\n",
+                "id": 27
+              },
+              {
+                "type": 2,
+                "tagName": "body",
+                "attributes": {},
+                "childNodes": [
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 29
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "div",
+                    "attributes": {
+                      "class": "shell"
+                    },
+                    "childNodes": [
+                      {
+                        "type": 3,
+                        "textContent": "\n\n    ",
+                        "id": 31
+                      },
+                      {
+                        "type": 5,
+                        "textContent": " topbar ",
+                        "id": 32
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n    ",
+                        "id": 33
+                      },
+                      {
+                        "type": 2,
+                        "tagName": "header",
+                        "attributes": {
+                          "class": "topbar reveal r-1"
+                        },
+                        "childNodes": [
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 35
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "div",
+                            "attributes": {
+                              "class": "brand"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 37
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "brand__mark",
+                                  "aria-hidden": "true"
+                                },
+                                "childNodes": [],
+                                "id": 38
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 39
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {},
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 41
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "div",
+                                    "attributes": {
+                                      "class": "brand__name"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "PAM",
+                                        "id": 43
+                                      }
+                                    ],
+                                    "id": 42
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 44
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "div",
+                                    "attributes": {
+                                      "class": "brand__sub"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Демо рекордера",
+                                        "id": 46
+                                      }
+                                    ],
+                                    "id": 45
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 47
+                                  }
+                                ],
+                                "id": 40
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n      ",
+                                "id": 48
+                              }
+                            ],
+                            "id": 36
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n    ",
+                            "id": 49
+                          }
+                        ],
+                        "id": 34
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n\n    ",
+                        "id": 50
+                      },
+                      {
+                        "type": 5,
+                        "textContent": " intro ",
+                        "id": 51
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n    ",
+                        "id": 52
+                      },
+                      {
+                        "type": 2,
+                        "tagName": "section",
+                        "attributes": {
+                          "class": "intro reveal r-2"
+                        },
+                        "childNodes": [
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 54
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "h1",
+                            "attributes": {
+                              "class": "intro__title"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "Тестовая страница для проверки записи сессии.",
+                                "id": 56
+                              }
+                            ],
+                            "id": 55
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 57
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "p",
+                            "attributes": {
+                              "class": "intro__lede"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "\n        Пока вы не вошли — запись не идёт. После входа рекордер начинает\n        фиксировать действия и отправлять батчи на сервер. Ниже — формы\n        для взаимодействия, зоны приватности и лента того, что попало в запись.\n      ",
+                                "id": 59
+                              }
+                            ],
+                            "id": 58
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n    ",
+                            "id": 60
+                          }
+                        ],
+                        "id": 53
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n\n    ",
+                        "id": 61
+                      },
+                      {
+                        "type": 5,
+                        "textContent": " status bar ",
+                        "id": 62
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n    ",
+                        "id": 63
+                      },
+                      {
+                        "type": 2,
+                        "tagName": "div",
+                        "attributes": {
+                          "class": "status reveal r-2",
+                          "id": "status-bar",
+                          "aria-live": "polite"
+                        },
+                        "childNodes": [
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 65
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "span",
+                            "attributes": {
+                              "class": "status__dot",
+                              "id": "status-dot",
+                              "aria-hidden": "true"
+                            },
+                            "childNodes": [],
+                            "id": 66
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 67
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "span",
+                            "attributes": {
+                              "class": "status__label"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "Статус сессии",
+                                "id": 69
+                              }
+                            ],
+                            "id": 68
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 70
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "span",
+                            "attributes": {
+                              "class": "status__value",
+                              "id": "auth-status"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "logged out",
+                                "id": 72
+                              }
+                            ],
+                            "id": 71
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n    ",
+                            "id": 73
+                          }
+                        ],
+                        "id": 64
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n\n    ",
+                        "id": 74
+                      },
+                      {
+                        "type": 5,
+                        "textContent": " main grid ",
+                        "id": 75
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n    ",
+                        "id": 76
+                      },
+                      {
+                        "type": 2,
+                        "tagName": "div",
+                        "attributes": {
+                          "class": "grid grid--2"
+                        },
+                        "childNodes": [
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 78
+                          },
+                          {
+                            "type": 5,
+                            "textContent": " auth ",
+                            "id": 79
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 80
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "form",
+                            "attributes": {
+                              "class": "card reveal r-3",
+                              "id": "auth-panel",
+                              "autocomplete": "off"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 82
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "card__head"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 84
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "div",
+                                    "attributes": {},
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n            ",
+                                        "id": 86
+                                      },
+                                      {
+                                        "type": 2,
+                                        "tagName": "h2",
+                                        "attributes": {
+                                          "class": "card__title"
+                                        },
+                                        "childNodes": [
+                                          {
+                                            "type": 3,
+                                            "textContent": "Вход",
+                                            "id": 88
+                                          }
+                                        ],
+                                        "id": 87
+                                      },
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n            ",
+                                        "id": 89
+                                      },
+                                      {
+                                        "type": 2,
+                                        "tagName": "p",
+                                        "attributes": {
+                                          "class": "card__hint"
+                                        },
+                                        "childNodes": [
+                                          {
+                                            "type": 3,
+                                            "textContent": "После входа активируется запись.",
+                                            "id": 91
+                                          }
+                                        ],
+                                        "id": 90
+                                      },
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n          ",
+                                        "id": 92
+                                      }
+                                    ],
+                                    "id": 85
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 93
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "card__badge card__badge--yellow"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Требуется вход",
+                                        "id": 95
+                                      }
+                                    ],
+                                    "id": 94
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 96
+                                  }
+                                ],
+                                "id": 83
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n\n        ",
+                                "id": 97
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "label",
+                                "attributes": {
+                                  "class": "field",
+                                  "for": "auth-user"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 99
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "field__label"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Логин",
+                                        "id": 101
+                                      }
+                                    ],
+                                    "id": 100
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 102
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "input",
+                                    "attributes": {
+                                      "class": "field__input",
+                                      "id": "auth-user",
+                                      "type": "text",
+                                      "placeholder": "alice",
+                                      "value": "alice",
+                                      "autocomplete": "off"
+                                    },
+                                    "childNodes": [],
+                                    "id": 103
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 104
+                                  }
+                                ],
+                                "id": 98
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n\n        ",
+                                "id": 105
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "label",
+                                "attributes": {
+                                  "class": "field",
+                                  "for": "auth-password"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 107
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "field__label"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Пароль",
+                                        "id": 109
+                                      }
+                                    ],
+                                    "id": 108
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 110
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "input",
+                                    "attributes": {
+                                      "class": "field__input",
+                                      "id": "auth-password",
+                                      "type": "password",
+                                      "placeholder": "••••••••",
+                                      "autocomplete": "off",
+                                      "value": "*****"
+                                    },
+                                    "childNodes": [],
+                                    "id": 111
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 112
+                                  }
+                                ],
+                                "id": 106
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n\n        ",
+                                "id": 113
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "btns"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 115
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "button",
+                                    "attributes": {
+                                      "class": "btn btn--primary",
+                                      "id": "auth-login",
+                                      "type": "button",
+                                      "disabled": ""
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 2,
+                                        "tagName": "span",
+                                        "attributes": {
+                                          "class": "spinner",
+                                          "aria-hidden": "true"
+                                        },
+                                        "childNodes": [],
+                                        "id": 117
+                                      },
+                                      {
+                                        "type": 3,
+                                        "textContent": "Вход…",
+                                        "id": 118
+                                      }
+                                    ],
+                                    "id": 116
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 119
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "button",
+                                    "attributes": {
+                                      "class": "btn btn--ghost",
+                                      "id": "auth-logout",
+                                      "type": "button",
+                                      "hidden": ""
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Выйти",
+                                        "id": 121
+                                      }
+                                    ],
+                                    "id": 120
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 122
+                                  }
+                                ],
+                                "id": 114
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n\n        ",
+                                "id": 123
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "form-error",
+                                  "id": "auth-error",
+                                  "role": "alert"
+                                },
+                                "childNodes": [],
+                                "id": 124
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n\n        ",
+                                "id": 125
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "hint rec-no-capture",
+                                  "rr_width": "458px",
+                                  "rr_height": "82.5px"
+                                },
+                                "childNodes": [],
+                                "id": 126
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n      ",
+                                "id": 127
+                              }
+                            ],
+                            "id": 81
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n\n      ",
+                            "id": 128
+                          },
+                          {
+                            "type": 5,
+                            "textContent": " interactive form ",
+                            "id": 129
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 130
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "section",
+                            "attributes": {
+                              "class": "card reveal r-4"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 132
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "card__head"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 134
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "div",
+                                    "attributes": {},
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n            ",
+                                        "id": 136
+                                      },
+                                      {
+                                        "type": 2,
+                                        "tagName": "h2",
+                                        "attributes": {
+                                          "class": "card__title"
+                                        },
+                                        "childNodes": [
+                                          {
+                                            "type": 3,
+                                            "textContent": "Интерактивные поля",
+                                            "id": 138
+                                          }
+                                        ],
+                                        "id": 137
+                                      },
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n            ",
+                                        "id": 139
+                                      },
+                                      {
+                                        "type": 2,
+                                        "tagName": "p",
+                                        "attributes": {
+                                          "class": "card__hint"
+                                        },
+                                        "childNodes": [
+                                          {
+                                            "type": 3,
+                                            "textContent": "Каждый ввод и выбор фиксируется в ленте ниже.",
+                                            "id": 141
+                                          }
+                                        ],
+                                        "id": 140
+                                      },
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n          ",
+                                        "id": 142
+                                      }
+                                    ],
+                                    "id": 135
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 143
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "card__badge card__badge--blue"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Live",
+                                        "id": 145
+                                      }
+                                    ],
+                                    "id": 144
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 146
+                                  }
+                                ],
+                                "id": 133
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n\n        ",
+                                "id": 147
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "label",
+                                "attributes": {
+                                  "class": "field"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 149
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "field__label"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Текстовый ввод",
+                                        "id": 151
+                                      }
+                                    ],
+                                    "id": 150
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 152
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "input",
+                                    "attributes": {
+                                      "class": "field__input",
+                                      "type": "text",
+                                      "placeholder": "введите любое значение…",
+                                      "oninput": "logAction('ввод: ' + this.value, 'evt-search')"
+                                    },
+                                    "childNodes": [],
+                                    "id": 153
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 154
+                                  }
+                                ],
+                                "id": 148
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n\n        ",
+                                "id": 155
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "label",
+                                "attributes": {
+                                  "class": "field"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 157
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "field__label"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Выпадающий список А",
+                                        "id": 159
+                                      }
+                                    ],
+                                    "id": 158
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 160
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "div",
+                                    "attributes": {
+                                      "class": "select-wrap"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n            ",
+                                        "id": 162
+                                      },
+                                      {
+                                        "type": 2,
+                                        "tagName": "select",
+                                        "attributes": {
+                                          "class": "field__input field__input--select",
+                                          "onchange": "logAction('выбор A: ' + this.value, 'evt-filter')",
+                                          "value": "Вариант 1"
+                                        },
+                                        "childNodes": [
+                                          {
+                                            "type": 3,
+                                            "textContent": "\n              ",
+                                            "id": 164
+                                          },
+                                          {
+                                            "type": 2,
+                                            "tagName": "option",
+                                            "attributes": {
+                                              "selected": true
+                                            },
+                                            "childNodes": [
+                                              {
+                                                "type": 3,
+                                                "textContent": "Вариант 1",
+                                                "id": 166
+                                              }
+                                            ],
+                                            "id": 165
+                                          },
+                                          {
+                                            "type": 3,
+                                            "textContent": "\n              ",
+                                            "id": 167
+                                          },
+                                          {
+                                            "type": 2,
+                                            "tagName": "option",
+                                            "attributes": {},
+                                            "childNodes": [
+                                              {
+                                                "type": 3,
+                                                "textContent": "Вариант 2",
+                                                "id": 169
+                                              }
+                                            ],
+                                            "id": 168
+                                          },
+                                          {
+                                            "type": 3,
+                                            "textContent": "\n              ",
+                                            "id": 170
+                                          },
+                                          {
+                                            "type": 2,
+                                            "tagName": "option",
+                                            "attributes": {},
+                                            "childNodes": [
+                                              {
+                                                "type": 3,
+                                                "textContent": "Вариант 3",
+                                                "id": 172
+                                              }
+                                            ],
+                                            "id": 171
+                                          },
+                                          {
+                                            "type": 3,
+                                            "textContent": "\n              ",
+                                            "id": 173
+                                          },
+                                          {
+                                            "type": 2,
+                                            "tagName": "option",
+                                            "attributes": {},
+                                            "childNodes": [
+                                              {
+                                                "type": 3,
+                                                "textContent": "Вариант 4",
+                                                "id": 175
+                                              }
+                                            ],
+                                            "id": 174
+                                          },
+                                          {
+                                            "type": 3,
+                                            "textContent": "\n            ",
+                                            "id": 176
+                                          }
+                                        ],
+                                        "id": 163
+                                      },
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n          ",
+                                        "id": 177
+                                      }
+                                    ],
+                                    "id": 161
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 178
+                                  }
+                                ],
+                                "id": 156
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n\n        ",
+                                "id": 179
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "label",
+                                "attributes": {
+                                  "class": "field"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 181
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "field__label"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Выпадающий список Б",
+                                        "id": 183
+                                      }
+                                    ],
+                                    "id": 182
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 184
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "div",
+                                    "attributes": {
+                                      "class": "select-wrap"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n            ",
+                                        "id": 186
+                                      },
+                                      {
+                                        "type": 2,
+                                        "tagName": "select",
+                                        "attributes": {
+                                          "class": "field__input field__input--select",
+                                          "onchange": "logAction('выбор Б: ' + this.value, 'evt-filter')",
+                                          "value": "Первый"
+                                        },
+                                        "childNodes": [
+                                          {
+                                            "type": 3,
+                                            "textContent": "\n              ",
+                                            "id": 188
+                                          },
+                                          {
+                                            "type": 2,
+                                            "tagName": "option",
+                                            "attributes": {
+                                              "selected": true
+                                            },
+                                            "childNodes": [
+                                              {
+                                                "type": 3,
+                                                "textContent": "Первый",
+                                                "id": 190
+                                              }
+                                            ],
+                                            "id": 189
+                                          },
+                                          {
+                                            "type": 3,
+                                            "textContent": "\n              ",
+                                            "id": 191
+                                          },
+                                          {
+                                            "type": 2,
+                                            "tagName": "option",
+                                            "attributes": {},
+                                            "childNodes": [
+                                              {
+                                                "type": 3,
+                                                "textContent": "Второй",
+                                                "id": 193
+                                              }
+                                            ],
+                                            "id": 192
+                                          },
+                                          {
+                                            "type": 3,
+                                            "textContent": "\n              ",
+                                            "id": 194
+                                          },
+                                          {
+                                            "type": 2,
+                                            "tagName": "option",
+                                            "attributes": {},
+                                            "childNodes": [
+                                              {
+                                                "type": 3,
+                                                "textContent": "Третий",
+                                                "id": 196
+                                              }
+                                            ],
+                                            "id": 195
+                                          },
+                                          {
+                                            "type": 3,
+                                            "textContent": "\n            ",
+                                            "id": 197
+                                          }
+                                        ],
+                                        "id": 187
+                                      },
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n          ",
+                                        "id": 198
+                                      }
+                                    ],
+                                    "id": 185
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 199
+                                  }
+                                ],
+                                "id": 180
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n\n        ",
+                                "id": 200
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "btns"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 202
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "button",
+                                    "attributes": {
+                                      "class": "btn btn--ghost",
+                                      "type": "button",
+                                      "onclick": "logAction('кастомное событие', 'evt-manual')"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "\n            Сгенерировать событие\n          ",
+                                        "id": 204
+                                      }
+                                    ],
+                                    "id": 203
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 205
+                                  }
+                                ],
+                                "id": 201
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n      ",
+                                "id": 206
+                              }
+                            ],
+                            "id": 131
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n    ",
+                            "id": 207
+                          }
+                        ],
+                        "id": 77
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n\n    ",
+                        "id": 208
+                      },
+                      {
+                        "type": 5,
+                        "textContent": " privacy zones ",
+                        "id": 209
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n    ",
+                        "id": 210
+                      },
+                      {
+                        "type": 2,
+                        "tagName": "div",
+                        "attributes": {
+                          "class": "grid grid--3 reveal r-5",
+                          "style": "margin-top: 12px;"
+                        },
+                        "childNodes": [
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 212
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "div",
+                            "attributes": {
+                              "class": "zone zone--mask"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 214
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "zone__top"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 216
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "div",
+                                    "attributes": {
+                                      "class": "zone__icon"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "●",
+                                        "id": 218
+                                      }
+                                    ],
+                                    "id": 217
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 219
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "zone__chip"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": ".rec-mask",
+                                        "id": 221
+                                      }
+                                    ],
+                                    "id": 220
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 222
+                                  }
+                                ],
+                                "id": 215
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 223
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "h3",
+                                "attributes": {
+                                  "class": "zone__title"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "Маска текста",
+                                    "id": 225
+                                  }
+                                ],
+                                "id": 224
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 226
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "p",
+                                "attributes": {
+                                  "class": "zone__copy"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "На странице видно, в записи — звёздочки.",
+                                    "id": 228
+                                  }
+                                ],
+                                "id": 227
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 229
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "zone__sample rec-mask"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "************** ****** * * *** ***",
+                                    "id": 231
+                                  }
+                                ],
+                                "id": 230
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n      ",
+                                "id": 232
+                              }
+                            ],
+                            "id": 213
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n\n      ",
+                            "id": 233
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "div",
+                            "attributes": {
+                              "class": "zone zone--block"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 235
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "zone__top"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 237
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "div",
+                                    "attributes": {
+                                      "class": "zone__icon"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "⊘",
+                                        "id": 239
+                                      }
+                                    ],
+                                    "id": 238
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 240
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "zone__chip"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": ".rec-no-capture",
+                                        "id": 242
+                                      }
+                                    ],
+                                    "id": 241
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 243
+                                  }
+                                ],
+                                "id": 236
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 244
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "h3",
+                                "attributes": {
+                                  "class": "zone__title"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "Полный блок",
+                                    "id": 246
+                                  }
+                                ],
+                                "id": 245
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 247
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "p",
+                                "attributes": {
+                                  "class": "zone__copy"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "Элемент и поддерево не попадают в запись.",
+                                    "id": 249
+                                  }
+                                ],
+                                "id": 248
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 250
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "zone__sample rec-no-capture",
+                                  "rr_width": "297.3359375px",
+                                  "rr_height": "38px"
+                                },
+                                "childNodes": [],
+                                "id": 251
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n      ",
+                                "id": 252
+                              }
+                            ],
+                            "id": 234
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n\n      ",
+                            "id": 253
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "div",
+                            "attributes": {
+                              "class": "zone zone--clear"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 255
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "zone__top"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 257
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "div",
+                                    "attributes": {
+                                      "class": "zone__icon"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "✓",
+                                        "id": 259
+                                      }
+                                    ],
+                                    "id": 258
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 260
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "span",
+                                    "attributes": {
+                                      "class": "zone__chip"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "default",
+                                        "id": 262
+                                      }
+                                    ],
+                                    "id": 261
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 263
+                                  }
+                                ],
+                                "id": 256
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 264
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "h3",
+                                "attributes": {
+                                  "class": "zone__title"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "Открытая запись",
+                                    "id": 266
+                                  }
+                                ],
+                                "id": 265
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 267
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "p",
+                                "attributes": {
+                                  "class": "zone__copy"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "Обычный контент — фиксируется как есть.",
+                                    "id": 269
+                                  }
+                                ],
+                                "id": 268
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 270
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "zone__sample"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "Нейтральный текст без ограничений.",
+                                    "id": 272
+                                  }
+                                ],
+                                "id": 271
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n      ",
+                                "id": 273
+                              }
+                            ],
+                            "id": 254
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n    ",
+                            "id": 274
+                          }
+                        ],
+                        "id": 211
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n\n    ",
+                        "id": 275
+                      },
+                      {
+                        "type": 5,
+                        "textContent": " activity log ",
+                        "id": 276
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n    ",
+                        "id": 277
+                      },
+                      {
+                        "type": 2,
+                        "tagName": "section",
+                        "attributes": {
+                          "class": "card reveal r-5",
+                          "style": "margin-top: 12px;"
+                        },
+                        "childNodes": [
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 279
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "div",
+                            "attributes": {
+                              "class": "card__head"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 281
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {},
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 283
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "h2",
+                                    "attributes": {
+                                      "class": "card__title"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Лента действий",
+                                        "id": 285
+                                      }
+                                    ],
+                                    "id": 284
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n          ",
+                                    "id": 286
+                                  },
+                                  {
+                                    "type": 2,
+                                    "tagName": "p",
+                                    "attributes": {
+                                      "class": "card__hint"
+                                    },
+                                    "childNodes": [
+                                      {
+                                        "type": 3,
+                                        "textContent": "Что улетает в батчи рекордера.",
+                                        "id": 288
+                                      }
+                                    ],
+                                    "id": 287
+                                  },
+                                  {
+                                    "type": 3,
+                                    "textContent": "\n        ",
+                                    "id": 289
+                                  }
+                                ],
+                                "id": 282
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 290
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "span",
+                                "attributes": {
+                                  "class": "card__badge",
+                                  "id": "log-count"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "0 событий",
+                                    "id": 292
+                                  }
+                                ],
+                                "id": 291
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n      ",
+                                "id": 293
+                              }
+                            ],
+                            "id": 280
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n      ",
+                            "id": 294
+                          },
+                          {
+                            "type": 2,
+                            "tagName": "div",
+                            "attributes": {
+                              "class": "log",
+                              "id": "log"
+                            },
+                            "childNodes": [
+                              {
+                                "type": 3,
+                                "textContent": "\n        ",
+                                "id": 296
+                              },
+                              {
+                                "type": 2,
+                                "tagName": "div",
+                                "attributes": {
+                                  "class": "log__empty"
+                                },
+                                "childNodes": [
+                                  {
+                                    "type": 3,
+                                    "textContent": "Начните взаимодействовать с полями выше — события появятся здесь.",
+                                    "id": 298
+                                  }
+                                ],
+                                "id": 297
+                              },
+                              {
+                                "type": 3,
+                                "textContent": "\n      ",
+                                "id": 299
+                              }
+                            ],
+                            "id": 295
+                          },
+                          {
+                            "type": 3,
+                            "textContent": "\n    ",
+                            "id": 300
+                          }
+                        ],
+                        "id": 278
+                      },
+                      {
+                        "type": 3,
+                        "textContent": "\n  ",
+                        "id": 301
+                      }
+                    ],
+                    "id": 30
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n\n  ",
+                    "id": 302
+                  },
+                  {
+                    "type": 5,
+                    "textContent": " behaviour ",
+                    "id": 303
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n  ",
+                    "id": 304
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "script",
+                    "attributes": {},
+                    "childNodes": [
+                      {
+                        "type": 3,
+                        "textContent": "SCRIPT_PLACEHOLDER",
+                        "id": 306
+                      }
+                    ],
+                    "id": 305
+                  },
+                  {
+                    "type": 3,
+                    "textContent": "\n\n\n",
+                    "id": 307
+                  },
+                  {
+                    "type": 2,
+                    "tagName": "div",
+                    "attributes": {
+                      "popover": "manual",
+                      "style": "z-index: 2147483647 !important; padding: 0px !important; margin: 0px !important; border-radius: 8px !important; position: fixed !important; color-scheme: normal !important; box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 4px 0px, rgba(0, 0, 0, 0.18) 0px 8px 15px 6px !important; border: 1px solid rgba(0, 0, 0, 0.2) !important; overflow: hidden !important; backdrop-filter: blur(20px) !important; background-color: rgba(230, 230, 230, 0.8) !important; top: 532px !important; left: -999999px !important; opacity: 0 !important; visibility: hidden !important; height: 106.5px !important; width: 305px !important;"
+                    },
+                    "childNodes": [
+                      {
+                        "type": 2,
+                        "tagName": "iframe",
+                        "attributes": {
+                          "frameborder": "0",
+                          "style": "width: 305px !important; height: 106.5px !important; display: block !important;",
+                          "rr_src": "chrome-extension://pejdijmoenmkgeppbflobdenhhabjlaj/completion_list.html?username=alice&colorScheme=&screenX=0&screenY=154&effectiveWindowWidth=1512&isDark=false"
+                        },
+                        "childNodes": [],
+                        "id": 309,
+                        "isShadow": true
+                      }
+                    ],
+                    "id": 308,
+                    "isShadowHost": true
+                  }
+                ],
+                "id": 28
+              }
+            ],
+            "id": 3
+          }
+        ],
+        "id": 1
+      },
+      "initialOffset": {
+        "left": 0,
+        "top": 0
+      }
+    },
+    "timestamp": 1780445231301
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [
+        {
+          "id": 116,
+          "attributes": {
+            "disabled": null,
+            "hidden": ""
+          }
+        },
+        {
+          "id": 64,
+          "attributes": {
+            "class": "status reveal r-2 live"
+          }
+        },
+        {
+          "id": 120,
+          "attributes": {
+            "hidden": null
+          }
+        }
+      ],
+      "removes": [
+        {
+          "parentId": 116,
+          "id": 117
+        },
+        {
+          "parentId": 116,
+          "id": 118
+        },
+        {
+          "parentId": 71,
+          "id": 72
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 116,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "Войти",
+            "id": 310
+          }
+        },
+        {
+          "parentId": 71,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "logged in",
+            "id": 311
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445231303
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 5,
+      "text": "",
+      "isChecked": false,
+      "id": 111
+    },
+    "timestamp": 1780445231305
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 71,
+          "id": 311
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 71,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "logged in",
+            "id": 312
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445231312
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 467,
+          "y": 551,
+          "id": 120,
+          "timeOffset": 0
+        }
+      ]
+    },
+    "timestamp": 1780445231479
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 469,
+          "y": 551,
+          "id": 120,
+          "timeOffset": -453
+        },
+        {
+          "x": 471,
+          "y": 551,
+          "id": 120,
+          "timeOffset": -402
+        },
+        {
+          "x": 475,
+          "y": 548,
+          "id": 120,
+          "timeOffset": -352
+        },
+        {
+          "x": 481,
+          "y": 543,
+          "id": 114,
+          "timeOffset": -294
+        },
+        {
+          "x": 486,
+          "y": 538,
+          "id": 81,
+          "timeOffset": -244
+        },
+        {
+          "x": 488,
+          "y": 535,
+          "id": 81,
+          "timeOffset": -194
+        },
+        {
+          "x": 489,
+          "y": 533,
+          "id": 81,
+          "timeOffset": -119
+        },
+        {
+          "x": 496,
+          "y": 526,
+          "id": 111,
+          "timeOffset": -60
+        },
+        {
+          "x": 549,
+          "y": 474,
+          "id": 106,
+          "timeOffset": -10
+        }
+      ]
+    },
+    "timestamp": 1780445231981
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 673,
+          "y": 395,
+          "id": 98,
+          "timeOffset": -461
+        },
+        {
+          "x": 768,
+          "y": 369,
+          "id": 131,
+          "timeOffset": -411
+        },
+        {
+          "x": 804,
+          "y": 373,
+          "id": 150,
+          "timeOffset": -361
+        }
+      ]
+    },
+    "timestamp": 1780445232482
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 71,
+          "id": 312
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 71,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "logged in",
+            "id": 313
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445232812
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 808,
+          "y": 379,
+          "id": 150,
+          "timeOffset": -405
+        },
+        {
+          "x": 815,
+          "y": 419,
+          "id": 153,
+          "timeOffset": -355
+        },
+        {
+          "x": 865,
+          "y": 498,
+          "id": 163,
+          "timeOffset": -305
+        },
+        {
+          "x": 900,
+          "y": 561,
+          "id": 187,
+          "timeOffset": -255
+        },
+        {
+          "x": 907,
+          "y": 576,
+          "id": 187,
+          "timeOffset": -205
+        },
+        {
+          "x": 907,
+          "y": 571,
+          "id": 187,
+          "timeOffset": -155
+        },
+        {
+          "x": 904,
+          "y": 551,
+          "id": 182,
+          "timeOffset": -105
+        },
+        {
+          "x": 901,
+          "y": 539,
+          "id": 182,
+          "timeOffset": -55
+        },
+        {
+          "x": 900,
+          "y": 534,
+          "id": 131,
+          "timeOffset": -5
+        }
+      ]
+    },
+    "timestamp": 1780445232984
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 1,
+      "id": 163,
+      "x": 900.28125,
+      "y": 516.01171875
+    },
+    "timestamp": 1780445233151
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 5,
+      "id": 163
+    },
+    "timestamp": 1780445233151
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 0,
+      "id": 163,
+      "x": 900.28125,
+      "y": 516.01171875
+    },
+    "timestamp": 1780445233154
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 2,
+      "id": 163,
+      "x": 900,
+      "y": 516,
+      "pointerType": 0
+    },
+    "timestamp": 1780445233154
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 900,
+          "y": 526,
+          "id": 163,
+          "timeOffset": -456
+        },
+        {
+          "x": 900,
+          "y": 519,
+          "id": 163,
+          "timeOffset": -406
+        },
+        {
+          "x": 900,
+          "y": 516,
+          "id": 163,
+          "timeOffset": -356
+        }
+      ]
+    },
+    "timestamp": 1780445233485
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 5,
+      "text": "Вариант 3",
+      "isChecked": false,
+      "id": 163
+    },
+    "timestamp": 1780445234128
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [
+        {
+          "id": 295,
+          "attributes": {
+            "data-cleared": "1"
+          }
+        }
+      ],
+      "removes": [
+        {
+          "parentId": 295,
+          "id": 296
+        },
+        {
+          "parentId": 295,
+          "id": 297
+        },
+        {
+          "parentId": 295,
+          "id": 299
+        },
+        {
+          "parentId": 291,
+          "id": 292
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 291,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "1 событие",
+            "id": 314
+          }
+        },
+        {
+          "parentId": 295,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__row evt-filter"
+            },
+            "childNodes": [],
+            "id": 315
+          }
+        },
+        {
+          "parentId": 315,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__main"
+            },
+            "childNodes": [],
+            "id": 316
+          }
+        },
+        {
+          "parentId": 316,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__sub"
+            },
+            "childNodes": [],
+            "id": 317
+          }
+        },
+        {
+          "parentId": 317,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "05:07:14 · filter",
+            "id": 318
+          }
+        },
+        {
+          "parentId": 315,
+          "nextId": 316,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__icon"
+            },
+            "childNodes": [],
+            "id": 319
+          }
+        },
+        {
+          "parentId": 319,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "≡",
+            "id": 320
+          }
+        },
+        {
+          "parentId": 316,
+          "nextId": 317,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__name"
+            },
+            "childNodes": [],
+            "id": 321
+          }
+        },
+        {
+          "parentId": 321,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "выбор A: Вариант 3",
+            "id": 322
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445234130
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 2,
+      "id": 163,
+      "x": 786,
+      "y": 479,
+      "pointerType": 0
+    },
+    "timestamp": 1780445234133
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 898,
+          "y": 463,
+          "id": 158,
+          "timeOffset": 0
+        }
+      ]
+    },
+    "timestamp": 1780445234138
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 71,
+          "id": 313
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 71,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "logged in",
+            "id": 323
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445234312
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 1,
+      "id": 153,
+      "x": 903.44140625,
+      "y": 424.796875
+    },
+    "timestamp": 1780445234316
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 6,
+      "id": 163
+    },
+    "timestamp": 1780445234316
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 5,
+      "id": 153
+    },
+    "timestamp": 1780445234317
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 308,
+          "id": 309,
+          "isShadow": true
+        }
+      ],
+      "adds": []
+    },
+    "timestamp": 1780445234420
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 28,
+          "id": 308
+        }
+      ],
+      "adds": []
+    },
+    "timestamp": 1780445234420
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 0,
+      "id": 153,
+      "x": 903.44140625,
+      "y": 424.6640625
+    },
+    "timestamp": 1780445234442
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 2,
+      "id": 153,
+      "x": 903,
+      "y": 424,
+      "pointerType": 0
+    },
+    "timestamp": 1780445234442
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 5,
+      "text": "в",
+      "isChecked": false,
+      "id": 153
+    },
+    "timestamp": 1780445234590
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 291,
+          "id": 314
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 291,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "2 события",
+            "id": 324
+          }
+        },
+        {
+          "parentId": 295,
+          "nextId": 315,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__row evt-search"
+            },
+            "childNodes": [],
+            "id": 325
+          }
+        },
+        {
+          "parentId": 325,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__main"
+            },
+            "childNodes": [],
+            "id": 326
+          }
+        },
+        {
+          "parentId": 326,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__sub"
+            },
+            "childNodes": [],
+            "id": 327
+          }
+        },
+        {
+          "parentId": 327,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "05:07:14 · search",
+            "id": 328
+          }
+        },
+        {
+          "parentId": 325,
+          "nextId": 326,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__icon"
+            },
+            "childNodes": [],
+            "id": 329
+          }
+        },
+        {
+          "parentId": 329,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "⌕",
+            "id": 330
+          }
+        },
+        {
+          "parentId": 326,
+          "nextId": 327,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__name"
+            },
+            "childNodes": [],
+            "id": 331
+          }
+        },
+        {
+          "parentId": 331,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "ввод: в",
+            "id": 332
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445234590
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 902,
+          "y": 437,
+          "id": 153,
+          "timeOffset": -442
+        },
+        {
+          "x": 903,
+          "y": 427,
+          "id": 153,
+          "timeOffset": -392
+        },
+        {
+          "x": 903,
+          "y": 425,
+          "id": 153,
+          "timeOffset": -342
+        }
+      ]
+    },
+    "timestamp": 1780445234638
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 5,
+      "text": "вф",
+      "isChecked": false,
+      "id": 153
+    },
+    "timestamp": 1780445234697
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 291,
+          "id": 324
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 291,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "3 события",
+            "id": 333
+          }
+        },
+        {
+          "parentId": 295,
+          "nextId": 325,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__row evt-search"
+            },
+            "childNodes": [],
+            "id": 334
+          }
+        },
+        {
+          "parentId": 334,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__main"
+            },
+            "childNodes": [],
+            "id": 335
+          }
+        },
+        {
+          "parentId": 335,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__sub"
+            },
+            "childNodes": [],
+            "id": 336
+          }
+        },
+        {
+          "parentId": 336,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "05:07:14 · search",
+            "id": 337
+          }
+        },
+        {
+          "parentId": 334,
+          "nextId": 335,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__icon"
+            },
+            "childNodes": [],
+            "id": 338
+          }
+        },
+        {
+          "parentId": 338,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "⌕",
+            "id": 339
+          }
+        },
+        {
+          "parentId": 335,
+          "nextId": 336,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__name"
+            },
+            "childNodes": [],
+            "id": 340
+          }
+        },
+        {
+          "parentId": 340,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "ввод: вф",
+            "id": 341
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445234697
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 5,
+      "text": "вфы",
+      "isChecked": false,
+      "id": 153
+    },
+    "timestamp": 1780445234763
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 291,
+          "id": 333
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 291,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "4 события",
+            "id": 342
+          }
+        },
+        {
+          "parentId": 295,
+          "nextId": 334,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__row evt-search"
+            },
+            "childNodes": [],
+            "id": 343
+          }
+        },
+        {
+          "parentId": 343,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__main"
+            },
+            "childNodes": [],
+            "id": 344
+          }
+        },
+        {
+          "parentId": 344,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__sub"
+            },
+            "childNodes": [],
+            "id": 345
+          }
+        },
+        {
+          "parentId": 345,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "05:07:14 · search",
+            "id": 346
+          }
+        },
+        {
+          "parentId": 343,
+          "nextId": 344,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__icon"
+            },
+            "childNodes": [],
+            "id": 347
+          }
+        },
+        {
+          "parentId": 347,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "⌕",
+            "id": 348
+          }
+        },
+        {
+          "parentId": 344,
+          "nextId": 345,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__name"
+            },
+            "childNodes": [],
+            "id": 349
+          }
+        },
+        {
+          "parentId": 349,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "ввод: вфы",
+            "id": 350
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445234763
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 5,
+      "text": "вфыв",
+      "isChecked": false,
+      "id": 153
+    },
+    "timestamp": 1780445234861
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 291,
+          "id": 342
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 291,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "5 событий",
+            "id": 351
+          }
+        },
+        {
+          "parentId": 295,
+          "nextId": 343,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__row evt-search"
+            },
+            "childNodes": [],
+            "id": 352
+          }
+        },
+        {
+          "parentId": 352,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__main"
+            },
+            "childNodes": [],
+            "id": 353
+          }
+        },
+        {
+          "parentId": 353,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__sub"
+            },
+            "childNodes": [],
+            "id": 354
+          }
+        },
+        {
+          "parentId": 354,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "05:07:14 · search",
+            "id": 355
+          }
+        },
+        {
+          "parentId": 352,
+          "nextId": 353,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__icon"
+            },
+            "childNodes": [],
+            "id": 356
+          }
+        },
+        {
+          "parentId": 356,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "⌕",
+            "id": 357
+          }
+        },
+        {
+          "parentId": 353,
+          "nextId": 354,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__name"
+            },
+            "childNodes": [],
+            "id": 358
+          }
+        },
+        {
+          "parentId": 358,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "ввод: вфыв",
+            "id": 359
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445234861
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 5,
+      "text": "вфывы",
+      "isChecked": false,
+      "id": 153
+    },
+    "timestamp": 1780445234952
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 291,
+          "id": 351
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 291,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "6 событий",
+            "id": 360
+          }
+        },
+        {
+          "parentId": 295,
+          "nextId": 352,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__row evt-search"
+            },
+            "childNodes": [],
+            "id": 361
+          }
+        },
+        {
+          "parentId": 361,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__main"
+            },
+            "childNodes": [],
+            "id": 362
+          }
+        },
+        {
+          "parentId": 362,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__sub"
+            },
+            "childNodes": [],
+            "id": 363
+          }
+        },
+        {
+          "parentId": 363,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "05:07:14 · search",
+            "id": 364
+          }
+        },
+        {
+          "parentId": 361,
+          "nextId": 362,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__icon"
+            },
+            "childNodes": [],
+            "id": 365
+          }
+        },
+        {
+          "parentId": 365,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "⌕",
+            "id": 366
+          }
+        },
+        {
+          "parentId": 362,
+          "nextId": 363,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__name"
+            },
+            "childNodes": [],
+            "id": 367
+          }
+        },
+        {
+          "parentId": 367,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "ввод: вфывы",
+            "id": 368
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445234953
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 5,
+      "text": "вфывыф",
+      "isChecked": false,
+      "id": 153
+    },
+    "timestamp": 1780445234959
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 291,
+          "id": 360
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 291,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "7 событий",
+            "id": 369
+          }
+        },
+        {
+          "parentId": 295,
+          "nextId": 361,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__row evt-search"
+            },
+            "childNodes": [],
+            "id": 370
+          }
+        },
+        {
+          "parentId": 370,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__main"
+            },
+            "childNodes": [],
+            "id": 371
+          }
+        },
+        {
+          "parentId": 371,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__sub"
+            },
+            "childNodes": [],
+            "id": 372
+          }
+        },
+        {
+          "parentId": 372,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "05:07:14 · search",
+            "id": 373
+          }
+        },
+        {
+          "parentId": 370,
+          "nextId": 371,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__icon"
+            },
+            "childNodes": [],
+            "id": 374
+          }
+        },
+        {
+          "parentId": 374,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "⌕",
+            "id": 375
+          }
+        },
+        {
+          "parentId": 371,
+          "nextId": 372,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__name"
+            },
+            "childNodes": [],
+            "id": 376
+          }
+        },
+        {
+          "parentId": 376,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "ввод: вфывыф",
+            "id": 377
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445234960
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 903,
+          "y": 424,
+          "id": 153,
+          "timeOffset": -410
+        },
+        {
+          "x": 899,
+          "y": 439,
+          "id": 153,
+          "timeOffset": -352
+        },
+        {
+          "x": 888,
+          "y": 469,
+          "id": 158,
+          "timeOffset": -294
+        },
+        {
+          "x": 881,
+          "y": 490,
+          "id": 163,
+          "timeOffset": -244
+        },
+        {
+          "x": 877,
+          "y": 509,
+          "id": 163,
+          "timeOffset": -194
+        },
+        {
+          "x": 874,
+          "y": 526,
+          "id": 163,
+          "timeOffset": -143
+        },
+        {
+          "x": 871,
+          "y": 541,
+          "id": 182,
+          "timeOffset": -93
+        },
+        {
+          "x": 870,
+          "y": 554,
+          "id": 182,
+          "timeOffset": -43
+        }
+      ]
+    },
+    "timestamp": 1780445235139
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 1,
+      "id": 187,
+      "x": 868.01171875,
+      "y": 570.05859375
+    },
+    "timestamp": 1780445235267
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 6,
+      "id": 153
+    },
+    "timestamp": 1780445235267
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 5,
+      "id": 187
+    },
+    "timestamp": 1780445235267
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 0,
+      "id": 187,
+      "x": 868.01171875,
+      "y": 570.05859375
+    },
+    "timestamp": 1780445235272
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 2,
+      "id": 187,
+      "x": 868,
+      "y": 570,
+      "pointerType": 0
+    },
+    "timestamp": 1780445235272
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 868,
+          "y": 563,
+          "id": 187,
+          "timeOffset": -493
+        },
+        {
+          "x": 868,
+          "y": 566,
+          "id": 187,
+          "timeOffset": -443
+        },
+        {
+          "x": 868,
+          "y": 570,
+          "id": 187,
+          "timeOffset": -386
+        }
+      ]
+    },
+    "timestamp": 1780445235639
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 71,
+          "id": 323
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 71,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "logged in",
+            "id": 378
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445235812
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 5,
+      "text": "Второй",
+      "isChecked": false,
+      "id": 187
+    },
+    "timestamp": 1780445236326
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 291,
+          "id": 369
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 291,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "8 событий",
+            "id": 379
+          }
+        },
+        {
+          "parentId": 295,
+          "nextId": 370,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__row evt-filter"
+            },
+            "childNodes": [],
+            "id": 380
+          }
+        },
+        {
+          "parentId": 380,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__main"
+            },
+            "childNodes": [],
+            "id": 381
+          }
+        },
+        {
+          "parentId": 381,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__sub"
+            },
+            "childNodes": [],
+            "id": 382
+          }
+        },
+        {
+          "parentId": 382,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "05:07:16 · filter",
+            "id": 383
+          }
+        },
+        {
+          "parentId": 380,
+          "nextId": 381,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__icon"
+            },
+            "childNodes": [],
+            "id": 384
+          }
+        },
+        {
+          "parentId": 384,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "≡",
+            "id": 385
+          }
+        },
+        {
+          "parentId": 381,
+          "nextId": 382,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__name"
+            },
+            "childNodes": [],
+            "id": 386
+          }
+        },
+        {
+          "parentId": 386,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "выбор Б: Второй",
+            "id": 387
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445236327
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 2,
+      "id": 187,
+      "x": 786,
+      "y": 561,
+      "pointerType": 0
+    },
+    "timestamp": 1780445236328
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 913,
+          "y": 628,
+          "id": 203,
+          "timeOffset": 0
+        }
+      ]
+    },
+    "timestamp": 1780445236363
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 1,
+      "id": 203,
+      "x": 913.5546875,
+      "y": 633.45703125
+    },
+    "timestamp": 1780445236500
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 6,
+      "id": 187
+    },
+    "timestamp": 1780445236501
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 5,
+      "id": 203
+    },
+    "timestamp": 1780445236501
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 0,
+      "id": 203,
+      "x": 913.5546875,
+      "y": 633.45703125
+    },
+    "timestamp": 1780445236641
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 2,
+      "id": 203,
+      "x": 913,
+      "y": 633,
+      "pointerType": 0
+    },
+    "timestamp": 1780445236641
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 291,
+          "id": 379
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 291,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "9 событий",
+            "id": 388
+          }
+        },
+        {
+          "parentId": 295,
+          "nextId": 380,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__row evt-manual"
+            },
+            "childNodes": [],
+            "id": 389
+          }
+        },
+        {
+          "parentId": 389,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__main"
+            },
+            "childNodes": [],
+            "id": 390
+          }
+        },
+        {
+          "parentId": 390,
+          "nextId": null,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__sub"
+            },
+            "childNodes": [],
+            "id": 391
+          }
+        },
+        {
+          "parentId": 391,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "05:07:16 · manual",
+            "id": 392
+          }
+        },
+        {
+          "parentId": 389,
+          "nextId": 390,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__icon"
+            },
+            "childNodes": [],
+            "id": 393
+          }
+        },
+        {
+          "parentId": 393,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "!",
+            "id": 394
+          }
+        },
+        {
+          "parentId": 390,
+          "nextId": 391,
+          "node": {
+            "type": 2,
+            "tagName": "div",
+            "attributes": {
+              "class": "log__name"
+            },
+            "childNodes": [],
+            "id": 395
+          }
+        },
+        {
+          "parentId": 395,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "кастомное событие",
+            "id": 396
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445236642
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 913,
+          "y": 632,
+          "id": 203,
+          "timeOffset": -443
+        },
+        {
+          "x": 913,
+          "y": 633,
+          "id": 203,
+          "timeOffset": -18
+        }
+      ]
+    },
+    "timestamp": 1780445236864
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 71,
+          "id": 378
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 71,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "logged in",
+            "id": 397
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445237312
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 913,
+          "y": 632,
+          "id": 203,
+          "timeOffset": -469
+        },
+        {
+          "x": 913,
+          "y": 622,
+          "id": 131,
+          "timeOffset": -419
+        },
+        {
+          "x": 913,
+          "y": 600,
+          "id": 187,
+          "timeOffset": -369
+        },
+        {
+          "x": 913,
+          "y": 578,
+          "id": 187,
+          "timeOffset": -311
+        },
+        {
+          "x": 907,
+          "y": 567,
+          "id": 187,
+          "timeOffset": -261
+        },
+        {
+          "x": 898,
+          "y": 561,
+          "id": 187,
+          "timeOffset": -211
+        },
+        {
+          "x": 862,
+          "y": 562,
+          "id": 187,
+          "timeOffset": -153
+        },
+        {
+          "x": 787,
+          "y": 583,
+          "id": 187,
+          "timeOffset": -95
+        },
+        {
+          "x": 727,
+          "y": 596,
+          "id": 81,
+          "timeOffset": -45
+        }
+      ]
+    },
+    "timestamp": 1780445237365
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 662,
+          "y": 605,
+          "id": 126,
+          "timeOffset": -496
+        },
+        {
+          "x": 625,
+          "y": 602,
+          "id": 81,
+          "timeOffset": -445
+        },
+        {
+          "x": 614,
+          "y": 588,
+          "id": 120,
+          "timeOffset": -388
+        },
+        {
+          "x": 616,
+          "y": 567,
+          "id": 120,
+          "timeOffset": -338
+        },
+        {
+          "x": 621,
+          "y": 558,
+          "id": 120,
+          "timeOffset": -287
+        },
+        {
+          "x": 625,
+          "y": 556,
+          "id": 120,
+          "timeOffset": -237
+        }
+      ]
+    },
+    "timestamp": 1780445237866
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 1,
+      "positions": [
+        {
+          "x": 627,
+          "y": 556,
+          "id": 120,
+          "timeOffset": -421
+        },
+        {
+          "x": 627,
+          "y": 559,
+          "id": 120,
+          "timeOffset": -371
+        },
+        {
+          "x": 627,
+          "y": 563,
+          "id": 120,
+          "timeOffset": -321
+        },
+        {
+          "x": 626,
+          "y": 566,
+          "id": 120,
+          "timeOffset": -264
+        }
+      ]
+    },
+    "timestamp": 1780445238367
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 0,
+      "texts": [],
+      "attributes": [],
+      "removes": [
+        {
+          "parentId": 71,
+          "id": 397
+        }
+      ],
+      "adds": [
+        {
+          "parentId": 71,
+          "nextId": null,
+          "node": {
+            "type": 3,
+            "textContent": "logged in",
+            "id": 398
+          }
+        }
+      ]
+    },
+    "timestamp": 1780445238812
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 1,
+      "id": 120,
+      "x": 626.5625,
+      "y": 566
+    },
+    "timestamp": 1780445239259
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 6,
+      "id": 203
+    },
+    "timestamp": 1780445239260
+  },
+  {
+    "type": 3,
+    "data": {
+      "source": 2,
+      "type": 5,
+      "id": 120
+    },
+    "timestamp": 1780445239260
+  }
+]

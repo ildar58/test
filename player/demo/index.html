@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@pam/player demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    body { margin: 0; background: #0a0b0d; color: #eef0f4; font-family: 'Onest', system-ui, sans-serif; padding: 28px; }
+    h1 { font-size: 18px; margin: 0 0 18px; font-weight: 700; letter-spacing: -0.02em; }
+    .bar { display: flex; gap: 14px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+    label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: #a4abb8; }
+    select, input { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 1px solid #2a2e36; background: #15171c; color: #eef0f4; }
+    input[type="color"] { padding: 2px; width: 40px; height: 32px; }
+    #mount { max-width: 920px; }
+    .note { margin-top: 16px; font-size: 12px; color: #6c7480; }
+  </style>
+</head>
+<body>
+  <h1>@pam/player — demo</h1>
+  <div class="bar">
+    <label>Движок
+      <select id="engine">
+        <option value="replayer">replayer (B)</option>
+        <option value="rrweb-player">rrweb-player (A)</option>
+      </select>
+    </label>
+    <label>Тема
+      <select id="theme">
+        <option value="dark">dark</option>
+        <option value="light">light</option>
+      </select>
+    </label>
+    <label>Акцент <input id="accent" type="color" value="#ffdd2d" /></label>
+  </div>
+  <div id="mount"></div>
+  <div class="note">Фикстура: <code>events.json</code></div>
+  <script type="module">
+    import { createPamPlayer } from '../dist/index.mjs';
+    const mount = document.getElementById('mount');
+    const engineSel = document.getElementById('engine');
+    const themeSel = document.getElementById('theme');
+    const accent = document.getElementById('accent');
+    let player = null;
+    const events = await fetch('./events.json').then((r) => r.json());
+    window.__events = events;
+    function theme() { return { preset: themeSel.value, accent: accent.value }; }
+    function build() {
+      if (player) player.destroy();
+      player = createPamPlayer(mount, { events, engine: engineSel.value, theme: theme() });
+      window.__player = player;
+    }
+    engineSel.onchange = build;
+    themeSel.onchange = () => player.setTheme(theme());
+    accent.oninput = () => player.setTheme(theme());
+    build();
+  </script>
+</body>
+</html>
