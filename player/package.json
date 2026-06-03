@@ -14,7 +14,7 @@
     "./iife": "./dist/pam-player.iife.js"
   },
   "scripts": {
-    "build": "node esbuild.config.mjs && tsc -p tsconfig.json --emitDeclarationOnly",
+    "build": "rm -rf dist && node esbuild.config.mjs && tsc -p tsconfig.json --emitDeclarationOnly",
     "dev": "node esbuild.config.mjs --watch",
     "typecheck": "tsc --noEmit"
   },

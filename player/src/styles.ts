@@ -14,8 +14,9 @@ export const CONTROL_CSS = `
 }
 
 .pam-screen { position: relative; overflow: hidden; background: #fff; }
-.pam-screen .replayer-wrapper { left: 0 !important; top: 0 !important; float: none; }
-.pam-screen .rr-player { border-radius: 0 !important; box-shadow: none !important; height: auto !important; margin: 0 !important; background: #fff !important; }
+.pam-screen .replayer-wrapper { float: none; }
+.pam-screen .rr-player { border-radius: 0 !important; box-shadow: none !important; height: auto !important; margin: 0 !important; float: none !important; background: #fff !important; }
+.pam-screen .rr-player__frame { overflow: hidden; }
 .pam-screen .rr-controller { display: none !important; }
 
 .pam-loading { padding: 44px 20px; text-align: center; color: var(--pam-text-2); font-family: var(--pam-font); font-size: 14px; }
@@ -96,7 +97,7 @@ export const CONTROL_CSS = `
 
 // rrweb Replayer primitives (wrapper + mouse cursor + click ripple). Injected for engine B.
 export const REPLAYER_CSS = `
-.replayer-wrapper { transform-origin: top left; }
+.replayer-wrapper { position: absolute; transform-origin: top left; left: 50%; top: 50%; }
 .replayer-wrapper > iframe { border: none; }
 .replayer-mouse {
   position: absolute; width: 20px; height: 20px;

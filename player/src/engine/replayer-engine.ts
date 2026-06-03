@@ -118,6 +118,9 @@ export class ReplayerEngine implements PlayerEngine {
     const scale = maxHeight
       ? Math.min(width / this.recW, maxHeight / this.recH)
       : width / this.recW;
+    // engine B scales from the top-left corner (no rrweb-player translate centering)
+    this.wrapper.style.left = '0';
+    this.wrapper.style.top = '0';
     this.wrapper.style.transform = `scale(${scale})`;
     this.screenEl.style.width = `${Math.round(this.recW * scale)}px`;
     this.screenEl.style.height = `${Math.round(this.recH * scale)}px`;
