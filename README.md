@@ -71,9 +71,9 @@ wire-формате.
 # 1. Установить зависимости workspace'а
 pnpm install
 
-# 2. Собрать бандл рекордера и положить его туда, где nginx его раздаёт
+# 2. Собрать бандлы (рекордер + плеер); build сам раскладывает их туда,
+#    откуда их отдают nginx и реплеер
 pnpm build
-cp sdk/dist/recorder.iife.js proxy/recorder-bundle/recorder.iife.js
 
 # 3. Поднять полный стек (nginx + demo app + ingestion)
 pnpm dev:proxy

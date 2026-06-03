@@ -5,6 +5,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 replayer/vendor/
+proxy/recorder-bundle/recorder.iife.js
 
 # Ingestion runtime data
 ingestion/data/

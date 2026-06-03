@@ -147,6 +147,11 @@ app.get('/sessions/:id', (req: Request, res: Response) => {
   }
 });
 
+// Healthcheck для docker (без обращения к ФС).
+app.get('/healthz', (_req: Request, res: Response) => {
+  res.json({ ok: true });
+});
+
 // Глобальный обработчик: логируем внутреннюю причину, наружу — без деталей.
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error('[ingestion] unhandled error:', err);
